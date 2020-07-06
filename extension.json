@@ -1,0 +1,54 @@
+{
+  "manifest_version": 2,
+  "name": "MWUnit",
+  "namemsg": "mwunit-extensionname",
+  "type": "other",
+  "author": [
+    "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
+  ],
+  "version": "0.5",
+  "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
+  "description": "A unit testing framework for MediaWiki",
+  "descriptionmsg": "mwunit-description",
+  "license-name": "MIT",
+  "requires": {
+    "MediaWiki": ">= 1.31.0"
+  },
+  "MessagesDirs": {
+    "MWUnit": [
+      "i18n"
+    ]
+  },
+  "ExtensionMessagesFiles": {
+    "MWUnitMagic": "i18n/MWUnitMagic.i18n.php"
+  },
+  "AutoloadNamespaces": {
+    "MWUnit\\": "src/",
+    "MWUnit\\Assertion": "src/Assertion/",
+    "MWUnit\\Exception": "src/Exception/",
+    "MWUnit\\Specials": "src/Specials/"
+  },
+  "Hooks": {
+    "ParserFirstCallInit": "MWUnit\\MWUnit::onParserFirstCallInit",
+    "LoadExtensionSchemaUpdates": "MWUnit\\MWUnit::onLoadExtensionSchemaUpdates",
+    "PageContentSaveComplete": "MWUnit\\UpdateHandler::onPageContentSaveComplete",
+    "PageContentInsertComplete": "MWUnit\\UpdateHandler::onPageContentInsertComplete",
+    "ArticleDelete": "MWUnit\\UpdateHandler::onArticleDelete",
+    "SkinBuildSidebar": "MWUnit\\MWUnit::skinBuildSidebar"
+  },
+  "SpecialPages": {
+    "MWUnit": "MWUnit\\Specials\\SpecialMWUnit"
+  },
+  "namespaces": [
+    {
+      "id": 4500,
+      "constant": "NS_TEST",
+      "name": "Test"
+    },
+    {
+      "id": 4501,
+      "constant": "NS_TEST_TALK",
+      "name": "Test_talk"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "@metadata": {
+    "authors": [
+      "Marijn van Wezel"
+    ]
+  },
+  "mwunit-extensionname": "The name of the extension (MWUnit)",
+  "mwunit-description": "A short description of the extension as it will appear on Special:Version"
+}
