@@ -25,7 +25,7 @@ class IsEmpty implements Assertion {
 		$haystack = trim( $frame->expand( $args[0] ) );
 		$failure_message = isset( $args[1] ) ?
 			trim( $frame->expand( $args[1] ) ) :
-				wfMessage( "mwunit-assert-failure-is_empty", $haystack )->plain();
+				wfMessage( "mwunit-assert-failure-empty", $haystack )->plain();
 
 		Assert::report( empty( $haystack ), $failure_message );
 	}
