@@ -20,5 +20,7 @@ $magicWords['en'] = [
 	'assert_string_ends_with' => [ 0, 'assert_string_ends_with' ],
 	'assert_string_starts_with' => [ 0, 'assert_string_starts_with' ],
 	'assert_error' => [ 0, 'assert_error' ],
-	'assert_no_error' => [ 0, 'assert_no_error' ]
+	'assert_no_error' => [ 0, 'assert_no_error' ],
+	'assert_that' => [ 0, 'assert_that' ],
+	'assert_not_empty' => [ 0, 'assert_not_empty' ]
 ];
