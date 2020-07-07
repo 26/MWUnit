@@ -154,6 +154,14 @@ class MWUnit {
 			],
 			Parser::SFH_OBJECT_ARGS
 		);
+
+		$parser->setFunctionHook(
+			'assert_that',
+			[
+				Assertion\That::class, 'assert'
+			],
+			Parser::SFH_OBJECT_ARGS
+		);
 	}
 
 	/**
