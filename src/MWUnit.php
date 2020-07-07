@@ -52,6 +52,14 @@ class MWUnit {
 		);
 
 		$parser->setFunctionHook(
+			'assert_not_empty',
+			[
+				Assertion\NotEmpty::class, 'assert'
+			],
+			Parser::SFH_OBJECT_ARGS
+		);
+
+		$parser->setFunctionHook(
 			'assert_equals',
 			[
 				Assertion\Equals::class, 'assert'
