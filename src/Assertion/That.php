@@ -24,8 +24,8 @@ class That implements Assertion {
 
 		$that = trim( $frame->expand( $args[0] ) );
 
-		$failure_message = isset( $args[2] ) ?
-			trim( $frame->expand( $args[2] ) ) :
+		$failure_message = isset( $args[1] ) ?
+			trim( $frame->expand( $args[1] ) ) :
 			wfMessage( "mwunit-assert-failure-that", $that )->plain();
 
 		Assert::report( filter_var( $that, FILTER_VALIDATE_BOOLEAN ), $failure_message );
