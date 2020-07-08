@@ -55,6 +55,11 @@ class UpdateHandler {
 			throw new \MWException( "Article ID musn't be `null`." );
 		}
 
+		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return true;
+		}
+
 		// Deregister all tests on the page and let the parser re-register them.
 		TestCaseRegister::deregisterTests( $article_id );
 
@@ -101,6 +106,11 @@ class UpdateHandler {
 			throw new \MWException( "Article ID musn't be `null`." );
 		}
 
+		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return true;
+		}
+
 		// Deregister all tests on the page and let the parser re-register them.
 		TestCaseRegister::deregisterTests( $article_id );
 
@@ -136,6 +146,11 @@ class UpdateHandler {
 
 		if ( $deleted_id === null ) {
 			throw new \MWException( "Deleted article ID mustn't be `null`." );
+		}
+
+		if ( $article->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return true;
 		}
 
 		TestCaseRegister::deregisterTests( $deleted_id );
