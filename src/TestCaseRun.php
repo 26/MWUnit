@@ -29,21 +29,21 @@ class TestCaseRun {
 
 	public function runTest() {
 		$context_option = $this->test_case->getOption( 'context' );
-		if ( $context_option !== false ) {
-			switch ( $context_option ) {
-				case 'canonical':
-					$context = 'canonical';
-					break;
-				case 'user':
-					$context = $this->test_case->getParser()->getUser();
-					break;
-				default:
-					self::$test_result->setRisky();
-					self::$test_result->setRiskyMessage( 'mwunit-invalid-context' );
-					return;
-			}
-		} else {
-			$context = 'canonical';
+
+		switch ( $context_option ) {
+			case 'canonical':
+			case false:
+				global $wgVersion;
+				$context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
+
+				break;
+			case 'user':
+				$context = $this->test_case->getParser()->getUser();
+				break;
+			default:
+				self::$test_result->setRisky();
+				self::$test_result->setRiskyMessage( 'mwunit-invalid-context' );
+				return;
 		}
 
 		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
