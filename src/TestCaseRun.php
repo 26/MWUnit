@@ -35,7 +35,6 @@ class TestCaseRun {
 			case false:
 				global $wgVersion;
 				$context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
-
 				break;
 			case 'user':
 				$context = $this->test_case->getParser()->getUser();

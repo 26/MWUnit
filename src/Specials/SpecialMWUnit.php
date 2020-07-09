@@ -316,13 +316,13 @@ class SpecialMWUnit extends \SpecialPage {
 		$assertions = $result->getAssertionResults();
 
 		foreach ( $assertions as $assertion ) {
-			if ( $assertion->predicate_result === false ) {
+			if ( $assertion['predicate_result'] === false ) {
 				return sprintf(
 					'<div class="errorbox" style="display:block;"><p><span style="color:#d33"><b>%s</b></span> %s</p>' .
 							'<hr/><pre>%s</pre></div>',
 					$this->msg( 'mwunit-test-failed' ),
 					$this->renderTestHeader( $result ),
-					htmlspecialchars( $assertion->failure_message )
+					htmlspecialchars( $assertion['failure_message'] )
 				);
 			}
 		}

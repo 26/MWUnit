@@ -26,13 +26,13 @@ class TestResult {
 	}
 
 	/**
-	 * Adds the given AssertionResult object to the list of assertion results and automatically sets
+	 * Adds the given array to the list of assertion results and automatically sets
 	 * the TestResult object to failed if a failed assertion is given.
 	 *
-	 * @param AssertionResult $assertion_result
+	 * @param array $assertion_result
 	 */
-	public function addAssertionResult( AssertionResult $assertion_result ) {
-		if ( $assertion_result->predicate_result === false ) {
+	public function addAssertionResult( array $assertion_result ) {
+		if ( $assertion_result['predicate_result'] === false ) {
 			$this->setFailed();
 		}
 

@@ -2,7 +2,6 @@
 
 namespace MWUnit\Assertion;
 
-use MWUnit\AssertionResult;
 use MWUnit\TestCaseRun;
 
 /**
@@ -21,16 +20,16 @@ trait Assert {
 	public static function report( bool $predicate, string $failure_message ): bool {
 		if ( !$predicate ) {
 			TestCaseRun::$test_result->addAssertionResult(
-				new AssertionResult(
-					false,
-					$failure_message
-				)
+				[
+					'predicate_result' => false,
+					'failure_message' => $failure_message
+				]
 			);
 		} else {
 			TestCaseRun::$test_result->addAssertionResult(
-				new AssertionResult(
-					true
-				)
+				[
+					'predicate_result' => true
+				]
 			);
 		}
 
