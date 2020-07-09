@@ -298,7 +298,7 @@ class SpecialMWUnit extends \SpecialPage {
 			$summary_formatted = $summary === null ? $summary : "<hr/><pre>$summary</pre>";
 
 			return sprintf(
-				'<div class="warningbox"><p><span style="color:#fc3"><b>%s</b></span> %s</p>%s</div>',
+				'<div class="warningbox" style="display:block;"><p><span style="color:#fc3"><b>%s</b></span> %s</p>%s</div>',
 				$this->msg( 'mwunit-test-risky' ),
 				$this->renderTestHeader( $result ),
 				$summary_formatted
@@ -307,7 +307,7 @@ class SpecialMWUnit extends \SpecialPage {
 
 		if ( $result->didTestSucceed() ) {
 			return sprintf(
-				'<div class="successbox"><p><span style="color:#14866d"><b>%s</b></span> %s</p></div>',
+				'<div class="successbox" style="display:block;"><p><span style="color:#14866d"><b>%s</b></span> %s</p></div>',
 				$this->msg( 'mwunit-test-success' ),
 				$this->renderTestHeader( $result )
 			);
@@ -318,7 +318,7 @@ class SpecialMWUnit extends \SpecialPage {
 		foreach ( $assertions as $assertion ) {
 			if ( $assertion->predicate_result === false ) {
 				return sprintf(
-					'<div class="errorbox"><p><span style="color:#d33"><b>%s</b></span> %s</p>' .
+					'<div class="errorbox" style="display:block;"><p><span style="color:#d33"><b>%s</b></span> %s</p>' .
 							'<hr/><pre>%s</pre></div>',
 					$this->msg( 'mwunit-test-failed' ),
 					$this->renderTestHeader( $result ),
