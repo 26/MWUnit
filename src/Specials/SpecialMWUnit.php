@@ -22,6 +22,8 @@ class SpecialMWUnit extends \SpecialPage {
 	 */
 	public function __construct() {
 		parent::__construct( "MWUnit", 'mwunit-runtests' );
+
+		set_time_limit( $this->getConfig()->get( 'MWUnitMaxTestExecutionTime' ) );
 	}
 
 	/**
