@@ -71,7 +71,7 @@ class TestCase {
 			throw new Exception\TestCaseException( 'mwunit-missing-group' );
 		}
 
-		if ( strlen( $group ) > 255 || preg_match( '/^[A-Za-z0-9_\-]+$/', $group ) !== 1 ) {
+		if ( strlen( $group ) > 255 || preg_match( '/^[A-Za-z0-9_\- ]+$/', $group ) !== 1 ) {
 			throw new Exception\TestCaseException( 'mwunit-invalid-group-name', [ $group ] );
 		}
 

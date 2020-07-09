@@ -12,7 +12,7 @@
   "mwunit-missing-test-name": "This test is missing the required parameter \"name\".",
   "mwunit-missing-group": "This test is missing the required parameter \"group\".",
   "mwunit-invalid-test-name": "The test name `$1` is not a valid test name. A test name may only contain the characters <code>a-zA-Z0-9_-</code>.",
-  "mwunit-invalid-group-name": "The group name `$1` is not a valid test name. A group name may only contain the characters <code>a-zA-Z0-9_-</code>.",
+  "mwunit-invalid-group-name": "The group name `$1` is not a valid test name. A group name may only contain the characters <code>a-zA-Z0-9_- </code>.",
   "mwunit-duplicate-test": "A test with the name `$1` has already been registered. This test will still be run, but error reporting will be sacrificed.",
   "mwunit-outside-test-namespace": "MWUnit may not be used outside the 'Test' namespace.",
   "mwunit-special-title": "Run unit tests",
