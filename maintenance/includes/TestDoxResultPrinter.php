@@ -24,7 +24,7 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 
 			if ( $title === null || $title === false ) return;
 
-			print ( "\n" . $title->getText() . "\n" );
+			print ( $title->getText() . "\n" );
 		}
 
 		switch ( $result->getResult() ) {
@@ -75,6 +75,12 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 		$parts = array_map( function ( $part ): string {
 			return ucfirst( trim( $part, '_- ' ) );
 		}, $parts );
+
+		$first_element = array_shift( $parts );
+
+		if ( $first_element !== "Test" ) {
+			array_unshift( $parts, $first_element );
+		}
 
 		return implode( " ", $parts );
 	}
