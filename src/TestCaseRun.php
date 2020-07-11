@@ -93,7 +93,6 @@ class TestCaseRun {
 			$this->globals[ '_POST' ]   	= $_POST;
 			$this->globals[ '_FILES' ]  	= $_FILES;
 			$this->globals[ '_COOKIE' ] 	= $_COOKIE;
-			$this->globals[ '_SESSION' ]	= $_SESSION;
 			$this->globals[ '_REQUEST' ]	= $_REQUEST;
 			$this->globals[ '_ENV' ]    	= $_ENV;
 		}
@@ -108,7 +107,6 @@ class TestCaseRun {
 			$_POST    	= $this->globals[ '_POST' ];
 			$_FILES   	= $this->globals[ '_FILES' ];
 			$_COOKIE  	= $this->globals[ '_COOKIE' ];
-			$_SESSION 	= $this->globals[ '_SESSION' ];
 			$_REQUEST 	= $this->globals[ '_REQUEST' ];
 			$_ENV 	  	= $this->globals[ '_ENV' ];
 		}
