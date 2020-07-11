@@ -133,4 +133,29 @@ class TestResult {
 	public function getAssertionCount(): int {
 		return count( $this->assertion_results );
 	}
+
+	/**
+	 * Returns the result constant for this test.
+	 *
+	 * @return int
+	 */
+	public function getResult(): int {
+		return $this->test_result;
+	}
+
+	/**
+	 * Returns the string variant of this test result. Used in the CLI runner.
+	 *
+	 * @return string
+	 */
+	public function toString(): string {
+		switch ( $this->test_result ) {
+			case self::T_SUCCESS:
+				return ".";
+			case self::T_RISKY:
+				return "\033[43mR\033[0m";
+			default:
+				return "\033[41mF\033[0m";
+		}
+	}
 }

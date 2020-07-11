@@ -45,5 +45,10 @@ class TestCaseRunner {
 		}
 
 		UnitTestRunner::$test_results[] = $run->getTestResult();
+
+		if ( is_callable( UnitTestRunner::$callback ) ) {
+			$callable = UnitTestRunner::$callback;
+			$callable( $run->getTestResult() );
+		}
 	}
 }

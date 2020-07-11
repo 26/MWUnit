@@ -7,7 +7,7 @@ class UnitTestRunner {
 	 * An associative array of the tests to be ran, where the key is the test identifier
 	 * and the value is the article ID the test is on.
 	 *
-	 * @var string
+	 * @var array
 	 */
 	public static $tests;
 
@@ -28,6 +28,8 @@ class UnitTestRunner {
 	 */
 	public static $total_test_count = 0;
 
+	public static $callback;
+
 	/**
 	 * UnitTestRunner constructor.
 	 * @param array $tests
@@ -40,13 +42,17 @@ class UnitTestRunner {
 
 	/**
 	 * Runs all tests in the group specified in the constructor.
+	 *
+	 * @param callable|null $callback Callback function that gets called after every completed test
 	 */
-	public function run() {
+	public function run( callable $callback = null ) {
 		$pages = array_unique( array_values( self::$tests ) );
 
 		if ( count( $pages ) === 0 ) {
 			return;
 		}
+
+		self::$callback = $callback;
 
 		foreach ( $pages as $page ) {
 			$this->runTestsOnPage( $page );
@@ -85,7 +91,7 @@ class UnitTestRunner {
 	 *
 	 * @return int
 	 */
-	public function getFailuresCount(): int {
+	public function getNotPassedCount(): int {
 		$failures = 0;
 		foreach ( self::$test_results as $result ) {
 			if ( !$result->didTestSucceed() ) { $failures++;
@@ -93,6 +99,39 @@ class UnitTestRunner {
 		}
 
 		return $failures;
+	}
+
+	/**
+	 * Returns an array of failed TestResult objects.
+	 *
+	 * @return array
+	 */
+	public function getFailedTests(): array {
+		return array_filter( $this->getResults(), function ( TestResult $result ) {
+			return $result->getResult() === TestResult::T_FAILED;
+		} );
+	}
+
+	/**
+	 * Returns an array of risky TestResult objects.
+	 *
+	 * @return array
+	 */
+	public function getRiskyTests(): array {
+		return array_filter( $this->getResults(), function ( TestResult $result ) {
+			return $result->getResult() === TestResult::T_RISKY;
+		} );
+	}
+
+	/**
+	 * Returns an array of successful TestResult objects.
+	 *
+	 * @return array
+	 */
+	public function getSuccessfulTests(): array {
+		return array_filter( $this->getResults(), function ( TestResult $result ) {
+			return $result->getResult() === TestResult::T_SUCCESS;
+		} );
 	}
 
 	/**

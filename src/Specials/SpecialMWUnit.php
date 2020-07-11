@@ -271,7 +271,7 @@ class SpecialMWUnit extends \SpecialPage {
 
 		$test_count = $this->runner->getTotalTestCount();
 		$assertion_count = $this->runner->getTotalAssertionsCount();
-		$failures_count = $this->runner->getFailuresCount();
+		$failures_count = $this->runner->getNotPassedCount();
 
 		$this->getOutput()->addHTML(
 			"<p>" . wfMessage( 'mwunit-test-result-intro' )->plain() . "</p>" .
