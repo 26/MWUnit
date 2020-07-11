@@ -6,7 +6,7 @@
   "author": [
     "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
   ],
-  "version": "0.6.1",
+  "version": "0.6.2",
   "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
   "description": "A unit testing framework for MediaWiki",
   "descriptionmsg": "mwunit-description",
@@ -47,6 +47,10 @@
     "MWUnitDefaultTestDox": {
       "value": false,
       "descriptionmsg": "mwunit-config-default-testdox"
+    },
+    "MWUnitBackupGlobals": {
+      "value": true,
+      "descriptionmsg": "mwunit-config-backup-globals"
     }
   },
   "namespaces": [

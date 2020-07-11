@@ -18,6 +18,11 @@ class TestCaseRun {
 	private $test_case;
 
 	/**
+	 * @var array
+	 */
+	private $globals;
+
+	/**
 	 * TestCaseRun constructor.
 	 * @param TestCase $test_case
 	 * @throws Exception\MWUnitException
@@ -45,16 +50,18 @@ class TestCaseRun {
 				return;
 		}
 
-		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
+		$this->backupGlobals();
 
 		// Run test cases
-		$parser->parse(
+		( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->parse(
 			$this->test_case->getInput(),
 			$this->test_case->getFrame()->getTitle(),
 			\ParserOptions::newCanonical( $context ),
 			true,
 			false
 		);
+
+		$this->restoreGlobals();
 	}
 
 	/**
@@ -73,5 +80,15 @@ class TestCaseRun {
 	 */
 	public function getTestResult(): TestResult {
 		return self::$test_result;
+	}
+
+	private function backupGlobals() {
+		$option = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
+		if ( $option ) $this->globals = $GLOBALS;
+	}
+
+	private function restoreGlobals() {
+		$option = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
+		if ( $option ) $GLOBALS = $this->globals;
 	}
 }
