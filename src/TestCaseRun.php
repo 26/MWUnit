@@ -52,16 +52,18 @@ class TestCaseRun {
 
 		$this->backupGlobals();
 
-		// Run test cases
-		( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->parse(
-			$this->test_case->getInput(),
-			$this->test_case->getFrame()->getTitle(),
-			\ParserOptions::newCanonical( $context ),
-			true,
-			false
-		);
-
-		$this->restoreGlobals();
+		try {
+			// Run test cases
+			( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->parse(
+				$this->test_case->getInput(),
+				$this->test_case->getFrame()->getTitle(),
+				\ParserOptions::newCanonical( $context ),
+				true,
+				false
+			);
+		} finally {
+			$this->restoreGlobals();
+		}
 	}
 
 	/**
@@ -84,11 +86,31 @@ class TestCaseRun {
 
 	private function backupGlobals() {
 		$option = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
-		if ( $option ) $this->globals = $GLOBALS;
+		if ( $option ) {
+			$this->globals[ 'GLOBALS' ] 	= $GLOBALS;
+			$this->globals[ '_SERVER' ] 	= $_SERVER;
+			$this->globals[ '_GET' ]    	= $_GET;
+			$this->globals[ '_POST' ]   	= $_POST;
+			$this->globals[ '_FILES' ]  	= $_FILES;
+			$this->globals[ '_COOKIE' ] 	= $_COOKIE;
+			$this->globals[ '_SESSION' ]	= $_SESSION;
+			$this->globals[ '_REQUEST' ]	= $_REQUEST;
+			$this->globals[ '_ENV' ]    	= $_ENV;
+		}
 	}
 
 	private function restoreGlobals() {
 		$option = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
-		if ( $option ) $GLOBALS = $this->globals;
+		if ( $option ) {
+			$GLOBALS  	= $this->globals[ 'GLOBALS' ];
+			$_SERVER  	= $this->globals[ '_SERVER' ];
+			$_GET	  	= $this->globals[ '_GET' ];
+			$_POST    	= $this->globals[ '_POST' ];
+			$_FILES   	= $this->globals[ '_FILES' ];
+			$_COOKIE  	= $this->globals[ '_COOKIE' ];
+			$_SESSION 	= $this->globals[ '_SESSION' ];
+			$_REQUEST 	= $this->globals[ '_REQUEST' ];
+			$_ENV 	  	= $this->globals[ '_ENV' ];
+		}
 	}
 }
