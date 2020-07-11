@@ -32,6 +32,10 @@ class TestCaseRun {
 		self::$test_result = new TestResult( MWUnit::getCanonicalTestNameFromTestCase( $test_case ) );
 	}
 
+	/**
+	 * @throws \FatalError
+	 * @throws \MWException
+	 */
 	public function runTest() {
 		$context_option = $this->test_case->getOption( 'context' );
 
@@ -53,6 +57,8 @@ class TestCaseRun {
 		$this->backupGlobals();
 
 		try {
+			\Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case ] );
+
 			// Run test cases
 			( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->parse(
 				$this->test_case->getInput(),

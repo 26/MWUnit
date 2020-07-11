@@ -16,6 +16,8 @@ class TestCaseHandler {
 	 * @param \PPFrame $frame The parent frame (PPFrame object)
 	 * @return string The output of the tag
 	 * @throws Exception\MWUnitException
+	 * @throws \FatalError
+	 * @throws \MWException
 	 * @internal
 	 */
 	public static function handleTestCase( $input, array $args, \Parser $parser, \PPFrame $frame ) {

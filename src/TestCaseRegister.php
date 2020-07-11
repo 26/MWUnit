@@ -14,10 +14,18 @@ class TestCaseRegister {
 	 * the test is located.
 	 *
 	 * @param TestCase $test_case
-	 * @throws Exception\TestCaseRegistrationException
 	 * @throws Exception\MWUnitException
+	 * @throws Exception\TestCaseRegistrationException
+	 * @throws \FatalError
+	 * @throws \MWException
 	 */
 	public static function register( TestCase $test_case ) {
+		$result = \Hooks::run( 'MWUnitBeforeRegisterTestCase', [ &$test_case ] );
+
+		if ( $result === false ) {
+			return;
+		}
+
 		self::$init_registered_tests[] = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
 
 		$database = wfGetDb( DB_MASTER );

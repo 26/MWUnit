@@ -24,6 +24,8 @@ class TestCaseRunner {
 	 * Runs the given TestCase.
 	 *
 	 * @throws Exception\MWUnitException
+	 * @throws \FatalError
+	 * @throws \MWException
 	 */
 	public function run() {
 		if ( !array_key_exists(
@@ -43,6 +45,8 @@ class TestCaseRunner {
 			$run::$test_result->setRisky();
 			TestCaseRun::$test_result->setRiskyMessage( 'mwunit-no-assertions' );
 		}
+
+		\Hooks::run( 'MWUnitAfterTestComplete', [ &$run ] );
 
 		UnitTestRunner::$test_results[] = $run->getTestResult();
 
