@@ -2,6 +2,8 @@
 
 namespace MWUnit;
 
+use MWUnit\Exception\MWUnitException;
+
 /**
  * Class TestCaseRun
  * @package MWUnit
@@ -11,6 +13,20 @@ class TestCaseRun {
 	 * @var TestResult
 	 */
 	public static $test_result;
+
+	/**
+	 * The name of the template that this test case covers, or false if it does not cover a template.
+	 *
+	 * @var bool|string
+	 */
+	private static $covered;
+
+	/**
+	 * A clone of the parser right before it encountered the first test case. Used for strict coverage checking.
+	 *
+	 * @var \Parser
+	 */
+	private static $initial_parser;
 
 	/**
 	 * @var TestCase
@@ -23,20 +39,49 @@ class TestCaseRun {
 	private $globals;
 
 	/**
+	 * Called when the parser fetches a template. Used for strict coverage checking.
+	 *
+	 * @param \Parser|bool $parser
+	 * @param \Title $title
+	 * @param \Revision $revision
+	 * @param string|false|null $text
+	 * @param array $deps
+	 */
+	public static function onParserFetchTemplate(
+		$parser,
+		\Title $title,
+		\Revision $revision,
+		&$text,
+		array &$deps
+	) {
+		if ( $title->getText() === self::$covered )
+			self::$test_result->setTemplateCovered();
+	}
+
+	/**
 	 * TestCaseRun constructor.
 	 * @param TestCase $test_case
 	 * @throws Exception\MWUnitException
 	 */
 	public function __construct( \MWUnit\TestCase $test_case ) {
 		$this->test_case = $test_case;
+
 		self::$test_result = new TestResult( MWUnit::getCanonicalTestNameFromTestCase( $test_case ) );
+		self::$covered = $test_case->getOption( 'covers' );
 	}
 
 	/**
 	 * @throws \FatalError
 	 * @throws \MWException
+	 * @throws MWUnitException
 	 */
 	public function runTest() {
+		// Store a clone of the initial parser, so we can properly perform coverage checks, without
+		// breaking fixtures and global state.
+		if ( !isset( self::$initial_parser ) ) {
+			self::$initial_parser  = clone( ( \MediaWiki\MediaWikiServices::getInstance() )->getParser() );
+		}
+
 		$context_option = $this->test_case->getOption( 'context' );
 
 		switch ( $context_option ) {
@@ -57,9 +102,13 @@ class TestCaseRun {
 		$this->backupGlobals();
 
 		try {
+			if ( !self::$covered || $this->isCoveredTemplateCached( self::$covered, self::$initial_parser ) ) {
+				self::$test_result->setTemplateCovered();
+			}
+
 			\Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case ] );
 
-			// Run test cases
+			// Run test case
 			( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->parse(
 				$this->test_case->getInput(),
 				$this->test_case->getFrame()->getTitle(),
@@ -67,6 +116,8 @@ class TestCaseRun {
 				true,
 				false
 			);
+
+			$this->checkTemplateCoverage();
 		} finally {
 			$this->restoreGlobals();
 		}
@@ -90,6 +141,9 @@ class TestCaseRun {
 		return self::$test_result;
 	}
 
+	/**
+	 * Backs up globals.
+	 */
 	private function backupGlobals() {
 		$option = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
 		if ( $option ) {
@@ -104,9 +158,17 @@ class TestCaseRun {
 		}
 	}
 
+	/**
+	 * Restores globals backed up previously. This function should not be called before backupGlobals() is called.
+	 * @throws MWUnitException
+	 */
 	private function restoreGlobals() {
 		$option = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
 		if ( $option ) {
+			if ( !isset( $this->globals ) ) {
+				throw new MWUnitException( 'mwunit-globals-restored-before-backup' );
+			}
+
 			$GLOBALS  	= $this->globals[ 'GLOBALS' ];
 			$_SERVER  	= $this->globals[ '_SERVER' ];
 			$_GET	  	= $this->globals[ '_GET' ];
@@ -115,6 +177,55 @@ class TestCaseRun {
 			$_COOKIE  	= $this->globals[ '_COOKIE' ];
 			$_REQUEST 	= $this->globals[ '_REQUEST' ];
 			$_ENV 	  	= $this->globals[ '_ENV' ];
+		}
+	}
+
+	/**
+	 * Returns true if and only if the template that is covered is cached.
+	 *
+	 * @param string $template
+	 * @param \Parser $parser
+	 * @return bool
+	 * @internal
+	 */
+	private function isCoveredTemplateCached( string $template, \Parser $parser ): bool {
+		if ( !$template ) {
+			return false;
+		}
+
+		$title = \Title::newFromText( $template, NS_TEMPLATE );
+
+		if ( $title === false || $title === null ) {
+			return false;
+		}
+
+		$titleText = $title->getPrefixedDBkey();
+
+		if ( isset( $parser->mTplRedirCache[$titleText] ) ) {
+			list( $ns, $dbk ) = $parser->mTplRedirCache[$titleText];
+			$title = \Title::makeTitle( $ns, $dbk );
+			$titleText = $title->getPrefixedDBkey();
+		}
+
+		if ( isset( $parser->mTplDomCache[$titleText] ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks if the template specified in "covers" is covered and marks $test_result accordingly.
+	 * @internal
+	 */
+	private function checkTemplateCoverage() {
+		$strict_coverage = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get(
+				'MWUnitStrictCoverage'
+			) && $this->test_case->getOption( 'ignorestrictcoverage' ) === false;
+
+		if ( $strict_coverage && !self::$test_result->isTemplateCovered() ) {
+			self::$test_result->setRisky();
+			self::$test_result->setRiskyMessage( 'mwunit-strict-coverage-violation' );
 		}
 	}
 }

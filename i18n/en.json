@@ -11,6 +11,7 @@
   "mwunit-invalid-article": "Invalid article ID.",
   "mwunit-missing-test-name": "This test is missing the required parameter \"name\".",
   "mwunit-missing-group": "This test is missing the required parameter \"group\".",
+  "mwunit-missing-covers-annotation": "The test `$1` is missing the <code>@covers</code> annotation. A test must have the <code>@covers</code> annotation, since <code>$wgMWUnitForceCoversAnnotation</code> is set to <code>true</code>.",
   "mwunit-invalid-test-name": "The test name `$1` is not a valid test name. A test name may only contain the characters <code>a-zA-Z0-9_-</code>.",
   "mwunit-invalid-group-name": "The group name `$1` is not a valid test name. A group name may only contain the characters <code>a-zA-Z0-9_- </code>.",
   "mwunit-duplicate-test": "A test with the name `$1` has already been registered. This test will still be run, but error reporting will be sacrificed.",
@@ -33,6 +34,7 @@
   "mwunit-test-failed": "Failed:",
   "mwunit-expected": "Expected",
   "mwunit-actual": "Actual",
+  "mwunit-strict-coverage-violation": "This test is marked as risky, because the template specified in the 'covers' annotation is never used during the test. This check can be disabled by setting <code>$wgMWUnitStrictCoverage</code> to <code>false</code> or by annotating this test with <code>ignoreStrictCoverage</code>.",
   "mwunit-assert-failure-equal": "Failed asserting that two strings are equal.",
   "mwunit-assert-failure-contains-string": "Failed asserting that \"$2\" contains \"$1\".",
   "mwunit-assert-failure-string-starts-with": "Failed asserting that \"$2\" starts with \"$1\".",
@@ -54,7 +56,13 @@
   "specialpages-group-mwunit": "Unit testing",
   "mwunit-sidebar-header": "Unit testing",
   "mwunit-sidebar-run-tests": "Run unit tests",
+  "mwunit-sidebar-run-tests-for-template": "Run associated unit tests",
   "mwunit-no-assertions": "This test is marked as risky, because it contains 0 assertions.",
   "mwunit-invalid-context": "This test is marked as risky, because the given context is invalid. The context option must either be <i>empty</i>, 'canonical', or 'user'.",
-  "mwunit-invalid-assertion": "This test is marked as risky, because at least one assertion has one or more invalid parameters."
+  "mwunit-invalid-assertion": "This test is marked as risky, because at least one assertion has one or more invalid parameters.",
+  "mwunit-config-max-test-execution-time": "The maximum execution time for (all tests in) a test run",
+  "mwunit-config-default-testdox": "Whether or not TestDox is the default result printer for the command-line test runner",
+  "mwunit-config-backup-globals": "Whether or not to backup before and restore PHP globals and superglobals after every test case",
+  "mwunit-config-strict-coverage": "Whether or not to to be strict about untruthful covers annotations. A test that is annotated with @covers and does not execute the template listed in that @covers annotation, will be marked as risky when this check is enabled.",
+  "mwunit-config-force-covers-annotation": "Whether or not to force the @covers annotation. Tests without the @covers annotation will not be executed when this check is enabled."
 }

@@ -75,6 +75,13 @@ class TestCase {
 			throw new Exception\TestCaseException( 'mwunit-invalid-group-name', [ $group ] );
 		}
 
+		$force_covers = \MediaWiki\MediaWikiServices::getInstance()
+			->getMainConfig()
+			->get( 'MWUnitForceCoversAnnotation' );
+		if ( $force_covers && !isset( $tag_arguments[ 'covers' ] ) ) {
+			throw new Exception\TestCaseException( 'mwunit-missing-covers-annotation', [ $name ] );
+		}
+
 		return new TestCase( $tag_input, $name, $group, $tag_arguments, $parser, $frame );
 	}
 

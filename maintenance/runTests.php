@@ -38,6 +38,7 @@ class RunTests extends \Maintenance {
 		$this->addOption( 'group', 'Only run tests from the specified group', false, true, 'g' );
 		$this->addOption( 'test', 'Only run the specified test', false, true, 't' );
 		$this->addOption( 'testsuite', 'Filter which testsuite to run', false, true, 's' );
+		$this->addOption( 'covers', 'Only run tests that cover the specified template (without namespace)', false, true, 'c' );
 		$this->addOption( 'list-groups', 'List available test groups' );
 		$this->addOption( 'list-suites', 'List available test suites' );
 		$this->addOption( 'list-tests', 'List available tests' );
@@ -83,8 +84,9 @@ class RunTests extends \Maintenance {
 		$group = $this->getOption( 'group', false );
 		$test = $this->getOption( 'test', false );
 		$testsuite = $this->getOption( 'testsuite', false );
+		$covers = $this->getOption( 'covers', false );
 
-		if ( !$group && !$test && !$testsuite ) {
+		if ( !$group && !$test && !$testsuite && !$covers ) {
 			$this->fatalError( "No tests to run." );
 		}
 
@@ -223,6 +225,7 @@ class RunTests extends \Maintenance {
 		$group = $this->getOption( 'group', false );
 		$test = $this->getOption( 'test', false );
 		$testsuite = $this->getOption( 'testsuite', false );
+		$covers = $this->getOption( 'covers', false );
 
 		if ( $group !== false ) {
 			// Run group
@@ -235,13 +238,24 @@ class RunTests extends \Maintenance {
 
 		if ( $testsuite !== false ) {
 			// Run testsuite
-			$title = \Title::newFromText( "Test:" . $testsuite );
+			$title = \Title::newFromText( $testsuite, NS_TEST );
 
 			if ( $title === null || $title === false || !$title->exists() ) {
 				$this->fatalError( "The given testsuite '$testsuite' does not exist." );
 			}
 
 			return \MWUnit\TestCaseRegister::getTestsFromTitle( $title );
+		}
+
+		if ( $covers !== false ) {
+			// Run tests covering template
+			$title = \Title::newFromText( $covers, NS_TEMPLATE );
+
+			if ( $title === null || $title === false || !$title->exists() ) {
+				$this->fatalError( "The given template '$covers' does not exist." );
+			}
+
+			return \MWUnit\TestCaseRegister::getTestsCoveringTemplate( $title );
 		}
 
 		// Run test
@@ -251,11 +265,16 @@ class RunTests extends \Maintenance {
 
 		list( $page_title, $name ) = explode( '::', $test );
 
-		if ( !\MWUnit\TestCaseRegister::testExists( "Test:" . $page_title, $name ) ) {
+		$title = \Title::newFromText( $page_title, NS_TEST );
+
+		if ( $title === null  ||
+			$title === false  ||
+			!$title->exists() ||
+			!\MWUnit\TestCaseRegister::testExists( $title->getFullText(), $name ) ) {
 			$this->fatalError( "The test '$test' does not exist." );
 		}
 
-		$tests[ $test ] = ( \Title::newFromText( "Test:" . $page_title ) )->getArticleID();
+		$tests[ $test ] = $title->getArticleID();
 
 		return $tests;
 	}

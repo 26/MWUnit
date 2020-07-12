@@ -61,14 +61,17 @@ class TestCaseRegister {
 			);
 		}
 
-		$database->insert(
-			'tests',
-			[
-				'article_id' => $test_case->getParser()->getTitle()->getArticleID(),
-				'test_group' => $test_case->getGroup(),
-				'test_name'  => $test_case->getName()
-			]
-		);
+		$data = [
+			'article_id' => $test_case->getParser()->getTitle()->getArticleID(),
+			'test_group' => $test_case->getGroup(),
+			'test_name'  => $test_case->getName()
+		];
+
+		if ( $test_case->getOption( 'covers' ) ) {
+			$data[ 'covers' ] = $test_case->getOption( 'covers' );
+		}
+
+		$database->insert( 'tests', $data );
 	}
 
 	/**
@@ -157,7 +160,7 @@ class TestCaseRegister {
 	 * @return array
 	 * @throws Exception\MWUnitException
 	 */
-	public static function getTestsFromTitle( \Title $title ) {
+	public static function getTestsFromTitle( \Title $title ): array {
 		$article_id = $title->getArticleID();
 		$result = wfGetDb( DB_REPLICA )->select(
 			'tests',
@@ -177,5 +180,60 @@ class TestCaseRegister {
 		}
 
 		return $tests;
+	}
+
+	/**
+	 * Returns an array of tests that cover the given Title object. The given page must be an existing template,
+	 * else an empty array is returned.
+	 *
+	 * @param \Title $title
+	 * @return array
+	 * @throws Exception\MWUnitException
+	 */
+	public static function getTestsCoveringTemplate( \Title $title ): array {
+		if ( !$title->exists() ) return [];
+		if ( $title->getNamespace() !== NS_TEMPLATE ) return [];
+
+		$template_name = $title->getText();
+
+		$result = wfGetDb( DB_REPLICA )->select(
+			'tests',
+			[ 'article_id', 'test_name' ],
+			[ 'covers' => $template_name ],
+			'Database::select',
+			'DISTINCT'
+		);
+
+		$tests = [];
+		$test_count = $result->numRows();
+
+		for ( $i = 0; $i < $test_count; $i++ ) {
+			$row = $result->current();
+			$tests[ MWUnit::getCanonicalTestName( (int)$row->article_id, $row->test_name ) ] = (int)$row->article_id;
+			$result->next();
+		}
+
+		return $tests;
+	}
+
+	/**
+	 * Returns true if and only if the given Title object exists, is a template and has tests written for it.
+	 *
+	 * @param \Title $title
+	 * @return bool
+	 */
+	public static function isTemplateCovered( \Title $title ): bool {
+		if ( !$title->exists() ) return false;
+		if ( $title->getNamespace() !== NS_TEMPLATE ) return false;
+
+		$template_name = $title->getText();
+
+		return wfGetDb( DB_REPLICA )->select(
+			'tests',
+			[ 'article_id' ],
+			[ 'covers' => $template_name ],
+			'Database::select',
+			'DISTINCT'
+		)->numRows() > 0;
 	}
 }

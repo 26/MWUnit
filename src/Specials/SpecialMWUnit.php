@@ -104,18 +104,41 @@ class SpecialMWUnit extends \SpecialPage {
 				$this->getRequest()->getVal( 'unitTestIndividual' )
 			);
 
-			if ( !\MWUnit\TestCaseRegister::testExists( "Test:" . $page_title, $name ) ) {
+			$title = \Title::newFromText( $page_title, NS_TEST );
+
+			if ( $title === null || $title === false || !$title->exists() ) {
 				return false;
 			}
 
-			$title = \Title::newFromText( "Test:" . $page_title );
-			if ( $title === null || $title === false || !$title->exists() ) {
+			if ( !\MWUnit\TestCaseRegister::testExists( $title->getFullText(), $name ) ) {
 				return false;
 			}
 
 			$this->runner = new \MWUnit\UnitTestRunner( [
 				$this->getRequest()->getVal( 'unitTestIndividual' ) => $title->getArticleID()
 			] );
+			$this->runner->run();
+		} elseif ( $this->getRequest()->getVal( 'unitTestCoverTemplate' ) ) {
+			$title = \Title::newFromText(
+				$this->getRequest()->getVal( 'unitTestCoverTemplate' ),
+				NS_TEMPLATE
+			);
+
+			if ( $title === null || $title === false || !$title->exists() ) {
+				return false;
+			}
+
+			try {
+				$tests = \MWUnit\TestCaseRegister::getTestsCoveringTemplate($title);
+			} catch (MWUnitException $e) {
+				return false;
+			}
+
+			if ( count( $tests ) === 0 ) {
+				return false;
+			}
+
+			$this->runner = new \MWUnit\UnitTestRunner( $tests );
 			$this->runner->run();
 		} else {
 			// Run the specified page
@@ -380,6 +403,8 @@ class SpecialMWUnit extends \SpecialPage {
 			|| $this->getRequest()->getVal( 'unitTestIndividual' ) !== null &&
 				!empty( $this->getRequest()->getVal( 'unitTestIndividual' ) )
 			|| $this->getRequest()->getVal( 'unitTestPage' ) !== null &&
-				!empty( $this->getRequest()->getVal( 'unitTestPage' ) );
+				!empty( $this->getRequest()->getVal( 'unitTestPage' ) )
+			|| $this->getRequest()->getVal( 'unitTestCoverTemplate' ) &&
+				!empty( $this->getRequest()->getVal( 'unitTestCoverTemplate' ) );
 	}
 }

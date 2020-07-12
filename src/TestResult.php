@@ -18,6 +18,11 @@ class TestResult {
 	private $risky_message = '';
 
 	/**
+	 * @var bool
+	 */
+	private $covers = false;
+
+	/**
 	 * TestResult constructor.
 	 * @param string $canonical_testname
 	 */
@@ -141,6 +146,22 @@ class TestResult {
 	 */
 	public function getResult(): int {
 		return $this->test_result;
+	}
+
+	/**
+	 * Sets the coverage report for the "covers" template to true.
+	 */
+	public function setTemplateCovered() {
+		$this->covers = true;
+	}
+
+	/**
+	 * Returns true if and only if the template in the "covers" annotation got used in this test case.
+	 *
+	 * @return bool
+	 */
+	public function isTemplateCovered() {
+		return $this->covers;
 	}
 
 	/**

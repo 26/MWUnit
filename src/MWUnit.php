@@ -199,6 +199,22 @@ class MWUnit {
 	 * @return bool
 	 */
 	public static function skinBuildSidebar( \Skin $skin, array &$sidebar ) {
+		if ( $skin->getTitle()->getNamespace() === NS_TEMPLATE &&
+			TestCaseRegister::isTemplateCovered( $skin->getTitle() ) ) {
+			$special_title = \Title::newFromText( 'Special:MWUnit' );
+			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
+				[
+					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' ),
+					'href' => $special_title->getFullURL( [
+						'unitTestCoverTemplate' => $skin->getTitle()->getText()
+					] ),
+					'id' => 'mwunit-sb-run',
+					'active' => ''
+				]
+			];
+			return true;
+		}
+
 		if ( $skin->getTitle()->getNamespace() !== NS_TEST ) {
 			return true;
 		}
