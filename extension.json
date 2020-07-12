@@ -33,8 +33,7 @@
     "LoadExtensionSchemaUpdates": "MWUnit\\MWUnit::onLoadExtensionSchemaUpdates",
     "PageContentSaveComplete": "MWUnit\\UpdateHandler::onPageContentSaveComplete",
     "PageContentInsertComplete": "MWUnit\\UpdateHandler::onPageContentInsertComplete",
-    "ArticleDelete": "MWUnit\\UpdateHandler::onArticleDelete",
-    "SkinBuildSidebar": "MWUnit\\MWUnit::skinBuildSidebar",
+    "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
     "ParserFetchTemplate": "MWUnit\\TestCaseRun::onParserFetchTemplate"
   },
   "SpecialPages": {
