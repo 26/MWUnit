@@ -198,7 +198,7 @@ class MWUnit {
 	 * @param array &$sidebar
 	 * @return bool
 	 */
-	public static function skinBuildSidebar( \Skin $skin, array &$sidebar ) {
+	public static function onSkinBuildSidebar( \Skin $skin, array &$sidebar ) {
 		if ( $skin->getTitle()->getNamespace() === NS_TEMPLATE &&
 			TestCaseRegister::isTemplateCovered( $skin->getTitle() ) ) {
 			$special_title = \Title::newFromText( 'Special:MWUnit' );
@@ -220,7 +220,6 @@ class MWUnit {
 		}
 
 		$special_title = \Title::newFromText( 'Special:MWUnit' );
-
 		$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
 			[
 				'text' => wfMessage( 'mwunit-sidebar-run-tests' ),
