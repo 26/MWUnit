@@ -64,12 +64,12 @@
   },
   "namespaces": [
     {
-      "id": 4500,
+      "id": 5750,
       "constant": "NS_TEST",
       "name": "Test"
     },
     {
-      "id": 4501,
+      "id": 5751,
       "constant": "NS_TEST_TALK",
       "name": "Test_talk"
     }
