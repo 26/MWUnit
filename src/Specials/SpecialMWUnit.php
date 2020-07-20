@@ -22,7 +22,6 @@ class SpecialMWUnit extends \SpecialPage {
 	 */
 	public function __construct() {
 		parent::__construct( "MWUnit", 'mwunit-runtests' );
-
 		set_time_limit( $this->getConfig()->get( 'MWUnitMaxTestExecutionTime' ) );
 	}
 
@@ -59,11 +58,11 @@ class SpecialMWUnit extends \SpecialPage {
 						->rawParams( $this->getLanguage()->pipeList( [
 							$this->getLinkRenderer()->makeLink(
 								\Title::newFromText( "Special:MWUnit" ),
-								new \HtmlArmor( $this->msg( 'mwunit-nav-home' ) )
+								new \HtmlArmor( wfMessage( 'mwunit-nav-home' )->plain() )
 							)
 						] ) )
 						->text();
-			$nav = $this->msg( 'mwunit-nav-introtext' ) . $nav;
+			$nav = $this->msg( 'mwunit-nav-introtext' )->plain() . $nav;
 			$nav = \Xml::tags( 'div', [ 'class' => 'mw-mwunit-special-navigation' ], $nav );
 			$this->getOutput()->setSubtitle( $nav );
 

@@ -266,7 +266,7 @@ class MWUnit {
 	 */
 	public static function getCanonicalTestName( int $article_id, string $test_name ): string {
 		$title = \Title::newFromID( $article_id );
-		if ( $title === null || $title === false | !$title->exists() ) {
+		if ( $title === null || $title === false || !$title->exists() ) {
 			throw new MWUnitException( 'mwunit-invalid-article' );
 		}
 
@@ -276,11 +276,8 @@ class MWUnit {
 	/**
 	 * @param TestCase $testcase
 	 * @return string
-	 * @throws MWUnitException
 	 */
 	public static function getCanonicalTestNameFromTestCase( TestCase $testcase ): string {
-		$article_id = $testcase->getParser()->getTitle()->getArticleID();
-
-		return self::getCanonicalTestName( $article_id, $testcase->getName() );
+		return $testcase->getParser()->getTitle()->getText() . "::" . $testcase->getName();
 	}
 }

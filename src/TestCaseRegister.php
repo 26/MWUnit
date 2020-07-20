@@ -20,6 +20,11 @@ class TestCaseRegister {
 	 * @throws \MWException
 	 */
 	public static function register( TestCase $test_case ) {
+	    if ( !$test_case->getParser()->getTitle()->exists() ) {
+	        // This page has not yet been created.
+	        return;
+        }
+
 		$result = \Hooks::run( 'MWUnitBeforeRegisterTestCase', [ &$test_case ] );
 
 		if ( $result === false ) {
@@ -74,11 +79,11 @@ class TestCaseRegister {
 		$database->insert( 'tests', $data );
 	}
 
-	/**
-	 * Removes all test cases on a page from the database.
-	 *
-	 * @param int $article_id The article ID of the page from which the tests should be deregistered.
-	 */
+    /**
+     * Removes all test cases on a page from the database.
+     *
+     * @param integer $article_id The article ID of the page from which the tests should be deregistered.
+     */
 	public static function deregisterTests( int $article_id ) {
 		$database = wfGetDb( DB_MASTER );
 		$database->delete(
