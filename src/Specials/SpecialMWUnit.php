@@ -22,6 +22,7 @@ class SpecialMWUnit extends \SpecialPage {
 	 */
 	public function __construct() {
 		parent::__construct( "MWUnit", 'mwunit-runtests' );
+
 		set_time_limit( $this->getConfig()->get( 'MWUnitMaxTestExecutionTime' ) );
 	}
 
@@ -48,21 +49,15 @@ class SpecialMWUnit extends \SpecialPage {
 	 * @throws \MWException
 	 */
 	public function execute( $subpage ) {
-		if ( $this->shouldRunTests() ) {
-			if ( !$this->runTests() ) {
-				$this->showForms();
-				return;
-			}
-
+		if ( $this->shouldRunTests() && $this->runTests() ) {
 			$nav = $this->msg( 'parentheses' )
 						->rawParams( $this->getLanguage()->pipeList( [
 							$this->getLinkRenderer()->makeLink(
 								\Title::newFromText( "Special:MWUnit" ),
-								new \HtmlArmor( wfMessage( 'mwunit-nav-home' )->plain() )
+								new \HtmlArmor( $this->msg( 'mwunit-nav-home' ) )
 							)
-						] ) )
-						->text();
-			$nav = $this->msg( 'mwunit-nav-introtext' )->plain() . $nav;
+						] ) )->text();
+			$nav = $this->msg( 'mwunit-nav-introtext' ) . $nav;
 			$nav = \Xml::tags( 'div', [ 'class' => 'mw-mwunit-special-navigation' ], $nav );
 			$this->getOutput()->setSubtitle( $nav );
 
@@ -128,8 +123,8 @@ class SpecialMWUnit extends \SpecialPage {
 			}
 
 			try {
-				$tests = \MWUnit\TestCaseRegister::getTestsCoveringTemplate($title);
-			} catch (MWUnitException $e) {
+				$tests = \MWUnit\TestCaseRegister::getTestsCoveringTemplate( $title );
+			} catch ( MWUnitException $e ) {
 				return false;
 			}
 
@@ -233,7 +228,7 @@ class SpecialMWUnit extends \SpecialPage {
 	private function getTestGroupsDescriptor(): array {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
-			'tests',
+			'mwunit_tests',
 			'test_group',
 			[],
 			'Database::select',
@@ -259,7 +254,7 @@ class SpecialMWUnit extends \SpecialPage {
 	private function getIndividualTestDescriptor(): array {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
-			'tests',
+			'mwunit_tests',
 			[ 'article_id', 'test_name' ],
 			[],
 			'Database::select',
@@ -322,7 +317,9 @@ class SpecialMWUnit extends \SpecialPage {
 			$summary_formatted = $summary === null ? $summary : "<hr/><pre>$summary</pre>";
 
 			return sprintf(
-				'<div class="warningbox" style="display:block;"><p><span style="color:#fc3"><b>%s</b></span> %s</p>%s</div>',
+				'<div class="warningbox" style="display:block;">' .
+							'<p><span style="color:#fc3"><b>%s</b></span> %s</p>%s' .
+						'</div>',
 				$this->msg( 'mwunit-test-risky' ),
 				$this->renderTestHeader( $result ),
 				$summary_formatted
@@ -331,7 +328,9 @@ class SpecialMWUnit extends \SpecialPage {
 
 		if ( $result->didTestSucceed() ) {
 			return sprintf(
-				'<div class="successbox" style="display:block;"><p><span style="color:#14866d"><b>%s</b></span> %s</p></div>',
+				'<div class="successbox" style="display:block;">' .
+							'<p><span style="color:#14866d"><b>%s</b></span> %s</p>' .
+						'</div>',
 				$this->msg( 'mwunit-test-success' ),
 				$this->renderTestHeader( $result )
 			);

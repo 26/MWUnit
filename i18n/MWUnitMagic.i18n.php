@@ -22,5 +22,7 @@ $magicWords['en'] = [
 	'assert_error' => [ 0, 'assert_error' ],
 	'assert_no_error' => [ 0, 'assert_no_error' ],
 	'assert_that' => [ 0, 'assert_that' ],
-	'assert_not_empty' => [ 0, 'assert_not_empty' ]
+	'assert_not_empty' => [ 0, 'assert_not_empty' ],
+	'assert_has_property' => [ 0, 'assert_has_property' ],
+	'assert_property_has_value' => [ 0, 'assert_property_has_value' ]
 ];

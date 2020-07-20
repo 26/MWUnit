@@ -28,6 +28,9 @@ class UnitTestRunner {
 	 */
 	public static $total_test_count = 0;
 
+	/**
+	 * @var callable
+	 */
 	public static $callback;
 
 	/**
@@ -44,6 +47,8 @@ class UnitTestRunner {
 	 * Runs all tests in the group specified in the constructor.
 	 *
 	 * @param callable|null $callback Callback function that gets called after every completed test
+	 * @throws \FatalError
+	 * @throws \MWException
 	 */
 	public function run( callable $callback = null ) {
 		$pages = array_unique( array_values( self::$tests ) );
@@ -52,8 +57,13 @@ class UnitTestRunner {
 			return;
 		}
 
-		self::$callback = $callback;
+		$result = \Hooks::run( 'MWUnitBeforeFirstTestHook', [ &$pages ] );
 
+		if ( !$result ) {
+			return;
+		}
+
+		self::$callback = $callback;
 		foreach ( $pages as $page ) {
 			$this->runTestsOnPage( $page );
 		}
@@ -94,7 +104,8 @@ class UnitTestRunner {
 	public function getNotPassedCount(): int {
 		$failures = 0;
 		foreach ( self::$test_results as $result ) {
-			if ( !$result->didTestSucceed() ) { $failures++;
+			if ( !$result->didTestSucceed() ) {
+				$failures++;
 			}
 		}
 
@@ -152,7 +163,7 @@ class UnitTestRunner {
 
 		try {
 			$content = $wiki_page->getRevision()->getContent( \Revision::RAW );
-			$parser  = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
+			$parser  = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->getFreshParser();
 			$text = \ContentHandler::getContentText( $content );
 		} catch ( \MWException $e ) {
 			return;

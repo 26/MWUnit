@@ -2,26 +2,11 @@
 
 namespace MWUnit\Assertion;
 
-use MWUnit\TestCaseRun;
-
 class StringContains implements Assertion {
-	use Assert;
-
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args ) {
-		// At least one assertion already failed
-		if ( !TestCaseRun::$test_result->didTestSucceed() ) {
-			return;
-		}
-
-		if ( !isset( $args[0] ) || !isset( $args[1] ) ) {
-			TestCaseRun::$test_result->setRisky();
-			TestCaseRun::$test_result->setRiskyMessage( 'mwunit-invalid-assertion' );
-			return;
-		}
-
+	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
 		$needle = trim( $frame->expand( $args[0] ) );
 		$haystack = trim( $frame->expand( $args[1] ) );
 
@@ -29,6 +14,13 @@ class StringContains implements Assertion {
 			trim( $frame->expand( $args[2] ) ) :
 			wfMessage( "mwunit-assert-failure-contains-string", $needle, $haystack )->plain();
 
-		Assert::report( strpos( $haystack, $needle ) !== false, $failure_message );
+		return strpos( $haystack, $needle ) !== false;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function getRequiredArgumentCount(): int {
+		return 2;
 	}
 }

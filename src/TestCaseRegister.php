@@ -35,7 +35,7 @@ class TestCaseRegister {
 
 		$database = wfGetDb( DB_MASTER );
 		$result = $database->select(
-			'tests',
+			'mwunit_tests',
 			[
 				'article_id'
 			],
@@ -66,17 +66,19 @@ class TestCaseRegister {
 			);
 		}
 
-		$data = [
+		$database->insert( 'mwunit_tests', [
 			'article_id' => $test_case->getParser()->getTitle()->getArticleID(),
 			'test_group' => $test_case->getGroup(),
 			'test_name'  => $test_case->getName()
-		];
+		] );
 
 		if ( $test_case->getOption( 'covers' ) ) {
-			$data[ 'covers' ] = $test_case->getOption( 'covers' );
+			$database->insert( 'mwunit_test_coverage', [
+				'article_id' => $test_case->getParser()->getTitle()->getArticleID(),
+				'test_name'  => $test_case->getName(),
+				'covers' 	 => $test_case->getOption( 'covers' )
+			] );
 		}
-
-		$database->insert( 'tests', $data );
 	}
 
     /**
@@ -87,7 +89,7 @@ class TestCaseRegister {
 	public static function deregisterTests( int $article_id ) {
 		$database = wfGetDb( DB_MASTER );
 		$database->delete(
-			'tests',
+			'mwunit_tests',
 			[
 				'article_id' => $article_id
 			]
@@ -108,7 +110,7 @@ class TestCaseRegister {
 		}
 
 		return wfGetDb( DB_REPLICA )->select(
-			'tests',
+			'mwunit_tests',
 			[ 'test_name' ],
 			[ 'article_id' => $title->getArticleID(), 'test_name' => $test_name ],
 			'Database::select'
@@ -123,7 +125,7 @@ class TestCaseRegister {
 	 */
 	public static function testGroupExists( string $test_group ) {
 		return wfGetDb( DB_REPLICA )->select(
-			'tests',
+			'mwunit_tests',
 			[ 'test_name' ],
 			[ 'test_group' => $test_group ],
 			'Database::select'
@@ -139,7 +141,7 @@ class TestCaseRegister {
 	 */
 	public static function getTestsForGroup( string $test_group ) {
 		$result = wfGetDb( DB_REPLICA )->select(
-			'tests',
+			'mwunit_tests',
 			[ 'article_id', 'test_name' ],
 			[ 'test_group' => $test_group ],
 			'Database::select',
@@ -168,7 +170,7 @@ class TestCaseRegister {
 	public static function getTestsFromTitle( \Title $title ): array {
 		$article_id = $title->getArticleID();
 		$result = wfGetDb( DB_REPLICA )->select(
-			'tests',
+			'mwunit_tests',
 			[ 'test_name' ],
 			[ 'article_id' => (int)$article_id ],
 			'Database::select',
@@ -196,17 +198,18 @@ class TestCaseRegister {
 	 * @throws Exception\MWUnitException
 	 */
 	public static function getTestsCoveringTemplate( \Title $title ): array {
-		if ( !$title->exists() ) return [];
-		if ( $title->getNamespace() !== NS_TEMPLATE ) return [];
+		if ( !$title->exists() ) { return [];
+		}
+		if ( $title->getNamespace() !== NS_TEMPLATE ) { return [];
+		}
 
 		$template_name = $title->getText();
 
 		$result = wfGetDb( DB_REPLICA )->select(
-			'tests',
+			'mwunit_tests',
 			[ 'article_id', 'test_name' ],
 			[ 'covers' => $template_name ],
-			'Database::select',
-			'DISTINCT'
+			'Database::select'
 		);
 
 		$tests = [];
@@ -228,17 +231,18 @@ class TestCaseRegister {
 	 * @return bool
 	 */
 	public static function isTemplateCovered( \Title $title ): bool {
-		if ( !$title->exists() ) return false;
-		if ( $title->getNamespace() !== NS_TEMPLATE ) return false;
+		if ( !$title->exists() ) { return false;
+		}
+		if ( $title->getNamespace() !== NS_TEMPLATE ) { return false;
+		}
 
 		$template_name = $title->getText();
 
 		return wfGetDb( DB_REPLICA )->select(
-			'tests',
+			'mwunit_tests',
 			[ 'article_id' ],
 			[ 'covers' => $template_name ],
-			'Database::select',
-			'DISTINCT'
+			'Database::select'
 		)->numRows() > 0;
 	}
 }

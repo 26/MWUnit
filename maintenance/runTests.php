@@ -15,7 +15,7 @@ require_once __DIR__ . "/includes/MWUnitResultPrinter.php";
 require_once __DIR__ . "/includes/TestDoxResultPrinter.php";
 
 class RunTests extends \Maintenance {
-	const MUTUALLY_EXCLUSIVE_OPTIONS = [
+	const MUTUALLY_EXCLUSIVE_OPTIONS = [ // phpcs:ignore
 		"group",
 		"test",
 		"testsuite",
@@ -38,7 +38,13 @@ class RunTests extends \Maintenance {
 		$this->addOption( 'group', 'Only run tests from the specified group', false, true, 'g' );
 		$this->addOption( 'test', 'Only run the specified test', false, true, 't' );
 		$this->addOption( 'testsuite', 'Filter which testsuite to run', false, true, 's' );
-		$this->addOption( 'covers', 'Only run tests that cover the specified template (without namespace)', false, true, 'c' );
+		$this->addOption(
+			'covers',
+			'Only run tests that cover the specified template (without namespace)',
+			false,
+			true,
+			'c'
+		);
 		$this->addOption( 'list-groups', 'List available test groups' );
 		$this->addOption( 'list-suites', 'List available test suites' );
 		$this->addOption( 'list-tests', 'List available tests' );
@@ -125,7 +131,7 @@ class RunTests extends \Maintenance {
 				$this->output( "* $option\n" );
 			}
 
-			$this->fatalError( "\nYou may supply at most one of these options.\n");
+			$this->fatalError( "\nYou may supply at most one of these options.\n" );
 		}
 	}
 
@@ -267,8 +273,8 @@ class RunTests extends \Maintenance {
 
 		$title = \Title::newFromText( $page_title, NS_TEST );
 
-		if ( $title === null  ||
-			$title === false  ||
+		if ( $title === null ||
+			$title === false ||
 			!$title->exists() ||
 			!\MWUnit\TestCaseRegister::testExists( $title->getFullText(), $name ) ) {
 			$this->fatalError( "The test '$test' does not exist." );

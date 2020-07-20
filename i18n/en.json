@@ -52,6 +52,8 @@
   "mwunit-assert-failure-less-than-or-equal": "Failed asserting that \"$1\" is less than or equal to \"$2\".",
   "mwunit-assert-failure-no-error": "Failed asserting that input does not have the \"error\" class.",
   "mwunit-assert-failure-page-exists": "Failed asserting that the page \"$1\" exists.",
+  "mwunit-assert-failure-has-property": "Failed asserting that the page \"$1\" has the property \"$2\".",
+  "mwunit-assert-failure-property-has-value": "Failed asserting that the property \"$1\" has the value \"$2\" on page \"$3\".",
   "mwunit-test-result-intro": "This page displays the result of the unit tests. If a test is marked as <span style=\"color:#14866d\"><i>Passed</i></span>, this means the assertion succeeded. If a test is marked as <span style=\"color:#fc3\"><i>Risky</i></span>, this means the test was deemed risky or incomplete by MWUnit. You can read more about risky tests on <a href='https://www.mediawiki.org/wiki/Extension:MWUnit/Risky_tests' title='MediaWiki.org'>MediaWiki.org</a>. If a test is marked as <span style=\"color:#d33\"><i>Failed</i></span>, at least one assertion failed. Only the first assertion that failed will get shown. Usually, a failed test will be accompanied by a short explanation.",
   "mwunit-sidebar-header": "Unit testing",
   "mwunit-sidebar-run-tests": "Run unit tests",

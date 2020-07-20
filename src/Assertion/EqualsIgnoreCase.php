@@ -2,26 +2,11 @@
 
 namespace MWUnit\Assertion;
 
-use MWUnit\TestCaseRun;
-
 class EqualsIgnoreCase implements Assertion {
-	use Assert;
-
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args ) {
-		// At least one assertion already failed
-		if ( !TestCaseRun::$test_result->didTestSucceed() ) {
-			return;
-		}
-
-		if ( !isset( $args[0] ) || !isset( $args[1] ) ) {
-			TestCaseRun::$test_result->setRisky();
-			TestCaseRun::$test_result->setRiskyMessage( 'mwunit-invalid-assertion' );
-			return;
-		}
-
+	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
 		$expected = trim( $frame->expand( $args[0] ) );
 		$actual = trim( $frame->expand( $args[1] ) );
 
@@ -35,6 +20,13 @@ class EqualsIgnoreCase implements Assertion {
 				Equals::createDiff( $expected, $actual )
 			);
 
-		Assert::report( $expected_lower === $actual_lower, $failure_message );
+		return $expected_lower === $actual_lower;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function getRequiredArgumentCount(): int {
+		return 2;
 	}
 }

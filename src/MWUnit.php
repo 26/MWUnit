@@ -7,169 +7,61 @@ use MWUnit\Exception\MWUnitException;
 use Parser;
 
 class MWUnit {
+	const GLOBAL_ASSERTIONS = [ // phpcs:ignore
+		'string_contains' 				=> 'assertStringContains',
+		'string_contains_ignore_case' 	=> 'assertStringContainsIgnoreCase',
+		'has_length' 					=> 'assertHasLength',
+		'empty'							=> 'assertEmpty',
+		'not_empty' 					=> 'assertNotEmpty',
+		'equals' 						=> 'assertEquals',
+		'equals_ignore_case' 			=> 'assertEqualsIgnoreCase',
+		'page_exists' 					=> 'assertPageExists',
+		'greater_than' 					=> 'assertGreaterThan',
+		'greater_than_or_equal' 		=> 'assertGreaterThanOrEqual',
+		'is_integer' 					=> 'assertIsInteger',
+		'is_numeric' 					=> 'assertIsNumeric',
+		'less_than' 					=> 'assertLessThan',
+		'less_than_or_equal' 			=> 'assertLessThanOrEqual',
+		'string_ends_with' 				=> 'assertStringEndsWith',
+		'string_starts_with' 			=> 'assertStringStartsWith',
+		'error' 						=> 'assertError',
+		'no_error' 						=> 'assertNoError',
+		'that' 							=> 'assertThat'
+	];
+
+	const SEMANTIC_ASSERTIONS = [ // phpcs:ignore
+		'has_property' 	  				=> 'assertHasProperty',
+		'property_has_value' 			=> 'assertPropertyHasValue'
+	];
+
 	/**
 	 * @var bool
 	 */
-	private static $testRunning = false;
+	private static $test_running = false;
 
 	/**
+	 * Called when the parser initializes for the first time.
+	 *
 	 * @param Parser $parser
 	 * @throws MWException
 	 */
 	public static function onParserFirstCallInit( Parser $parser ) {
-		$parser->setHook( 'testcase', [ TestCaseHandler::class, 'handleTestCase' ] );
+		$parser->setHook( 'testcase', [ Controllers\TestCaseController::class, 'handleTestCase' ] );
+		self::registerFunctions( $parser );
+	}
 
-		$parser->setFunctionHook(
-			'assert_string_contains',
-			[
-				Assertion\StringContains::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
+	/**
+	 * Handles the registration of the parser functions.
+	 *
+	 * @param Parser $parser
+	 * @throws MWException
+	 */
+	public static function registerFunctions( Parser $parser ) {
+		self::registerAssertions( $parser, self::GLOBAL_ASSERTIONS );
 
-		$parser->setFunctionHook(
-			'assert_string_contains_ignore_case',
-			[
-				Assertion\StringContainsIgnoreCase::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_has_length',
-			[
-				Assertion\HasLength::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_empty',
-			[
-				Assertion\IsEmpty::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_not_empty',
-			[
-				Assertion\NotEmpty::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_equals',
-			[
-				Assertion\Equals::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_equals_ignore_case',
-			[
-				Assertion\EqualsIgnoreCase::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_page_exists',
-			[
-				Assertion\PageExists::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_greater_than',
-			[
-				Assertion\GreaterThan::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_greater_than_or_equal',
-			[
-				Assertion\GreaterThanOrEqual::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_is_integer',
-			[
-				Assertion\IsInteger::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_is_numeric',
-			[
-				Assertion\IsNumeric::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_less_than',
-			[
-				Assertion\LessThan::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_less_than_or_equal',
-			[
-				Assertion\LessThanOrEqual::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_string_ends_with',
-			[
-				Assertion\StringEndsWith::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_string_starts_with',
-			[
-				Assertion\StringStartsWith::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_error',
-			[
-				Assertion\Error::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_no_error',
-			[
-				Assertion\NoError::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'assert_that',
-			[
-				Assertion\That::class, 'assert'
-			],
-			Parser::SFH_OBJECT_ARGS
-		);
+		if ( \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' ) ) {
+			self::registerAssertions( $parser, self::SEMANTIC_ASSERTIONS );
+		}
 	}
 
 	/**
@@ -182,13 +74,13 @@ class MWUnit {
 		$directory = $GLOBALS['wgExtensionDirectory'] . '/MWUnit/sql';
 		$type = $updater->getDB()->getType();
 
-		$sql_file = sprintf( "%s/%s/table_tests.sql", $directory, $type );
+		$mwunit_tests_sql = sprintf( "%s/%s/table_mwunit_tests.sql", $directory, $type );
 
-		if ( !file_exists( $sql_file ) ) {
+		if ( !file_exists( $mwunit_tests_sql ) ) {
 			throw new MWException( wfMessage( 'mwunit-invalid-dbms', $type )->plain() );
 		}
 
-		$updater->addExtensionTable( 'tests', $sql_file );
+		$updater->addExtensionTable( 'mwunit_tests', $mwunit_tests_sql );
 	}
 
 	/**
@@ -246,7 +138,7 @@ class MWUnit {
 	}
 
 	public static function setRunning() {
-		self::$testRunning = true;
+		self::$test_running = true;
 	}
 
 	/**
@@ -255,7 +147,7 @@ class MWUnit {
 	 * @return bool
 	 */
 	public static function isRunning(): bool {
-		return self::$testRunning === true;
+		return self::$test_running === true;
 	}
 
 	/**
@@ -279,5 +171,22 @@ class MWUnit {
 	 */
 	public static function getCanonicalTestNameFromTestCase( TestCase $testcase ): string {
 		return $testcase->getParser()->getTitle()->getText() . "::" . $testcase->getName();
+	}
+
+	/**
+	 * Registers the given list of assertions to the given parser.
+	 *
+	 * @param Parser $parser
+	 * @param array $assertions
+	 * @throws MWException
+	 */
+	private static function registerAssertions( Parser $parser, array $assertions ) {
+		foreach ( $assertions as $assertion => $function ) {
+			$parser->setFunctionHook(
+				"assert_$assertion",
+				[ Controllers\AssertionController::class, $function ],
+				Parser::SFH_OBJECT_ARGS
+			);
+		}
 	}
 }

@@ -12,7 +12,14 @@ if ( getenv( 'MW_INSTALL_PATH' ) !== false ) {
 }
 
 class RebuildTestsIndex extends \Maintenance {
+	/**
+	 * @var int
+	 */
 	private $done = 0;
+
+	/**
+	 * @var int
+	 */
 	private $total;
 
 	/**
@@ -20,12 +27,12 @@ class RebuildTestsIndex extends \Maintenance {
 	 *
 	 * @inheritDoc
 	 */
-	public function __construct(){
+	public function __construct() {
 		parent::__construct();
 
 		$this->addOption( 'quick', 'Skip the 5 second countdown before starting' );
 
-		$this->addDescription('Rebuilds the index of tests by reparsing all pages in the "Tests" namespace.');
+		$this->addDescription( 'Rebuilds the index of tests by reparsing all pages in the "Test" namespace.' );
 		$this->requireExtension( "MWUnit" );
 	}
 
@@ -53,13 +60,23 @@ class RebuildTestsIndex extends \Maintenance {
 			__METHOD__
 		);
 
+		$this->output( "\t... deleting broken indices ...\n" );
+
+		$dbr = wfGetDB( DB_MASTER );
+		$dbr->delete(
+			'mwunit_tests',
+			'*'
+		);
+
 		global $wgVersion;
 		$context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
 
 		$this->total = $res->numRows();
 		$this->showProgress();
 
-		while ( $row = $res->next() ) {
+		for ( $i = 0; $i < $res->numRows(); $i++ ) {
+			$row = $res->next();
+
 			$title = \Title::newFromText( $row->page_title, (int)$row->page_namespace );
 			$page = \WikiPage::newFromID( $title->getArticleID() );
 
@@ -77,20 +94,40 @@ class RebuildTestsIndex extends \Maintenance {
 		$this->output( "\n" );
 	}
 
+	/**
+	 * Shows the rebuilding progress dynamically.
+	 */
 	private function showProgress() {
 		$this->output(
 			"\r\t... rebuilding test indices\t\t {$this->getProgress()}% ({$this->getDone()}/{$this->getTotal()})"
 		);
 	}
 
+	/**
+	 * Returns the percentage of test indices rebuilt.
+	 *
+	 * @return string
+	 */
 	private function getProgress() {
-		return (string)$this->getTotal() == 0 ? 100 : floor( ( $this->getDone() / $this->getTotal() ) * 100 );
+		return (string)( $this->getTotal() == 0 ?
+			100 :
+			floor( ( $this->getDone() / $this->getTotal() ) * 100 ) );
 	}
 
+	/**
+	 * Returns the number of indices rebuilt.
+	 *
+	 * @return int
+	 */
 	private function getDone() {
 		return $this->done;
 	}
 
+	/**
+	 * Returns the total number of indices that have to be rebuild.
+	 *
+	 * @return int
+	 */
 	private function getTotal() {
 		return $this->total;
 	}

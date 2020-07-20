@@ -88,7 +88,8 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 			print( "\n\n" );
 
-			foreach ( $failed_tests as $test ) $this->printTest( $test );
+			foreach ( $failed_tests as $test ) { $this->printTest( $test );
+			}
 		}
 
 		$this->count = 1;
@@ -100,10 +101,13 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 			print( "\n\n" );
 
-			foreach ( $risky_tests as $test ) $this->printTest( $test );
+			foreach ( $risky_tests as $test ) { $this->printTest( $test );
+			}
 		}
 
-		print( "\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, Assertions: $no_assertions, Failures: $no_not_passed.\033[0m\n" );
+		print( "\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
+			"Assertions: $no_assertions, " .
+			"Failures: $no_not_passed.\033[0m\n" );
 
 		exit( 1 );
 	}
@@ -126,7 +130,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 					break;
 				}
 			}
-		} else if( $test->getResult() === TestResult::T_RISKY ) {
+		} elseif ( $test->getResult() === TestResult::T_RISKY ) {
 			print( $test->getRiskyMessage() );
 		}
 

@@ -2,39 +2,31 @@
 
 namespace MWUnit\Assertion;
 
-use MWUnit\TestCaseRun;
-
 class GreaterThan implements Assertion {
-	use Assert;
-
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args ) {
-		// At least one assertion already failed
-		if ( !TestCaseRun::$test_result->didTestSucceed() ) {
-			return;
-		}
-
-		if ( !isset( $args[0] ) || !isset( $args[1] ) ) {
-			TestCaseRun::$test_result->setRisky();
-			TestCaseRun::$test_result->setRiskyMessage( 'mwunit-invalid-assertion' );
-			return;
-		}
-
+	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
 		$a = trim( $frame->expand( $args[0] ) );
 		$b = trim( $frame->expand( $args[1] ) );
 
 		if ( !is_numeric( $a ) || !is_numeric( $b ) ) {
-			TestCaseRun::$test_result->setRisky();
-			TestCaseRun::$test_result->setRiskyMessage( 'mwunit-invalid-assertion' );
-			return;
+			$failure_message = wfMessage( 'mwunit-invalid-assertion' )->plain();
+
+			return null;
 		}
 
 		$failure_message = isset( $args[2] ) ?
 			trim( $frame->expand( $args[2] ) ) :
 			wfMessage( "mwunit-assert-failure-greater-than", $a, $b )->plain();
 
-		Assert::report( (float)$a > (float)$b, $failure_message );
+		return (float)$a > (float)$b;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function getRequiredArgumentCount(): int {
+		return 2;
 	}
 }

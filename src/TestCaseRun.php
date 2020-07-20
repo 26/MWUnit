@@ -44,8 +44,8 @@ class TestCaseRun {
 	 * @param \Parser|bool $parser
 	 * @param \Title $title
 	 * @param \Revision $revision
-	 * @param string|false|null $text
-	 * @param array $deps
+	 * @param string|false|null &$text
+	 * @param array &$deps
 	 */
 	public static function onParserFetchTemplate(
 		$parser,
@@ -54,8 +54,9 @@ class TestCaseRun {
 		&$text,
 		array &$deps
 	) {
-		if ( $title->getText() === self::$covered )
+		if ( $title->getText() === self::$covered ) {
 			self::$test_result->setTemplateCovered();
+		}
 	}
 
 	/**
@@ -79,7 +80,7 @@ class TestCaseRun {
 		// Store a clone of the initial parser, so we can properly perform coverage checks, without
 		// breaking fixtures and global state.
 		if ( !isset( self::$initial_parser ) ) {
-			self::$initial_parser  = clone( ( \MediaWiki\MediaWikiServices::getInstance() )->getParser() );
+			self::$initial_parser = clone \MediaWiki\MediaWikiServices::getInstance()->getParser();
 		}
 
 		$context_option = $this->test_case->getOption( 'context' );
@@ -102,7 +103,7 @@ class TestCaseRun {
 		$this->backupGlobals();
 
 		try {
-			if ( !self::$covered || $this->isCoveredTemplateCached( self::$covered, self::$initial_parser ) ) {
+			if ( !self::$covered || $this->isTemplateCached( self::$covered, self::$initial_parser ) ) {
 				self::$test_result->setTemplateCovered();
 			}
 
@@ -149,8 +150,8 @@ class TestCaseRun {
 		if ( $option ) {
 			$this->globals[ 'GLOBALS' ] 	= $GLOBALS;
 			$this->globals[ '_SERVER' ] 	= $_SERVER;
-			$this->globals[ '_GET' ]    	= $_GET;
-			$this->globals[ '_POST' ]   	= $_POST;
+			$this->globals[ '_GET' ]    	= $_GET; // phpcs:ignore
+			$this->globals[ '_POST' ]   	= $_POST; // phpcs:ignore
 			$this->globals[ '_FILES' ]  	= $_FILES;
 			$this->globals[ '_COOKIE' ] 	= $_COOKIE;
 			$this->globals[ '_REQUEST' ]	= $_REQUEST;
@@ -171,8 +172,8 @@ class TestCaseRun {
 
 			$GLOBALS  	= $this->globals[ 'GLOBALS' ];
 			$_SERVER  	= $this->globals[ '_SERVER' ];
-			$_GET	  	= $this->globals[ '_GET' ];
-			$_POST    	= $this->globals[ '_POST' ];
+			$_GET	  	= $this->globals[ '_GET' ]; // phpcs:ignore
+			$_POST    	= $this->globals[ '_POST' ]; // phpcs:ignore
 			$_FILES   	= $this->globals[ '_FILES' ];
 			$_COOKIE  	= $this->globals[ '_COOKIE' ];
 			$_REQUEST 	= $this->globals[ '_REQUEST' ];
@@ -188,7 +189,7 @@ class TestCaseRun {
 	 * @return bool
 	 * @internal
 	 */
-	private function isCoveredTemplateCached( string $template, \Parser $parser ): bool {
+	private function isTemplateCached(string $template, \Parser $parser ): bool {
 		if ( !$template ) {
 			return false;
 		}

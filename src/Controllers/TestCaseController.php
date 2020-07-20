@@ -1,12 +1,20 @@
 <?php
 
-namespace MWUnit;
+namespace MWUnit\Controllers;
+
+use MWUnit\Exception\MWUnitException;
+use MWUnit\Exception\TestCaseException;
+use MWUnit\Exception\TestCaseRegistrationException;
+use MWUnit\MWUnit;
+use MWUnit\TestCase;
+use MWUnit\TestCaseRegister;
+use MWUnit\TestCaseRunner;
 
 /**
- * Class TestCaseHandler
+ * Class TestCaseController
  * @package MWUnit
  */
-class TestCaseHandler {
+class TestCaseController {
 	/**
 	 * The callback function for the "testcase" tag.
 	 *
@@ -15,7 +23,7 @@ class TestCaseHandler {
 	 * @param \Parser $parser The parent parser (Parser object)
 	 * @param \PPFrame $frame The parent frame (PPFrame object)
 	 * @return string The output of the tag
-	 * @throws Exception\MWUnitException
+	 * @throws MWUnitException
 	 * @throws \FatalError
 	 * @throws \MWException
 	 * @internal
@@ -35,7 +43,7 @@ class TestCaseHandler {
 
 		try {
 			$test_case = TestCase::newFromTag( $input, $args, $parser, $frame );
-		} catch ( Exception\TestCaseException $exception ) {
+		} catch ( TestCaseException $exception ) {
 			return MWUnit::error( $exception->message_name, $exception->arguments );
 		}
 
@@ -45,7 +53,7 @@ class TestCaseHandler {
 		} else {
 			try {
 				TestCaseRegister::register( $test_case );
-			} catch ( Exception\TestCaseRegistrationException $exception ) {
+			} catch ( TestCaseRegistrationException $exception ) {
 				return MWUnit::error( $exception->message_name, $exception->arguments );
 			}
 		}

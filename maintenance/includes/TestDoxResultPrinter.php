@@ -22,7 +22,8 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 			$this->current_testsuite = $testsuite;
 			$title = \Title::newFromText( $testsuite );
 
-			if ( $title === null || $title === false ) return;
+			if ( $title === null || $title === false ) { return;
+			}
 
 			print ( $title->getText() . "\n" );
 		}
@@ -56,7 +57,9 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 		$no_not_passed 	= $runner->getNotPassedCount();
 
 		if ( $runner->getNotPassedCount() > 0 ) {
-			print( "\n\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, Assertions: $no_assertions, Failures: $no_not_passed.\033[0m\n" );
+			print( "\n\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
+				"Assertions: $no_assertions, " .
+				"Failures: $no_not_passed.\033[0m\n" );
 			exit( 1 );
 		} else {
 			print( "\nOK ($no_tests tests, $no_assertions assertions)\n" );
@@ -85,14 +88,19 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 		return implode( " ", $parts );
 	}
 
+	/**
+	 * Prints the failure message in TextDox format.
+	 *
+	 * @param string $failure_message
+	 */
 	private function printFailureReason( string $failure_message ) {
 		$lines = explode( "\n", $failure_message );
-		$lines_padded = array_map( function( string $line ): string {
+		$lines_padded = array_map( function ( string $line ): string {
 			return "    │  $line";
 		}, $lines );
 
-		print( "    │\n");
+		print( "    │\n" );
 		print( implode( "\n", $lines_padded ) . "\n" );
-		print( "    │\n\n");
+		print( "    │\n\n" );
 	}
 }
