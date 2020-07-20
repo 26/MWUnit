@@ -23,10 +23,15 @@ use MWUnit\Assertion\StringContainsIgnoreCase;
 use MWUnit\Assertion\StringEndsWith;
 use MWUnit\Assertion\StringStartsWith;
 use MWUnit\Assertion\That;
+use MWUnit\MWUnit;
 use MWUnit\TestCaseRun;
 
 final class AssertionController {
 	public static function doAssert( \Parser $parser, \PPFrame $frame, array $arguments, $class ) {
+		if ( !MWUnit::isRunning() ) {
+			return;
+		}
+
 		if ( !TestCaseRun::$test_result->didTestSucceed() ) {
 			return;
 		}
