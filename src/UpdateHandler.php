@@ -115,7 +115,7 @@ class UpdateHandler {
 
 		// Reparse Content to make sure the test has been registered.
 		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
-		$parser->recursiveTagParse( \ContentHandler::getContentText( $mainContent ) );
+		$parser->recursiveTagParse( \ContentHandler::getContentText( $content ) );
 
 		return true;
 	}
