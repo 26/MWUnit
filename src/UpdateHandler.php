@@ -64,7 +64,6 @@ class UpdateHandler {
 		TestCaseRegister::deregisterTests( $article_id );
 
 		// Reparse Content to make sure the test has been registered.
-		// TODO: Improve efficiency of this?
 		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
 		$parser->recursiveTagParse( \ContentHandler::getContentText( $mainContent ) );
 
@@ -113,6 +112,10 @@ class UpdateHandler {
 
 		// Deregister all tests on the page and let the parser re-register them.
 		TestCaseRegister::deregisterTests( $article_id );
+
+		// Reparse Content to make sure the test has been registered.
+		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
+		$parser->recursiveTagParse( \ContentHandler::getContentText( $mainContent ) );
 
 		return true;
 	}

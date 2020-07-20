@@ -31,8 +31,6 @@ class TestCaseRegister {
 			return;
 		}
 
-		self::$init_registered_tests[] = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
-
 		$database = wfGetDb( DB_MASTER );
 		$result = $database->select(
 			'mwunit_tests',
@@ -46,15 +44,18 @@ class TestCaseRegister {
 			__METHOD__
 		);
 
+		self::$init_registered_tests[] = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
+
 		if ( $result->numRows() > 0 ) {
 			// Do not throw an error when its the same test
 			if ( (int)$result->current()->article_id === $test_case->getParser()->getTitle()->getArticleID() ) {
 				$init_registered_test_count = array_count_values( self::$init_registered_tests );
-
-				if ( $init_registered_test_count[ MWUnit::getCanonicalTestName(
+				$test_name = MWUnit::getCanonicalTestName(
 					$result->current()->article_id,
 					$test_case->getName()
-				) ] < 2 ) {
+				);
+
+				if ( $init_registered_test_count[ $test_name ] < 2 ) {
 					return;
 				}
 			}
@@ -66,19 +67,17 @@ class TestCaseRegister {
 			);
 		}
 
-		$database->insert( 'mwunit_tests', [
+		$fields = [
 			'article_id' => $test_case->getParser()->getTitle()->getArticleID(),
 			'test_group' => $test_case->getGroup(),
 			'test_name'  => $test_case->getName()
-		] );
+		];
 
 		if ( $test_case->getOption( 'covers' ) ) {
-			$database->insert( 'mwunit_test_coverage', [
-				'article_id' => $test_case->getParser()->getTitle()->getArticleID(),
-				'test_name'  => $test_case->getName(),
-				'covers' 	 => $test_case->getOption( 'covers' )
-			] );
+			$fields[ 'covers' ] = $test_case->getOption( 'covers' );
 		}
+
+		$database->insert( 'mwunit_tests', $fields );
 	}
 
     /**
