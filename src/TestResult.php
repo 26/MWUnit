@@ -50,7 +50,7 @@ class TestResult {
 	 * @param string $message
 	 */
 	public function setRiskyMessage( string $message ) {
-		$this->risky_message = wfMessage( $message )->plain();
+		$this->risky_message = $message;
 	}
 
 	/**

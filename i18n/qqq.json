@@ -54,6 +54,7 @@
   "mwunit-sidebar-run-tests": "The sidebar 'Run tests' link located on pages in the NS_TEST namespace",
   "mwunit-sidebar-run-tests-for-template": "The sidebar 'Run associated unit tests' link located on templates that have tests covering it",
   "mwunit-strict-coverage-violation": "Test risky message shown when a tests violates $wgMWUnitStrictCoverage",
+  "mwunit-invalid-page-name": "Test risky message shown when a (Semantic) assertion is used with an invalid page name",
   "mwunit-no-assertions": "Test risky message shown when a test contains zero assertions",
   "mwunit-invalid-context": "Test risky message shown when a test has an invalid context annotation",
   "mwunit-invalid-assertion": "Test risky message shown when a test has one or more assertions with an invalid amount of parameters",

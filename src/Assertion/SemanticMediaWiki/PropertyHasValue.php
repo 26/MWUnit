@@ -12,7 +12,14 @@ class PropertyHasValue implements Assertion {
 		$property_name = trim( $frame->expand( $args[1] ) );
 		$expected_value = trim( $frame->expand( $args[2] ) );
 
-		$page = \SMWDIWikiPage::newFromTitle( \Title::newFromText( trim( $frame->expand( $args[0] ) ) ) );
+		$title = \Title::newFromText( trim( $frame->expand( $args[0] ) ) );
+		if ( $title === null || $title === false || !$title->exists() ) {
+			$failure_message = wfMessage( "mwunit-invalid-page-name" )->plain();
+			
+			return null;
+		}
+		
+		$page = \SMWDIWikiPage::newFromTitle( $title );
 		$store = \SMW\StoreFactory::getStore();
 		$data = $store->getSemanticData( $page );
 		$property = \SMWDIProperty::newFromUserLabel( $property_name );

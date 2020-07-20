@@ -9,8 +9,15 @@ class HasProperty implements Assertion {
 	 * @inheritDoc
 	 */
 	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
+		$title = \Title::newFromText( trim( $frame->expand( $args[0] ) ) );
+		if ( $title === null || $title === false || !$title->exists() ) {
+			$failure_message = wfMessage( "mwunit-invalid-page-name" )->plain();
+
+			return null;
+		}
+
 		$property_name = trim( $frame->expand( $args[1] ) );
-		$page = \SMWDIWikiPage::newFromTitle( \Title::newFromText( trim( $frame->expand( $args[0] ) ) ) );
+		$page = \SMWDIWikiPage::newFromTitle( $title );
 		$store = \SMW\StoreFactory::getStore();
 		$data = $store->getSemanticData( $page );
 		$property = \SMWDIProperty::newFromUserLabel( $property_name );
