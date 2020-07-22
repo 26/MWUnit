@@ -12,7 +12,6 @@ class HasProperty implements Assertion {
 		$title = \Title::newFromText( trim( $frame->expand( $args[0] ) ) );
 		if ( $title === null || $title === false || !$title->exists() ) {
 			$failure_message = wfMessage( "mwunit-invalid-page-name" )->plain();
-
 			return null;
 		}
 
@@ -39,6 +38,6 @@ class HasProperty implements Assertion {
 	 * @inheritDoc
 	 */
 	public static function getRequiredArgumentCount(): int {
-		return 3;
+		return 2;
 	}
 }

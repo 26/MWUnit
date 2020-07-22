@@ -13,9 +13,9 @@ class PropertyHasValue implements Assertion {
 		$expected_value = trim( $frame->expand( $args[2] ) );
 
 		$title = \Title::newFromText( trim( $frame->expand( $args[0] ) ) );
+
 		if ( $title === null || $title === false || !$title->exists() ) {
 			$failure_message = wfMessage( "mwunit-invalid-page-name" )->plain();
-			
 			return null;
 		}
 		

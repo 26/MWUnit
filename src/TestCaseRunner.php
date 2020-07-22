@@ -43,7 +43,7 @@ class TestCaseRunner {
 
 		if ( !$run->getTestResult()->isTestRisky() && $run->getAssertionCount() === 0 ) {
 			$run::$test_result->setRisky();
-			TestCaseRun::$test_result->setRiskyMessage( 'mwunit-no-assertions' );
+			TestCaseRun::$test_result->setRiskyMessage( wfMessage( 'mwunit-no-assertions' )->plain() );
 		}
 
 		\Hooks::run( 'MWUnitAfterTestComplete', [ &$run ] );

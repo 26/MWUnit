@@ -39,7 +39,7 @@ final class AssertionController {
 		$argument_count_callable = [ $class, 'getRequiredArgumentCount' ];
 
 		if ( count( $arguments ) < $argument_count_callable() ) {
-			TestCaseRun::$test_result->setRiskyMessage( 'mwunit-invalid-assertion' );
+			TestCaseRun::$test_result->setRiskyMessage( wfMessage( 'mwunit-invalid-assertion' )->plain() );
 			TestCaseRun::$test_result->setRisky();
 			return;
 		}

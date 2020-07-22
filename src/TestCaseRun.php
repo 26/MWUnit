@@ -96,7 +96,7 @@ class TestCaseRun {
 				break;
 			default:
 				self::$test_result->setRisky();
-				self::$test_result->setRiskyMessage( 'mwunit-invalid-context' );
+				self::$test_result->setRiskyMessage( wfMessage( 'mwunit-invalid-context' )->plain() );
 				return;
 		}
 
