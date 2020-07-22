@@ -54,7 +54,7 @@ class SpecialMWUnit extends \SpecialPage {
 						->rawParams( $this->getLanguage()->pipeList( [
 							$this->getLinkRenderer()->makeLink(
 								\Title::newFromText( "Special:MWUnit" ),
-								new \HtmlArmor( $this->msg( 'mwunit-nav-home' ) )
+								new \HtmlArmor( wfMessage( 'mwunit-nav-home' )->plain() )
 							)
 						] ) )->text();
 			$nav = $this->msg( 'mwunit-nav-introtext' ) . $nav;
