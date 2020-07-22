@@ -6,16 +6,15 @@ class Error implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
-		$haystack = trim( $frame->expand( $args[0] ) );
-		$failure_message = isset( $args[1] ) ?
-			trim( $frame->expand( $args[1] ) ) :
-			wfMessage( "mwunit-assert-failure-error" )->plain();
+	public static function getName(): string {
+		return "error";
+	}
 
-		return preg_match(
-			'/<(?:strong|span|p|div)\s(?:[^\s>]*\s+)*?class="(?:[^"\s>]*\s+)*?error(?:\s[^">]*)?"/',
-			$haystack
-		);
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return true;
 	}
 
 	/**
@@ -23,5 +22,25 @@ class Error implements Assertion {
 	 */
 	public static function getRequiredArgumentCount(): int {
 		return 1;
+	}
+
+	/**
+	 * Returns false if and only if $haystack does not contain at least one div, strong, span or p tag with the
+	 * attribute 'class="error"'. Tags with this attribute are usually returned by
+	 * other parser functions.
+	 *
+	 * @param string $failure_message
+	 * @param string $haystack
+	 * @param string|null $message
+	 * @return bool
+	 */
+	public static function assert( &$failure_message, $haystack, $message = null ) {
+		$failure_message = $message ??
+			wfMessage( "mwunit-assert-failure-error" )->plain();
+
+		return preg_match(
+			'/<(?:strong|span|p|div)\s(?:[^\s>]*\s+)*?class="(?:[^"\s>]*\s+)*?error(?:\s[^">]*)?"/',
+			$haystack
+		);
 	}
 }

@@ -19,7 +19,7 @@ class TestCaseRun {
 	 *
 	 * @var bool|string
 	 */
-	private static $covered;
+	public static $covered;
 
 	/**
 	 * A clone of the parser right before it encountered the first test case. Used for strict coverage checking.
@@ -95,8 +95,7 @@ class TestCaseRun {
 				$context = $this->test_case->getParser()->getUser();
 				break;
 			default:
-				self::$test_result->setRisky();
-				self::$test_result->setRiskyMessage( wfMessage( 'mwunit-invalid-context' )->plain() );
+				self::$test_result->setRisky( wfMessage( 'mwunit-invalid-context' )->plain() );
 				return;
 		}
 
@@ -225,8 +224,7 @@ class TestCaseRun {
 			) && $this->test_case->getOption( 'ignorestrictcoverage' ) === false;
 
 		if ( $strict_coverage && !self::$test_result->isTemplateCovered() ) {
-			self::$test_result->setRisky();
-			self::$test_result->setRiskyMessage( 'mwunit-strict-coverage-violation' );
+			self::$test_result->setRisky( wfMessage( 'mwunit-strict-coverage-violation' )->plain() );
 		}
 	}
 }

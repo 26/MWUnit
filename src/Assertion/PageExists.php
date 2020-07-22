@@ -6,17 +6,15 @@ class PageExists implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
-		$page_name = trim( $frame->expand( $args[0] ) );
-		$failure_message = isset( $args[1] ) ?
-			trim( $frame->expand( $args[1] ) ) :
-			wfMessage( "mwunit-assert-failure-page-exists" )->plain();
+	public static function getName(): string {
+		return "page_exists";
+	}
 
-		$title = \Title::newFromText( $page_name );
-
-		return $title !== null &&
-			$title !== false &&
-			$title->exists();
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return true;
 	}
 
 	/**
@@ -24,5 +22,25 @@ class PageExists implements Assertion {
 	 */
 	public static function getRequiredArgumentCount(): int {
 		return 1;
+	}
+
+	/**
+	 * Returns false if and only if the page specified by $page_name does not exist. $page_name must include the
+	 * namespace prefix if the page is not located in the main namespace.
+	 *
+	 * @param string $failure_message
+	 * @param string $page_name
+	 * @param string|null $message
+	 * @return bool
+	 */
+	public static function assert( &$failure_message, $page_name, $message = null ) {
+		$failure_message = $message ??
+			wfMessage( "mwunit-assert-failure-page-exists" )->plain();
+
+		$title = \Title::newFromText( $page_name );
+
+		return $title !== null &&
+			$title !== false &&
+			$title->exists();
 	}
 }

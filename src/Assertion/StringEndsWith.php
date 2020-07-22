@@ -6,18 +6,15 @@ class StringEndsWith implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
-		$needle = trim( $frame->expand( $args[0] ) );
-		$haystack = trim( $frame->expand( $args[1] ) );
+	public static function getName(): string {
+		return "string_ends_with";
+	}
 
-		$needle_length = strlen( $needle );
-
-		$failure_message = isset( $args[2] ) ?
-			trim( $frame->expand( $args[2] ) ) :
-			wfMessage( "mwunit-assert-failure-string-ends-with", $needle, $haystack )->plain();
-
-		return $needle_length <= strlen( $haystack ) &&
-			substr( $haystack, -$needle_length, $needle_length ) === $needle;
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return true;
 	}
 
 	/**
@@ -25,5 +22,24 @@ class StringEndsWith implements Assertion {
 	 */
 	public static function getRequiredArgumentCount(): int {
 		return 2;
+	}
+
+	/**
+	 * Returns false if and only if $needle is not at the end of $haystack.
+	 *
+	 * @param string $failure_message
+	 * @param string $needle
+	 * @param string $haystack
+	 * @param string|null $message
+	 * @return bool
+	 */
+	public static function assert( &$failure_message, $needle, $haystack, $message = null ) {
+		$needle_length = strlen( $needle );
+
+		$failure_message = $message ??
+			wfMessage( "mwunit-assert-failure-string-ends-with", $needle, $haystack )->plain();
+
+		return $needle_length <= strlen( $haystack ) &&
+			substr( $haystack, -$needle_length, $needle_length ) === $needle;
 	}
 }

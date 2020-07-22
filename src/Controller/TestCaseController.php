@@ -1,6 +1,6 @@
 <?php
 
-namespace MWUnit\Controllers;
+namespace MWUnit\Controller;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseException;

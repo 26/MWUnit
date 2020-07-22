@@ -4,6 +4,8 @@ namespace MWUnit;
 
 use MWException;
 use MWUnit\Exception\MWUnitException;
+use MWUnit\Registry\AssertionRegistry;
+use MWUnit\Registry\MockRegistry;
 use Parser;
 
 class MWUnit {
@@ -46,22 +48,12 @@ class MWUnit {
 	 * @throws MWException
 	 */
 	public static function onParserFirstCallInit( Parser $parser ) {
-		$parser->setHook( 'testcase', [ Controllers\TestCaseController::class, 'handleTestCase' ] );
-		self::registerFunctions( $parser );
-	}
+		$parser->setHook( 'testcase', [ Controller\TestCaseController::class, 'handleTestCase' ] );
 
-	/**
-	 * Handles the registration of the parser functions.
-	 *
-	 * @param Parser $parser
-	 * @throws MWException
-	 */
-	public static function registerFunctions( Parser $parser ) {
-		self::registerAssertions( $parser, self::GLOBAL_ASSERTIONS );
+		$assertion_registry = AssertionRegistry::getInstance();
+		$assertion_registry->registerAssertionClasses();
 
-		if ( \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' ) ) {
-			self::registerAssertions( $parser, self::SEMANTIC_ASSERTIONS );
-		}
+		$parser->setFunctionHook( 'create_mock', [ Controller\MockController::class, 'handleCreateMock' ], SFH_OBJECT_ARGS );
 	}
 
 	/**
@@ -171,22 +163,5 @@ class MWUnit {
 	 */
 	public static function getCanonicalTestNameFromTestCase( TestCase $testcase ): string {
 		return $testcase->getParser()->getTitle()->getText() . "::" . $testcase->getName();
-	}
-
-	/**
-	 * Registers the given list of assertions to the given parser.
-	 *
-	 * @param Parser $parser
-	 * @param array $assertions
-	 * @throws MWException
-	 */
-	private static function registerAssertions( Parser $parser, array $assertions ) {
-		foreach ( $assertions as $assertion => $function ) {
-			$parser->setFunctionHook(
-				"assert_$assertion",
-				[ Controllers\AssertionController::class, $function ],
-				Parser::SFH_OBJECT_ARGS
-			);
-		}
 	}
 }

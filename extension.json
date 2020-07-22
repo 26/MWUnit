@@ -23,11 +23,7 @@
     "MWUnitMagic": "i18n/MWUnitMagic.i18n.php"
   },
   "AutoloadNamespaces": {
-    "MWUnit\\": "src/",
-    "MWUnit\\Assertion": "src/Assertion/",
-    "MWUnit\\Exception": "src/Exception/",
-    "MWUnit\\Specials": "src/Specials/",
-    "MWUnit\\Controllers": "src/Controllers/"
+    "MWUnit\\": "src/"
   },
   "Hooks": {
     "ParserFirstCallInit": "MWUnit\\MWUnit::onParserFirstCallInit",
@@ -35,10 +31,13 @@
     "PageContentSaveComplete": "MWUnit\\UpdateHandler::onPageContentSaveComplete",
     "PageContentInsertComplete": "MWUnit\\UpdateHandler::onPageContentInsertComplete",
     "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
-    "ParserFetchTemplate": "MWUnit\\TestCaseRun::onParserFetchTemplate"
+    "ParserFetchTemplate": [
+      "MWUnit\\TestCaseRun::onParserFetchTemplate",
+      "MWUnit\\Controller\\MockController::onParserFetchTemplate"
+    ]
   },
   "SpecialPages": {
-    "MWUnit": "MWUnit\\Specials\\SpecialMWUnit"
+    "MWUnit": "MWUnit\\Special\\SpecialMWUnit"
   },
   "config": {
     "MWUnitMaxTestExecutionTime": {

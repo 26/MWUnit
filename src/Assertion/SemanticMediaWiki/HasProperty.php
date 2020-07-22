@@ -8,6 +8,27 @@ class HasProperty implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
+	public static function getName(): string {
+		return "has_property";
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' );
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function getRequiredArgumentCount(): int {
+		return 2;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
 	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
 		$title = \Title::newFromText( trim( $frame->expand( $args[0] ) ) );
 		if ( $title === null || $title === false || !$title->exists() ) {
@@ -32,12 +53,5 @@ class HasProperty implements Assertion {
 			);
 
 		return count( $values ) > 0;
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function getRequiredArgumentCount(): int {
-		return 2;
 	}
 }

@@ -6,19 +6,36 @@ class Equals implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
-	public static function getRequiredArgumentCount(): int {
-		return 2;
+	public static function getName(): string {
+		return "equals";
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
-		$expected = trim( $frame->expand( $args[0] ) );
-		$actual = trim( $frame->expand( $args[1] ) );
+	public static function shouldRegister(): bool {
+		return true;
+	}
 
-		$failure_message = isset( $args[2] ) ?
-			trim( $frame->expand( $args[2] ) ) :
+	/**
+	 * @inheritDoc
+	 */
+	public static function getRequiredArgumentCount(): int {
+		return 2;
+	}
+
+	/**
+	 * Returns false if and only if the two variables, $expected and $actual are not identical to each
+	 * other.
+	 *
+	 * @param string $failure_message
+	 * @param string $expected
+	 * @param string $actual
+	 * @param string|null $message
+	 * @return bool
+	 */
+	public static function assert( &$failure_message, $expected, $actual, $message = null ) {
+		$failure_message = $message ??
 			sprintf(
 				wfMessage( "mwunit-assert-failure-equal" )->plain() . "\n\n%s",
 				self::createDiff( $expected, $actual )

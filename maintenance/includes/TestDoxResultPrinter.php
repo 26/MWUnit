@@ -38,12 +38,7 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 				break;
 			case TestResult::T_FAILED:
 				print( "  \e[0;31m✘\e[0m " . $this->toSentence( $result->getTestName() ) . "\n" );
-				foreach ( $result->getAssertionResults() as $result ) {
-					if ( $result[ 'predicate_result' ] === false ) {
-						$this->printFailureReason( $result[ 'failure_message' ] );
-						break;
-					}
-				}
+				$this->printFailureReason( $result->getFailureMessage() );
 				break;
 		}
 	}

@@ -6,15 +6,15 @@ class StringContains implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
-		$needle = trim( $frame->expand( $args[0] ) );
-		$haystack = trim( $frame->expand( $args[1] ) );
+	public static function getName(): string {
+		return "string_contains";
+	}
 
-		$failure_message = isset( $args[2] ) ?
-			trim( $frame->expand( $args[2] ) ) :
-			wfMessage( "mwunit-assert-failure-contains-string", $needle, $haystack )->plain();
-
-		return strpos( $haystack, $needle ) !== false;
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return true;
 	}
 
 	/**
@@ -22,5 +22,26 @@ class StringContains implements Assertion {
 	 */
 	public static function getRequiredArgumentCount(): int {
 		return 2;
+	}
+
+	/**
+	 * Returns false if and only if $needle is not contained within $haystack.
+	 *
+	 * @param string $failure_message
+	 * @param string $needle
+	 * @param string $haystack
+	 * @param string|null $message
+	 * @return bool|null
+	 */
+	public static function assert( &$failure_message, $needle, $haystack, $message = null ) {
+		if ( mb_strlen( $needle ) < 1 || mb_strlen( $haystack ) < 1 ) {
+			$failure_message = wfMessage( "mwunit-invalid-assertion" )->plain();
+			return null;
+		}
+
+		$failure_message = $message ??
+			wfMessage( "mwunit-assert-failure-contains-string", $needle, $haystack )->plain();
+
+		return mb_strpos( $haystack, $needle ) !== false;
 	}
 }

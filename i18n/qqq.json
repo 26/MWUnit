@@ -58,6 +58,7 @@
   "mwunit-no-assertions": "Test risky message shown when a test contains zero assertions",
   "mwunit-invalid-context": "Test risky message shown when a test has an invalid context annotation",
   "mwunit-invalid-assertion": "Test risky message shown when a test has one or more assertions with an invalid amount of parameters",
+  "mwunit-mocked-cover-template": "Test risky message shown when the covers annotation of a test is a mocked template",
   "mwunit-config-max-test-execution-time": "Configuration parameter description for the configuration parameter defining the max execution time of a group of tests",
   "mwunit-config-default-testdox": "Configuration parameter description for the configuration parameter defining whether or not to use TestDox as the default ResultPrinter when using the command-line test runner",
   "mwunit-config-backup-globals": "Configuration parameter description for the configuration parameter defining whether or not to backup globals and superglobals for each test case",

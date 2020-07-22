@@ -11,9 +11,9 @@ class TestCase {
 	private $input;
 	private $name;
 	private $group;
-
 	private $parser;
 	private $frame;
+	private $options;
 
 	/**
 	 * TestCase constructor.

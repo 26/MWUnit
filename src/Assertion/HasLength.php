@@ -6,21 +6,15 @@ class HasLength implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
-		$haystack = trim( $frame->expand( $args[0] ) );
+	public static function getName(): string {
+		return "has_length";
+	}
 
-		$actual_length = strlen( $haystack );
-		$expected_length = trim( $frame->expand( $args[1] ) );
-
-		if ( !ctype_digit( $expected_length ) ) {
-			return null;
-		}
-
-		$failure_message = isset( $args[2] ) ?
-			trim( $frame->expand( $args[2] ) ) :
-			wfMessage( "mwunit-assert-failure-has-length", $actual_length, $expected_length )->plain();
-
-		return $actual_length === (int)$expected_length;
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return true;
 	}
 
 	/**
@@ -28,5 +22,28 @@ class HasLength implements Assertion {
 	 */
 	public static function getRequiredArgumentCount(): int {
 		return 2;
+	}
+
+	/**
+	 * Returns false if and only if $haystack is not exactly $expected_length characters in size.
+	 *
+	 * @param string $failure_message
+	 * @param string $haystack
+	 * @param string $expected_length
+	 * @param string|null $message
+	 * @return bool|null
+	 */
+	public static function assert( &$failure_message, $haystack, $expected_length, $message = null ) {
+		$actual_length = mb_strlen( $haystack );
+
+		if ( !ctype_digit( $expected_length ) ) {
+			$failure_message = wfMessage( "mwunit-invalid-assertion" )->plain();
+			return null;
+		}
+
+		$failure_message = $message ??
+			wfMessage( "mwunit-assert-failure-has-length", $actual_length, $expected_length )->plain();
+
+		return $actual_length === (int)$expected_length;
 	}
 }
