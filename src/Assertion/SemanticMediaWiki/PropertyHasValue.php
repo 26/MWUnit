@@ -19,10 +19,17 @@ class PropertyHasValue implements Assertion {
 		return \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' );
 	}
 
+        /**
+	 * @inheritDoc
+	 */
+	public static function getRequiredArgumentCount(): int {
+		return 3;
+	}
+
 	/**
 	 * Returns false if and only if the property given by $property_name on the page given
 	 * by $page_title does not have the value given by $expected_value.
-     *
+         *
 	 * @param string $failure_message
 	 * @param string $page_title
 	 * @param string $property_name
@@ -56,12 +63,5 @@ class PropertyHasValue implements Assertion {
 		return count( array_filter( $values, function( \SMW\DIWikiPage $value ) use ( $expected_value ) {
 			return $value->getDBkey() === $expected_value;
 		} ) ) > 0;
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function getRequiredArgumentCount(): int {
-		return 2;
 	}
 }
