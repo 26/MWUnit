@@ -20,10 +20,10 @@ class TestCaseRegister {
 	 * @throws \MWException
 	 */
 	public static function register( TestCase $test_case ) {
-	    if ( !$test_case->getParser()->getTitle()->exists() ) {
-	        // This page has not yet been created.
-	        return;
-        }
+	    	if ( !$test_case->getParser()->getTitle()->exists() ) {
+	        	// This page has not yet been created.
+	        	return;
+        	}
 
 		$result = \Hooks::run( 'MWUnitBeforeRegisterTestCase', [ &$test_case ] );
 
