@@ -27,24 +27,29 @@ class HasProperty implements Assertion {
 	}
 
 	/**
-	 * @inheritDoc
+	 * Returns false if and only if the page given by $page_title does not have the property
+	 * given by $property_name.
+	 *
+	 * @param string $failure_message
+	 * @param string $page_title
+	 * @param string $property_name
+	 * @param string|null $message
+	 * @return bool|null
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
-		$title = \Title::newFromText( trim( $frame->expand( $args[0] ) ) );
+	public static function assert( &$failure_message, $page_title, $property_name, $message = null ) {
+		$title = \Title::newFromText( $page_title );
 		if ( $title === null || $title === false || !$title->exists() ) {
 			$failure_message = wfMessage( "mwunit-invalid-page-name" )->plain();
 			return null;
 		}
 
-		$property_name = trim( $frame->expand( $args[1] ) );
 		$page = \SMWDIWikiPage::newFromTitle( $title );
 		$store = \SMW\StoreFactory::getStore();
 		$data = $store->getSemanticData( $page );
 		$property = \SMWDIProperty::newFromUserLabel( $property_name );
 		$values = $data->getPropertyValues( $property );
 
-		$failure_message = isset( $args[2] ) ?
-			trim( $frame->expand( $args[2] ) ) :
+		$failure_message = $message ??
 			sprintf(
 				wfMessage( "mwunit-assert-failure-has-property",
 					$page->getTitle()->getText(),
