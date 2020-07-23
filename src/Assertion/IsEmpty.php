@@ -36,6 +36,6 @@ class IsEmpty implements Assertion {
 		$failure_message = $message ??
 			wfMessage( "mwunit-assert-failure-empty", $haystack )->plain();
 
-		return empty( $haystack );
+		return empty( trim( $haystack ) );
 	}
 }

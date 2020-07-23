@@ -41,6 +41,6 @@ class Error implements Assertion {
 		return preg_match(
 			'/<(?:strong|span|p|div)\s(?:[^\s>]*\s+)*?class="(?:[^"\s>]*\s+)*?error(?:\s[^">]*)?"/',
 			$haystack
-		);
+		) === 1;
 	}
 }

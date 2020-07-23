@@ -38,8 +38,8 @@ class NoError implements Assertion {
 		$failure_message = $message ??
 			wfMessage( "mwunit-assert-failure-no-error" )->plain();
 
-		return !preg_match(
+		return preg_match(
 			'/<(?:strong|span|p|div)\s(?:[^\s>]*\s+)*?class="(?:[^"\s>]*\s+)*?error(?:\s[^">]*)?"/',
-			$haystack );
+			$haystack ) !== 1;
 	}
 }
