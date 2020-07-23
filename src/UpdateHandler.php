@@ -49,24 +49,7 @@ class UpdateHandler {
 		$originalRevId,
 		int $undidRevId
 	) {
-		$article_id = $wikiPage->getId();
-
-		if ( $article_id === null ) {
-			throw new \MWException( "Article ID musn't be `null`." );
-		}
-
-		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
-			// Do not run hook outside of "Test" namespace
-			return true;
-		}
-
-		// Deregister all tests on the page and let the parser re-register them.
-		TestCaseRegister::deregisterTests( $article_id );
-
-		// Reparse Content to make sure the test has been registered.
-		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
-		$parser->recursiveTagParse( \ContentHandler::getContentText( $mainContent ) );
-
+		self::parseWikitext( $wikiPage, $mainContent );
 		return true;
 	}
 
@@ -99,24 +82,7 @@ class UpdateHandler {
 		&$flags,
 		Revision $revision
 	) {
-		$article_id = $wikiPage->getId();
-
-		if ( $article_id === null ) {
-			throw new \MWException( "Article ID musn't be `null`." );
-		}
-
-		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
-			// Do not run hook outside of "Test" namespace
-			return true;
-		}
-
-		// Deregister all tests on the page and let the parser re-register them.
-		TestCaseRegister::deregisterTests( $article_id );
-
-		// Reparse Content to make sure the test has been registered.
-		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
-		$parser->recursiveTagParse( \ContentHandler::getContentText( $content ) );
-
+		self::parseWikitext( $wikiPage, $content );
 		return true;
 	}
 
@@ -159,5 +125,32 @@ class UpdateHandler {
 		TestCaseRegister::deregisterTests( $deleted_id );
 
 		return true;
+	}
+
+	/**
+	 * Parses the given content in the given page's context.
+	 *
+	 * @param WikiPage $wikiPage
+	 * @param Content $content
+	 * @throws \MWException
+	 */
+	private static function parseWikitext(WikiPage $wikiPage, Content $content) {
+		$article_id = $wikiPage->getId();
+
+		if ( $article_id === null ) {
+			throw new \MWException( "Article ID musn't be `null`." );
+		}
+
+		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return;
+		}
+
+		// Deregister all tests on the page and let the parser re-register them.
+		TestCaseRegister::deregisterTests( $article_id );
+
+		// Reparse Content to make sure the test has been registered.
+		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
+		$parser->recursiveTagParse( \ContentHandler::getContentText( $content ) );
 	}
 }

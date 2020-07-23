@@ -164,12 +164,14 @@ class UnitTestRunner {
 		try {
 			$content = $wiki_page->getRevision()->getContent( \Revision::RAW );
 			$parser  = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->getFreshParser();
+			$parser_options = $wiki_page->makeParserOptions( "canonical" );
+
 			$text = \ContentHandler::getContentText( $content );
 		} catch ( \MWException $e ) {
 			return;
 		}
 
 		// Run test cases
-		$parser->parse( $text, $wiki_page->getTitle(), $wiki_page->makeParserOptions( "canonical" ) );
+		$parser->parse( $text, $wiki_page->getTitle(), $parser_options );
 	}
 }

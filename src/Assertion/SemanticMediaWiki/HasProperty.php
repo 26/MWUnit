@@ -3,6 +3,9 @@
 namespace MWUnit\Assertion\SemanticMediaWiki;
 
 use MWUnit\Assertion\Assertion;
+use SMW\StoreFactory;
+use SMWDIProperty;
+use SMWDIWikiPage;
 
 class HasProperty implements Assertion {
 	/**
@@ -43,10 +46,10 @@ class HasProperty implements Assertion {
 			return null;
 		}
 
-		$page = \SMWDIWikiPage::newFromTitle( $title );
-		$store = \SMW\StoreFactory::getStore();
+		$page = SMWDIWikiPage::newFromTitle( $title );
+		$store = StoreFactory::getStore();
 		$data = $store->getSemanticData( $page );
-		$property = \SMWDIProperty::newFromUserLabel( $property_name );
+		$property = SMWDIProperty::newFromUserLabel( $property_name );
 		$values = $data->getPropertyValues( $property );
 
 		$failure_message = $message ??

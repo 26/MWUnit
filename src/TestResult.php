@@ -113,12 +113,19 @@ class TestResult {
 	}
 
 	/**
-	 * Returns the page name this test is on.
+	 * Returns the page name this test is on or false on failure.
 	 *
-	 * @return string
+	 * @return string|bool
 	 */
 	public function getPageName(): string {
-		return "Test:" . explode( "::", $this->canonical_testname )[0];
+		$page_text = explode( "::", $this->canonical_testname )[0];
+		$title_object = \Title::newFromText( $page_text, NS_TEST );
+
+		if ( !$title_object instanceof \Title ) {
+			return false;
+		}
+
+		return $title_object->getFullText();
 	}
 
 	/**

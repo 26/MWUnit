@@ -143,7 +143,7 @@ class TestCase {
 	/**
 	 * Returns an associative array of options.
 	 *
-	 * @return array
+	 * @return array The options as a key-value pair
 	 */
 	public function getOptions(): array {
 		return $this->options;

@@ -84,14 +84,9 @@ class SpecialMWUnit extends \SpecialPage {
 			} catch ( MWUnitException $e ) {
 				return false;
 			}
-
-			$this->runner = new \MWUnit\UnitTestRunner( $tests );
-			$this->runner->run();
 		} elseif ( $this->getRequest()->getVal( 'unitTestIndividual' ) !== null ) {
 			// Run the specified individual test
-			if ( strpos( $this->getRequest()->getVal( 'unitTestIndividual' ), '::' ) === false ) {
-				return false;
-			}
+			if ( strpos( $this->getRequest()->getVal( 'unitTestIndividual' ), '::' ) === false ) return false;
 
 			list( $page_title, $name ) = explode(
 				'::',
@@ -100,65 +95,43 @@ class SpecialMWUnit extends \SpecialPage {
 
 			$title = \Title::newFromText( $page_title, NS_TEST );
 
-			if ( $title === null || $title === false || !$title->exists() ) {
-				return false;
-			}
+			if ( !$title instanceof \Title || !$title->exists() ) return false;
+			if ( !\MWUnit\TestCaseRegister::testExists( $title->getFullText(), $name ) ) return false;
 
-			if ( !\MWUnit\TestCaseRegister::testExists( $title->getFullText(), $name ) ) {
-				return false;
-			}
-
-			$this->runner = new \MWUnit\UnitTestRunner( [
-				$this->getRequest()->getVal( 'unitTestIndividual' ) => $title->getArticleID()
-			] );
-			$this->runner->run();
+			$tests = [ $this->getRequest()->getVal( 'unitTestIndividual' ) => $title->getArticleID() ];
 		} elseif ( $this->getRequest()->getVal( 'unitTestCoverTemplate' ) ) {
 			$title = \Title::newFromText(
 				$this->getRequest()->getVal( 'unitTestCoverTemplate' ),
 				NS_TEMPLATE
 			);
 
-			if ( $title === null || $title === false || !$title->exists() ) {
-				return false;
-			}
+			if ( !$title instanceof \Title || !$title->exists() ) return false;
 
 			try {
 				$tests = \MWUnit\TestCaseRegister::getTestsCoveringTemplate( $title );
 			} catch ( MWUnitException $e ) {
 				return false;
 			}
-
-			if ( count( $tests ) === 0 ) {
-				return false;
-			}
-
-			$this->runner = new \MWUnit\UnitTestRunner( $tests );
-			$this->runner->run();
 		} else {
 			// Run the specified page
 			$title = \Title::newFromText( $this->getRequest()->getVal( 'unitTestPage' ) );
 
-			if ( $title === null || $title === false || !$title->exists() ) {
-				return false;
-			}
-
-			if ( $title->getNamespace() !== NS_TEST ) {
-				return false;
-			}
+			if ( !$title instanceof \Title || !$title->exists() ) return false;
+			if ( $title->getNamespace() !== NS_TEST ) return false;
 
 			try {
 				$tests = \MWUnit\TestCaseRegister::getTestsFromTitle( $title );
 			} catch ( MWUnitException $e ) {
 				return false;
 			}
-
-			if ( count( $tests ) === 0 ) {
-				return false;
-			}
-
-			$this->runner = new \MWUnit\UnitTestRunner( $tests );
-			$this->runner->run();
 		}
+
+		if ( count( $tests ) === 0 ) {
+			return false;
+		}
+
+		$this->runner = new \MWUnit\UnitTestRunner( $tests );
+		$this->runner->run();
 
 		return true;
 	}
@@ -281,7 +254,6 @@ class SpecialMWUnit extends \SpecialPage {
 	 */
 	private function renderTestResults( array $test_results ) {
 		if ( count( $test_results ) === 0 ) {
-			// TODO: Improve look of this error
 			$this->getOutput()->addHTML( "<b>No tests were ran</b>" );
 			return;
 		}

@@ -61,13 +61,15 @@ class TestCaseRun {
 
 	/**
 	 * TestCaseRun constructor.
+	 *
 	 * @param TestCase $test_case
-	 * @throws Exception\MWUnitException
 	 */
-	public function __construct( \MWUnit\TestCase $test_case ) {
+	public function __construct( TestCase $test_case ) {
 		$this->test_case = $test_case;
 
-		self::$test_result = new TestResult( MWUnit::getCanonicalTestNameFromTestCase( $test_case ) );
+		$test = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
+
+		self::$test_result = new TestResult( $test );
 		self::$covered = $test_case->getOption( 'covers' );
 	}
 
