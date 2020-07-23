@@ -15,6 +15,29 @@ use WikiPage;
  * @package MWUnit
  */
 class UpdateHandler {
+	public static function onPageContentSave(
+		WikiPage $wikiPage,
+		User $user,
+		Content $content,
+		&$summary,
+		bool $isMinor,
+		bool $isWatch,
+		$section,
+		$flags,
+		$status
+	) {
+		$article_id = $wikiPage->getTitle()->getArticleID();
+
+		MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
+			'id' => $article_id
+		] );
+
+		// Deregister all tests on the page and let the parser re-register them.
+		TestCaseRegister::deregisterTests( $article_id );
+
+		return true;
+	}
+
 	/**
 	 * Occurs after the save page request has been processed.
 	 *
@@ -50,6 +73,7 @@ class UpdateHandler {
 		int $undidRevId
 	) {
 		self::parseWikitext( $wikiPage, $mainContent );
+
 		return true;
 	}
 
@@ -83,6 +107,7 @@ class UpdateHandler {
 		Revision $revision
 	) {
 		self::parseWikitext( $wikiPage, $content );
+
 		return true;
 	}
 
@@ -146,8 +171,9 @@ class UpdateHandler {
 			return;
 		}
 
-		// Deregister all tests on the page and let the parser re-register them.
-		TestCaseRegister::deregisterTests( $article_id );
+		MWUnit::getLogger()->debug( 'Reparsing wikitext for article {id} because the page got updated', [
+			'id' => $article_id
+		] );
 
 		// Reparse Content to make sure the test has been registered.
 		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
