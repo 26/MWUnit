@@ -6,14 +6,15 @@ class That implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
-		$that = trim( $frame->expand( $args[0] ) );
+	public static function getName(): string {
+		return "that";
+	}
 
-		$failure_message = isset( $args[1] ) ?
-			trim( $frame->expand( $args[1] ) ) :
-			wfMessage( "mwunit-assert-failure-that", $that )->plain();
-
-		return filter_var( $that, FILTER_VALIDATE_BOOLEAN );
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return true;
 	}
 
 	/**
@@ -21,5 +22,26 @@ class That implements Assertion {
 	 */
 	public static function getRequiredArgumentCount(): int {
 		return 1;
+	}
+
+	/**
+	 * Returns false if and only if $proposition is not one of the following
+	 * values:
+	 *
+	 * - true
+	 * - yes
+	 * - on
+	 * - 1
+	 *
+	 * @param string $failure_message
+	 * @param string $proposition
+	 * @param string|null $message
+	 * @return bool
+	 */
+	public static function assert( &$failure_message, $proposition, $message = null ) {
+		$failure_message = $message ??
+			wfMessage( "mwunit-assert-failure-that", $proposition )->plain();
+
+		return filter_var( $proposition, FILTER_VALIDATE_BOOLEAN );
 	}
 }

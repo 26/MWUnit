@@ -135,17 +135,6 @@ class UnitTestRunner {
 	}
 
 	/**
-	 * Returns an array of successful TestResult objects.
-	 *
-	 * @return array
-	 */
-	public function getSuccessfulTests(): array {
-		return array_filter( $this->getResults(), function ( TestResult $result ) {
-			return $result->getResult() === TestResult::T_SUCCESS;
-		} );
-	}
-
-	/**
 	 * Runs a specific test page.
 	 *
 	 * @param int $article_id
@@ -154,22 +143,41 @@ class UnitTestRunner {
 		$wiki_page = \WikiPage::newFromID( $article_id );
 
 		if ( $wiki_page === false ) {
+			MWUnit::getLogger()->warning( 'Unable to run tests on article {article_id} because it does not exist', [
+				'article_id' => $article_id
+			] );
+
 			return;
 		}
 
 		if ( $wiki_page->getTitle()->getNamespace() !== NS_TEST ) {
+			MWUnit::getLogger()->warning( 'Unable to run tests on article {article} because it is not in the NS_TEST namespace', [
+				'article' => $wiki_page->getTitle()->getFullText()
+			] );
+
 			return;
 		}
 
 		try {
 			$content = $wiki_page->getRevision()->getContent( \Revision::RAW );
 			$parser  = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->getFreshParser();
+			$parser_options = $wiki_page->makeParserOptions( "canonical" );
+
 			$text = \ContentHandler::getContentText( $content );
 		} catch ( \MWException $e ) {
+			MWUnit::getLogger()->debug( 'Unable to create fresh parser for test suite {article}: {exception}', [
+				'article' => $wiki_page->getTitle()->getFullText(),
+				'exception' => $e
+			] );
+
 			return;
 		}
 
+		MWUnit::getLogger()->debug( 'Running tests on article {article_id}', [
+			'article' => $article_id
+		] );
+
 		// Run test cases
-		$parser->parse( $text, $wiki_page->getTitle(), $wiki_page->makeParserOptions( "canonical" ) );
+		$parser->parse( $text, $wiki_page->getTitle(), $parser_options );
 	}
 }

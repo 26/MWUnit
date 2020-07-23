@@ -2,37 +2,14 @@
 
 namespace MWUnit;
 
+use MediaWiki\Logger\LoggerFactory;
 use MWException;
 use MWUnit\Exception\MWUnitException;
+use MWUnit\Registry\AssertionRegistry;
 use Parser;
 
 class MWUnit {
-	const GLOBAL_ASSERTIONS = [ // phpcs:ignore
-		'string_contains' 				=> 'assertStringContains',
-		'string_contains_ignore_case' 	=> 'assertStringContainsIgnoreCase',
-		'has_length' 					=> 'assertHasLength',
-		'empty'							=> 'assertEmpty',
-		'not_empty' 					=> 'assertNotEmpty',
-		'equals' 						=> 'assertEquals',
-		'equals_ignore_case' 			=> 'assertEqualsIgnoreCase',
-		'page_exists' 					=> 'assertPageExists',
-		'greater_than' 					=> 'assertGreaterThan',
-		'greater_than_or_equal' 		=> 'assertGreaterThanOrEqual',
-		'is_integer' 					=> 'assertIsInteger',
-		'is_numeric' 					=> 'assertIsNumeric',
-		'less_than' 					=> 'assertLessThan',
-		'less_than_or_equal' 			=> 'assertLessThanOrEqual',
-		'string_ends_with' 				=> 'assertStringEndsWith',
-		'string_starts_with' 			=> 'assertStringStartsWith',
-		'error' 						=> 'assertError',
-		'no_error' 						=> 'assertNoError',
-		'that' 							=> 'assertThat'
-	];
-
-	const SEMANTIC_ASSERTIONS = [ // phpcs:ignore
-		'has_property' 	  				=> 'assertHasProperty',
-		'property_has_value' 			=> 'assertPropertyHasValue'
-	];
+	const LOGGING_CHANNEL = "MWUnit"; // phpcs:ignore
 
 	/**
 	 * @var bool
@@ -46,22 +23,19 @@ class MWUnit {
 	 * @throws MWException
 	 */
 	public static function onParserFirstCallInit( Parser $parser ) {
-		$parser->setHook( 'testcase', [ Controllers\TestCaseController::class, 'handleTestCase' ] );
-		self::registerFunctions( $parser );
-	}
+		$parser->setHook(
+			'testcase',
+			[ Controller\TestCaseController::class, 'handleTestCase' ]
+		);
 
-	/**
-	 * Handles the registration of the parser functions.
-	 *
-	 * @param Parser $parser
-	 * @throws MWException
-	 */
-	public static function registerFunctions( Parser $parser ) {
-		self::registerAssertions( $parser, self::GLOBAL_ASSERTIONS );
+		$assertion_registry = AssertionRegistry::getInstance();
+		$assertion_registry->registerAssertionClasses();
 
-		if ( \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' ) ) {
-			self::registerAssertions( $parser, self::SEMANTIC_ASSERTIONS );
-		}
+		$parser->setFunctionHook(
+			'create_mock',
+			[ Controller\MockController::class, 'handleCreateMock' ],
+			SFH_OBJECT_ARGS
+		);
 	}
 
 	/**
@@ -84,7 +58,10 @@ class MWUnit {
 	}
 
 	/**
-	 * Called at the end of Skin::buildSidebar().
+	 * Called at the end of Skin::buildSidebar(). Adds applicable links to the
+	 * skin's sidebar.
+	 *
+	 * Links are for instance added on all test pages or on covered templates.
 	 *
 	 * @param \Skin $skin
 	 * @param array &$sidebar
@@ -104,6 +81,7 @@ class MWUnit {
 					'active' => ''
 				]
 			];
+
 			return true;
 		}
 
@@ -137,6 +115,9 @@ class MWUnit {
 		);
 	}
 
+	/**
+	 * Sets a flag to tell other parts of the extension MWUnit is currently executing tests.
+	 */
 	public static function setRunning() {
 		self::$test_running = true;
 	}
@@ -144,17 +125,19 @@ class MWUnit {
 	/**
 	 * Returns true if and only if a test is currently running.
 	 *
-	 * @return bool
+	 * @return bool True if running, false otherwise
 	 */
 	public static function isRunning(): bool {
 		return self::$test_running === true;
 	}
 
 	/**
+	 * Returns the canonical test name for the given $article_id and $test_name.
+	 *
 	 * @param int $article_id
 	 * @param string $test_name
 	 * @return string
-	 * @throws MWUnitException
+	 * @throws MWUnitException Thrown when an invalid article ID is given
 	 */
 	public static function getCanonicalTestName( int $article_id, string $test_name ): string {
 		$title = \Title::newFromID( $article_id );
@@ -166,27 +149,24 @@ class MWUnit {
 	}
 
 	/**
+	 * Returns the canonical name of the given TestCase, which is used for
+	 * identifying tests.
+	 *
 	 * @param TestCase $testcase
-	 * @return string
+	 * @return string The canonical test name
 	 */
 	public static function getCanonicalTestNameFromTestCase( TestCase $testcase ): string {
 		return $testcase->getParser()->getTitle()->getText() . "::" . $testcase->getName();
 	}
 
 	/**
-	 * Registers the given list of assertions to the given parser.
+	 * Returns MWUnit's logger interface.
 	 *
-	 * @param Parser $parser
-	 * @param array $assertions
-	 * @throws MWException
+	 * @see https://www.mediawiki.org/wiki/Manual:Structured_logging
+	 *
+	 * @return \Psr\Log\LoggerInterface The logger interface
 	 */
-	private static function registerAssertions( Parser $parser, array $assertions ) {
-		foreach ( $assertions as $assertion => $function ) {
-			$parser->setFunctionHook(
-				"assert_$assertion",
-				[ Controllers\AssertionController::class, $function ],
-				Parser::SFH_OBJECT_ARGS
-			);
-		}
+	public static function getLogger(): \Psr\Log\LoggerInterface {
+		return LoggerFactory::getInstance( self::LOGGING_CHANNEL );
 	}
 }

@@ -20,51 +20,34 @@ class TestCaseRegister {
 	 * @throws \MWException
 	 */
 	public static function register( TestCase $test_case ) {
-	    	if ( !$test_case->getParser()->getTitle()->exists() ) {
-	        	// This page has not yet been created.
-	        	return;
-        	}
+		if ( !$test_case->getParser()->getTitle()->exists() ) {
+			// This page has not yet been created.
+			return;
+		}
 
 		$result = \Hooks::run( 'MWUnitBeforeRegisterTestCase', [ &$test_case ] );
-
 		if ( $result === false ) {
 			return;
 		}
 
-		$database = wfGetDb( DB_MASTER );
-		$result = $database->select(
-			'mwunit_tests',
-			[
-				'article_id'
-			],
-			[
-				'test_name' => $test_case->getName(),
-				'article_id' => $test_case->getParser()->getTitle()->getArticleID()
-			],
-			__METHOD__
-		);
-
 		self::$init_registered_tests[] = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
 
-		if ( $result->numRows() > 0 ) {
-			// Do not throw an error when its the same test
-			if ( (int)$result->current()->article_id === $test_case->getParser()->getTitle()->getArticleID() ) {
-				$init_registered_test_count = array_count_values( self::$init_registered_tests );
-				$test_name = MWUnit::getCanonicalTestName(
-					$result->current()->article_id,
-					$test_case->getName()
-				);
+		$registered = self::isTestRegistered( $test_case );
 
-				if ( $init_registered_test_count[ $test_name ] < 2 ) {
-					return;
-				}
-			}
+		if ( $registered === true ) {
+			MWUnit::getLogger()->notice("Did not register testcase {testcase} because it was already registered", [
+				"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
+			] );
 
-			// This test has already been registered on this page, or on a different page
+			// This test has already been registered on this page
 			throw new Exception\TestCaseRegistrationException(
 				'mwunit-duplicate-test',
 				[ htmlspecialchars( $test_case->getName() ) ]
 			);
+		}
+
+		if ( $registered === null ) {
+			return;
 		}
 
 		$fields = [
@@ -77,7 +60,16 @@ class TestCaseRegister {
 			$fields[ 'covers' ] = $test_case->getOption( 'covers' );
 		}
 
+		MWUnit::getLogger()->notice("Registering testcase {testcase}", [
+			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
+		] );
+
+		$database = wfGetDb( DB_MASTER );
 		$database->insert( 'mwunit_tests', $fields );
+
+		MWUnit::getLogger()->debug("Registered testcase {testcase}", [
+			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
+		] );
 	}
 
     /**
@@ -243,5 +235,48 @@ class TestCaseRegister {
 			[ 'covers' => $template_name ],
 			'Database::select'
 		)->numRows() > 0;
+	}
+
+	/**
+	 * Returns true if and only if the given $test_case has already been registered.
+	 *
+	 * @param TestCase $test_case
+	 * @return bool|null True when it has already been registered, false when it has not been registered or
+	 * null when we have already registered the given test, but it was not a duplicate.
+	 * @throws Exception\MWUnitException
+	 */
+	private static function isTestRegistered( TestCase $test_case ) {
+		$database = wfGetDb( DB_MASTER );
+		$result = $database->select(
+			'mwunit_tests',
+			[
+				'article_id'
+			],
+			[
+				'test_name' => $test_case->getName(),
+				'article_id' => $test_case->getParser()->getTitle()->getArticleID()
+			],
+			__METHOD__
+		);
+
+		if ( $result->numRows() < 1 ) {
+			return false;
+		}
+
+		if ( (int)$result->current()->article_id !== $test_case->getParser()->getTitle()->getArticleID() ) {
+			return false;
+		}
+
+		$init_registered_test_count = array_count_values( self::$init_registered_tests );
+		$test_name = MWUnit::getCanonicalTestName(
+			$result->current()->article_id,
+			$test_case->getName()
+		);
+
+		if ( $init_registered_test_count[ $test_name ] < 2 ) {
+			return null;
+		}
+
+		return true;
 	}
 }

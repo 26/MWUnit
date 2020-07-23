@@ -18,11 +18,17 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 	 */
 	public function testCompletionCallback( TestResult $result ) {
 		$testsuite = $result->getPageName();
+
+		if ( $testsuite === false ) {
+			return;
+		}
+
 		if ( !isset( $this->current_testsuite ) || $this->current_testsuite !== $testsuite ) {
 			$this->current_testsuite = $testsuite;
 			$title = \Title::newFromText( $testsuite );
 
-			if ( $title === null || $title === false ) { return;
+			if ( $title === null || $title === false ) {
+				return;
 			}
 
 			print ( $title->getText() . "\n" );
@@ -38,12 +44,7 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 				break;
 			case TestResult::T_FAILED:
 				print( "  \e[0;31m✘\e[0m " . $this->toSentence( $result->getTestName() ) . "\n" );
-				foreach ( $result->getAssertionResults() as $result ) {
-					if ( $result[ 'predicate_result' ] === false ) {
-						$this->printFailureReason( $result[ 'failure_message' ] );
-						break;
-					}
-				}
+				$this->printFailureReason( $result->getFailureMessage() );
 				break;
 		}
 	}

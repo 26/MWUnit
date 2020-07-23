@@ -3,6 +3,7 @@
 namespace MWUnit;
 
 use MWUnit\Exception\MWUnitException;
+use Title;
 
 /**
  * Class TestCaseRun
@@ -19,7 +20,7 @@ class TestCaseRun {
 	 *
 	 * @var bool|string
 	 */
-	private static $covered;
+	public static $covered;
 
 	/**
 	 * A clone of the parser right before it encountered the first test case. Used for strict coverage checking.
@@ -42,14 +43,14 @@ class TestCaseRun {
 	 * Called when the parser fetches a template. Used for strict coverage checking.
 	 *
 	 * @param \Parser|bool $parser
-	 * @param \Title $title
+	 * @param Title $title
 	 * @param \Revision $revision
 	 * @param string|false|null &$text
 	 * @param array &$deps
 	 */
 	public static function onParserFetchTemplate(
 		$parser,
-		\Title $title,
+		Title $title,
 		\Revision $revision,
 		&$text,
 		array &$deps
@@ -61,13 +62,15 @@ class TestCaseRun {
 
 	/**
 	 * TestCaseRun constructor.
+	 *
 	 * @param TestCase $test_case
-	 * @throws Exception\MWUnitException
 	 */
-	public function __construct( \MWUnit\TestCase $test_case ) {
+	public function __construct( TestCase $test_case ) {
 		$this->test_case = $test_case;
 
-		self::$test_result = new TestResult( MWUnit::getCanonicalTestNameFromTestCase( $test_case ) );
+		$test = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
+
+		self::$test_result = new TestResult( $test );
 		self::$covered = $test_case->getOption( 'covers' );
 	}
 
@@ -95,8 +98,12 @@ class TestCaseRun {
 				$context = $this->test_case->getParser()->getUser();
 				break;
 			default:
-				self::$test_result->setRisky();
-				self::$test_result->setRiskyMessage( wfMessage( 'mwunit-invalid-context' )->plain() );
+				MWUnit::getLogger()->debug( "Invalid context on {context} on {test}", [
+					$context_option,
+					MWUnit::getCanonicalTestNameFromTestCase( $this->test_case )
+				] );
+
+				self::$test_result->setRisky( wfMessage( 'mwunit-invalid-context' )->plain() );
 				return;
 		}
 
@@ -148,6 +155,8 @@ class TestCaseRun {
 	private function backupGlobals() {
 		$option = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
 		if ( $option ) {
+			MWUnit::getLogger()->debug( "Backing up globals" );
+
 			$this->globals[ 'GLOBALS' ] 	= $GLOBALS;
 			$this->globals[ '_SERVER' ] 	= $_SERVER;
 			$this->globals[ '_GET' ]    	= $_GET; // phpcs:ignore
@@ -167,8 +176,11 @@ class TestCaseRun {
 		$option = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
 		if ( $option ) {
 			if ( !isset( $this->globals ) ) {
+				MWUnit::getLogger()->emergency( "Unable to restore globals because they are not available" );
 				throw new MWUnitException( 'mwunit-globals-restored-before-backup' );
 			}
+
+			MWUnit::getLogger()->debug( "Restoring globals" );
 
 			$GLOBALS  	= $this->globals[ 'GLOBALS' ];
 			$_SERVER  	= $this->globals[ '_SERVER' ];
@@ -194,9 +206,9 @@ class TestCaseRun {
 			return false;
 		}
 
-		$title = \Title::newFromText( $template, NS_TEMPLATE );
+		$title = Title::newFromText( $template, NS_TEMPLATE );
 
-		if ( $title === false || $title === null ) {
+		if ( !$title instanceof Title ) {
 			return false;
 		}
 
@@ -204,7 +216,8 @@ class TestCaseRun {
 
 		if ( isset( $parser->mTplRedirCache[$titleText] ) ) {
 			list( $ns, $dbk ) = $parser->mTplRedirCache[$titleText];
-			$title = \Title::makeTitle( $ns, $dbk );
+
+			$title = Title::makeTitle( $ns, $dbk );
 			$titleText = $title->getPrefixedDBkey();
 		}
 
@@ -225,8 +238,7 @@ class TestCaseRun {
 			) && $this->test_case->getOption( 'ignorestrictcoverage' ) === false;
 
 		if ( $strict_coverage && !self::$test_result->isTemplateCovered() ) {
-			self::$test_result->setRisky();
-			self::$test_result->setRiskyMessage( 'mwunit-strict-coverage-violation' );
+			self::$test_result->setRisky( wfMessage( 'mwunit-strict-coverage-violation' )->plain() );
 		}
 	}
 }

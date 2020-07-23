@@ -122,14 +122,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 		print( $test->getCanonicalTestName() . "\n" );
 
 		if ( $test->getResult() === TestResult::T_FAILED ) {
-			$assertions = $test->getAssertionResults();
-
-			foreach ( $assertions as $assertion ) {
-				if ( $assertion[ 'predicate_result' ] === false ) {
-					print( $assertion[ 'failure_message' ] );
-					break;
-				}
-			}
+			print( $test->getFailureMessage() );
 		} elseif ( $test->getResult() === TestResult::T_RISKY ) {
 			print( $test->getRiskyMessage() );
 		}

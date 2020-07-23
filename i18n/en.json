@@ -58,6 +58,7 @@
   "mwunit-no-assertions": "This test is marked as risky, because it contains 0 assertions.",
   "mwunit-invalid-context": "This test is marked as risky, because the given context is invalid. The context option must either be <i>empty</i>, 'canonical', or 'user'.",
   "mwunit-invalid-assertion": "This test is marked as risky, because at least one assertion has one or more invalid parameters.",
+  "mwunit-mocked-cover-template": "This test is marked as risky, because the template that should get covered in this test is mocked.",
   "mwunit-config-max-test-execution-time": "The maximum execution time for (all tests in) a test run",
   "mwunit-config-default-testdox": "Whether or not TestDox is the default result printer for the command-line test runner",
   "mwunit-config-backup-globals": "Whether or not to backup before and restore PHP globals and superglobals after every test case",

@@ -35,6 +35,10 @@ class TestCaseRunner {
 			return;
 		}
 
+		MWUnit::getLogger()->debug( "Running test case {testcase}", [
+			'testcase' => MWUnit::getCanonicalTestNameFromTestCase( $this->test_case )
+		] );
+
 		$run = new TestCaseRun( $this->test_case );
 		$run->runTest();
 
@@ -42,8 +46,7 @@ class TestCaseRunner {
 		UnitTestRunner::$total_test_count += 1;
 
 		if ( !$run->getTestResult()->isTestRisky() && $run->getAssertionCount() === 0 ) {
-			$run::$test_result->setRisky();
-			TestCaseRun::$test_result->setRiskyMessage( wfMessage( 'mwunit-no-assertions' )->plain() );
+			$run::$test_result->setRisky( wfMessage( 'mwunit-no-assertions' )->plain() );
 		}
 
 		\Hooks::run( 'MWUnitAfterTestComplete', [ &$run ] );
@@ -51,6 +54,10 @@ class TestCaseRunner {
 		UnitTestRunner::$test_results[] = $run->getTestResult();
 
 		if ( is_callable( UnitTestRunner::$callback ) ) {
+			MWUnit::getLogger()->debug( "Calling test case completion callback {callback}", [
+				UnitTestRunner::$callback
+			] );
+
 			$callable = UnitTestRunner::$callback;
 			$callable( $run->getTestResult() );
 		}

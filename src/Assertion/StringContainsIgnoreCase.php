@@ -6,18 +6,15 @@ class StringContainsIgnoreCase implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
-	public static function assert( \Parser $parser, \PPFrame $frame, array $args, &$failure_message ) {
-		$needle = trim( $frame->expand( $args[0] ) );
-		$haystack = trim( $frame->expand( $args[1] ) );
+	public static function getName(): string {
+		return "string_contains_ignore_case";
+	}
 
-		$needle_lower = strtolower( $needle );
-		$haystack_lower = strtolower( $haystack );
-
-		$failure_message = isset( $args[2] ) ?
-			trim( $frame->expand( $args[2] ) ) :
-			wfMessage( "mwunit-assert-failure-contains-string", $needle_lower, $haystack_lower )->plain();
-
-		return strpos( $haystack_lower, $needle_lower ) !== false;
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return true;
 	}
 
 	/**
@@ -25,5 +22,30 @@ class StringContainsIgnoreCase implements Assertion {
 	 */
 	public static function getRequiredArgumentCount(): int {
 		return 2;
+	}
+
+	/**
+	 * Returns false if and only if $needle is not contained within $haystack. Differences in casing
+	 * are ignored in the comparison.
+	 *
+	 * @param string $failure_message
+	 * @param string $needle
+	 * @param string $haystack
+	 * @param string|null $message
+	 * @return bool|null
+	 */
+	public static function assert( &$failure_message, $needle, $haystack, $message = null ) {
+		$needle_lower = mb_strtolower( $needle );
+		$haystack_lower = mb_strtolower( $haystack );
+
+		if ( mb_strlen( $needle_lower ) < 1 || mb_strlen( $haystack_lower ) < 1 ) {
+			$failure_message = wfMessage( "mwunit-invalid-assertion" )->plain();
+			return null;
+		}
+
+		$failure_message = $message ??
+			wfMessage( "mwunit-assert-failure-contains-string", $needle_lower, $haystack_lower )->plain();
+
+		return mb_strpos( $haystack_lower, $needle_lower ) !== false;
 	}
 }

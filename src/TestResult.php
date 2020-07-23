@@ -18,6 +18,11 @@ class TestResult {
 	private $risky_message = '';
 
 	/**
+	 * @var string
+	 */
+	private $failure_message = '';
+
+	/**
 	 * @var bool
 	 */
 	private $covers = false;
@@ -38,32 +43,27 @@ class TestResult {
 	 */
 	public function addAssertionResult( array $assertion_result ) {
 		if ( $assertion_result['predicate_result'] === false ) {
-			$this->setFailed();
+			$this->setFailed( $assertion_result['failure_message'] );
 		}
 
 		$this->assertion_results[] = $assertion_result;
 	}
 
 	/**
-	 * Sets the message key for the "risky" message, which is displayed if the test is marked as risky.
-	 *
+	 * Sets the test result to "FAILED".
 	 * @param string $message
 	 */
-	public function setRiskyMessage( string $message ) {
-		$this->risky_message = $message;
-	}
-
-	/**
-	 * Sets the test result to "FAILED".
-	 */
-	public function setFailed() {
+	public function setFailed( $message ) {
+		$this->failure_message = $message;
 		$this->test_result = self::T_FAILED;
 	}
 
 	/**
-	 * Sets the test result to "RISKY".
+	 * Sets the test result to "RISKY" and sets the message for the "risky" message.
+	 * @param string $message
 	 */
-	public function setRisky() {
+	public function setRisky( $message ) {
+		$this->risky_message = $message;
 		$this->test_result = self::T_RISKY;
 	}
 
@@ -86,15 +86,6 @@ class TestResult {
 	}
 
 	/**
-	 * Returns the array of AssertionResult objects.
-	 *
-	 * @return array
-	 */
-	public function getAssertionResults(): array {
-		return $this->assertion_results;
-	}
-
-	/**
 	 * Returns the canonical test name of this object.
 	 *
 	 * @return string
@@ -104,7 +95,7 @@ class TestResult {
 	}
 
 	/**
-	 * Returns the localized "risky" message.
+	 * Returns the "risky" message.
 	 *
 	 * @return string
 	 */
@@ -113,12 +104,28 @@ class TestResult {
 	}
 
 	/**
-	 * Returns the page name this test is on.
+	 * Returns the "failure" message.
 	 *
 	 * @return string
 	 */
+	public function getFailureMessage(): string {
+		return $this->failure_message;
+	}
+
+	/**
+	 * Returns the page name this test is on or false on failure.
+	 *
+	 * @return string|bool
+	 */
 	public function getPageName(): string {
-		return "Test:" . explode( "::", $this->canonical_testname )[0];
+		$page_text = explode( "::", $this->canonical_testname )[0];
+		$title_object = \Title::newFromText( $page_text, NS_TEST );
+
+		if ( !$title_object instanceof \Title ) {
+			return false;
+		}
+
+		return $title_object->getFullText();
 	}
 
 	/**
