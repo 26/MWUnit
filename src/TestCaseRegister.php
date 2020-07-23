@@ -60,7 +60,16 @@ class TestCaseRegister {
 			$fields[ 'covers' ] = $test_case->getOption( 'covers' );
 		}
 
+		MWUnit::getLogger()->notice("Registering testcase {testcase}", [
+			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
+		] );
+
+		$database = wfGetDb( DB_MASTER );
 		$database->insert( 'mwunit_tests', $fields );
+
+		MWUnit::getLogger()->debug("Registered testcase {testcase}", [
+			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
+		] );
 	}
 
     /**

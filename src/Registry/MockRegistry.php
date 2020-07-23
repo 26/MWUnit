@@ -3,9 +3,6 @@
 namespace MWUnit\Registry;
 
 use MWUnit\MWUnit;
-use MWUnit\TestCaseRun;
-use Parser;
-use Revision;
 use Title;
 
 class MockRegistry {
@@ -72,5 +69,9 @@ class MockRegistry {
 	public function registerMock( Title $title, string $content ) {
 		$id = $title->getArticleID();
 		$this->mocks[ $id ] = $content;
+
+		MWUnit::getLogger()->notice("Registering mock for {title}", [
+			"title" => $title->getFullText()
+		] );
 	}
 }

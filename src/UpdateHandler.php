@@ -147,6 +147,10 @@ class UpdateHandler {
 			return true;
 		}
 
+		MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got deleted', [
+			'id' => $deleted_id
+		] );
+
 		TestCaseRegister::deregisterTests( $deleted_id );
 
 		return true;
@@ -159,10 +163,14 @@ class UpdateHandler {
 	 * @param Content $content
 	 * @throws \MWException
 	 */
-	private static function parseWikitext(WikiPage $wikiPage, Content $content) {
+	private static function parseWikitext( WikiPage $wikiPage, Content $content ) {
 		$article_id = $wikiPage->getId();
 
 		if ( $article_id === null ) {
+			MWUnit::getLogger()->error( 'Unable to parse wikitext on update for article {id}', [
+				'id' => $article_id
+			] );
+
 			throw new \MWException( "Article ID musn't be `null`." );
 		}
 

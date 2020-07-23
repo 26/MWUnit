@@ -34,7 +34,12 @@ class MockController {
 			)
 		);
 
-		$title = Title::newFromText( $page );
+		if ( strpos( $page, ":" ) === false ) {
+			// Interpret page without namespace as template
+			$title = Title::newFromText( $page, NS_TEMPLATE );
+		} else {
+			$title = Title::newFromText( $page );
+		}
 
 		if ( !$title instanceof Title || !$title->exists() ) {
 			return MWUnit::error( "mwunit-set-mock-bad-title" );

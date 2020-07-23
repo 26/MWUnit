@@ -35,6 +35,10 @@ class TestCaseRunner {
 			return;
 		}
 
+		MWUnit::getLogger()->debug( "Running test case {testcase}", [
+			'testcase' => MWUnit::getCanonicalTestNameFromTestCase( $this->test_case )
+		] );
+
 		$run = new TestCaseRun( $this->test_case );
 		$run->runTest();
 
@@ -50,6 +54,10 @@ class TestCaseRunner {
 		UnitTestRunner::$test_results[] = $run->getTestResult();
 
 		if ( is_callable( UnitTestRunner::$callback ) ) {
+			MWUnit::getLogger()->debug( "Calling test case completion callback {callback}", [
+				UnitTestRunner::$callback
+			] );
+
 			$callable = UnitTestRunner::$callback;
 			$callable( $run->getTestResult() );
 		}

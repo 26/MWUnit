@@ -2,6 +2,7 @@
 
 namespace MWUnit\Registry;
 
+use MediaWiki\MediaWikiServices;
 use MWUnit\Assertion\Assertion;
 use MWUnit\Assertion\Equals;
 use MWUnit\Assertion\EqualsIgnoreCase;
@@ -25,6 +26,7 @@ use MWUnit\Assertion\StringEndsWith;
 use MWUnit\Assertion\StringStartsWith;
 use MWUnit\Assertion\That;
 use MWUnit\Controller\AssertionController;
+use MWUnit\MWUnit;
 use Parser;
 use PPFrame;
 
@@ -67,7 +69,7 @@ class AssertionRegistry {
 		\Hooks::run( "MWUnitGetAssertionClasses", [ &$classes ] );
 
 		$this->classes = $classes;
-		$this->parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
+		$this->parser = MediaWikiServices::getInstance()->getParser();
 	}
 
 	/**
@@ -113,11 +115,23 @@ class AssertionRegistry {
 			$reflection_class = new \ReflectionClass( $assertion );
 
 			if ( !$reflection_class->implementsInterface( Assertion::class ) ) {
+				MWUnit::getLogger()->warning("Unable to register assertion given by class {class} because it does not implement the Assertion interface", [
+					"class" => $assertion
+				] );
+
 				return false;
 			}
 		} catch ( \ReflectionException $e ) {
+			MWUnit::getLogger()->error( "Unable to register assertion because the class could not be reflected (does not exist): {e}", [
+				$e
+			] );
+
 			return false;
 		}
+
+		MWUnit::getLogger()->notice("Registering assertion {assertion}", [
+			"assertion" => $assertion::getName()
+		] );
 
 		$assertion_name = $assertion::getName();
 		$this->parser->setFunctionHook(
