@@ -56,7 +56,7 @@
   "mwunit-sidebar-run-tests-for-template": "Run associated unit tests",
   "mwunit-invalid-page-name": "This test is marked as risky, because the page required by at least one assertion does not exist.",
   "mwunit-no-assertions": "This test is marked as risky, because it contains 0 assertions.",
-  "mwunit-invalid-context": "This test is marked as risky, because the given context is invalid. The context option must either be <i>empty</i>, 'canonical', or 'user'.",
+  "mwunit-invalid-context": "This test is marked as risky, because the given context is invalid. The context option must either be <i>empty</i>, 'canonical' or 'user'.",
   "mwunit-invalid-assertion": "This test is marked as risky, because at least one assertion has one or more invalid parameters.",
   "mwunit-mocked-cover-template": "This test is marked as risky, because the template that should get covered in this test is mocked.",
   "mwunit-config-max-test-execution-time": "The maximum execution time for (all tests in) a test run",

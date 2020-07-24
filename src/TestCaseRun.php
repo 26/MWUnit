@@ -95,7 +95,7 @@ class TestCaseRun {
 				$context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
 				break;
 			case 'user':
-				$context = $this->test_case->getParser()->getUser();
+				$context = \RequestContext::getMain()->getUser();
 				break;
 			default:
 				MWUnit::getLogger()->debug( "Invalid context on {context} on {test}", [
