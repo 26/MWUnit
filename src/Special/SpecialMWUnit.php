@@ -19,9 +19,12 @@ class SpecialMWUnit extends \SpecialPage {
 
 	/**
 	 * SpecialMWUnit constructor.
+	 * @throws \UserNotLoggedIn
 	 */
 	public function __construct() {
-		parent::__construct( "MWUnit", 'mwunit-runtests' );
+		parent::__construct( "MWUnit", "mwunit-runtests", true );
+		parent::requireLogin();
+
 
 		set_time_limit( $this->getConfig()->get( 'MWUnitMaxTestExecutionTime' ) );
 	}
@@ -49,6 +52,8 @@ class SpecialMWUnit extends \SpecialPage {
 	 * @throws \MWException
 	 */
 	public function execute( $subpage ) {
+		$this->checkPermissions();
+
 		if ( $this->shouldRunTests() && $this->runTests() ) {
 			$nav = $this->msg( 'parentheses' )
 						->rawParams( $this->getLanguage()->pipeList( [
