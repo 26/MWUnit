@@ -19,11 +19,11 @@ class MockController {
 	 */
 	public static function handleCreateMock( Parser $parser, PPFrame $frame, array $args ) {
 		if ( !isset( $args[0] ) ) {
-			return MWUnit::error( "mwunit-set-mock-missing-argument", [ "page title" ] );
+			return MWUnit::error( "mwunit-create-mock-missing-argument", [ "1st (page title)" ] );
 		}
 
 		if ( !isset( $args[1] ) ) {
-			return MWUnit::error( "mwunit-set-mock-missing-argument", [ "mock content" ] );
+			return MWUnit::error( "mwunit-create-mock-missing-argument", [ "2nd (mock content)" ] );
 		}
 
 		$page = trim( $frame->expand( $args[0] ) );
@@ -42,7 +42,7 @@ class MockController {
 		}
 
 		if ( !$title instanceof Title || !$title->exists() ) {
-			return MWUnit::error( "mwunit-set-mock-bad-title" );
+			return MWUnit::error( "mwunit-create-mock-bad-title" );
 		}
 
 		$mock_registry = MockRegistry::getInstance();

@@ -68,6 +68,8 @@
   "mwunit-special-result-title": "Unit test results",
   "mwunit-special-group-label": "Only run tests from the specified group. A test can be tagged as belonging to a group using the 'group' annotation.",
   "mwunit-test-result-intro": "This page displays the result of the unit tests. If a test is marked as <span style=\"color:#14866d\"><i>Passed</i></span>, this means the assertion succeeded. If a test is marked as <span style=\"color:#fc3\"><i>Risky</i></span>, this means the test was deemed risky or incomplete by MWUnit. You can read more about risky tests on <a href='https://www.mediawiki.org/wiki/Extension:MWUnit/Risky_tests' title='MediaWiki.org'>MediaWiki.org</a>. If a test is marked as <span style=\"color:#d33\"><i>Failed</i></span>, at least one assertion failed. Only the first assertion that failed will get shown. Usually, a failed test will be accompanied by a short explanation.",
+  "mwunit-create-mock-missing-argument": "The #create_mock parser function is missing the $1 argument",
+  "mwunit-create-mock-bad-title": "The page you are trying to mock does not exist; it is not possible to mock non-existent pages",
   "specialpages-group-mwunit": "Unit testing",
   "right-mwunit-runtests": "Run unit tests",
   "action-mwunit-runtests": "run unit tests"
