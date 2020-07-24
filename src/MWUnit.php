@@ -73,12 +73,13 @@ class MWUnit {
 			$special_title = \Title::newFromText( 'Special:MWUnit' );
 			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
 				[
-					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' ),
+					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->plain(),
 					'href' => $special_title->getFullURL( [
 						'unitTestCoverTemplate' => $skin->getTitle()->getText()
 					] ),
 					'id' => 'mwunit-sb-run',
-					'active' => ''
+					'active' => '',
+					'accesskey' => 'a'
 				]
 			];
 
@@ -92,10 +93,11 @@ class MWUnit {
 		$special_title = \Title::newFromText( 'Special:MWUnit' );
 		$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
 			[
-				'text' => wfMessage( 'mwunit-sidebar-run-tests' ),
+				'text' => wfMessage( 'mwunit-sidebar-run-tests' )->plain(),
 				'href' => $special_title->getFullURL( [ 'unitTestPage' => $skin->getTitle()->getFullText() ] ),
 				'id' => 'mwunit-sb-run',
-				'active' => ''
+				'active' => '',
+				'accesskey' => 'a'
 			]
 		];
 
