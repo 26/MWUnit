@@ -72,6 +72,11 @@ class UpdateHandler {
 		$originalRevId,
 		int $undidRevId
 	) {
+        if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+            // Do not run hook outside of "Test" namespace
+            return;
+        }
+
 		self::parseWikitext( $wikiPage, $mainContent );
 
 		return true;
@@ -106,6 +111,11 @@ class UpdateHandler {
 		&$flags,
 		Revision $revision
 	) {
+        if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+            // Do not run hook outside of "Test" namespace
+            return;
+        }
+
 		self::parseWikitext( $wikiPage, $content );
 
 		return true;
@@ -164,27 +174,18 @@ class UpdateHandler {
 	 * @throws \MWException
 	 */
 	private static function parseWikitext( WikiPage $wikiPage, Content $content ) {
-		$article_id = $wikiPage->getId();
-
-		if ( $article_id === null ) {
-			MWUnit::getLogger()->error( 'Unable to parse wikitext on update for article {id}', [
-				'id' => $article_id
-			] );
-
-			throw new \MWException( "Article ID musn't be `null`." );
-		}
-
-		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
-			// Do not run hook outside of "Test" namespace
-			return;
-		}
-
-		MWUnit::getLogger()->debug( 'Reparsing wikitext for article {id} because the page got updated', [
-			'id' => $article_id
+	    MWUnit::getLogger()->debug( 'Reparsing wikitext for article {id} because the page got updated', [
+			'id' => $wikiPage->getTitle()->getFullText()
 		] );
 
-		// Reparse Content to make sure the test has been registered.
-		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
-		$parser->recursiveTagParse( \ContentHandler::getContentText( $content ) );
+	    global $wgVersion;
+        $context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
+
+        $parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
+        $parser->parse(
+            \ContentHandler::getContentText( $content ),
+            $wikiPage->getTitle(),
+            \ParserOptions::newCanonical( $context )
+        );
 	}
 }

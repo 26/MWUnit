@@ -4,7 +4,7 @@ namespace MWUnit\Controller;
 
 use MWUnit\Assertion\Assertion;
 use MWUnit\MWUnit;
-use MWUnit\TestCaseRun;
+use MWUnit\TestRun;
 
 class AssertionController {
 	/**
@@ -27,20 +27,15 @@ class AssertionController {
 			return MWUnit::error( "mwunit-outside-test-namespace" );
 		}
 
-		if ( !MWUnit::isRunning() ) {
-			return '';
-		}
-
-		if ( !TestCaseRun::$test_result->didTestSucceed() ) {
-			return '';
-		}
+		if ( !MWUnit::isRunning() ) return '';
+		if ( !TestRun::$test_result->didTestSucceed() ) return '';
 
 		$required_arg_count = $class::getRequiredArgumentCount();
 		$actual_arg_count 	= count( $arguments );
 		$argument_range 	= range( $required_arg_count, $required_arg_count + 1 );
 
 		if ( !in_array( $actual_arg_count, $argument_range ) ) {
-			TestCaseRun::$test_result->setRisky( wfMessage( 'mwunit-invalid-assertion' )->plain() );
+			TestRun::$test_result->setRisky( wfMessage( 'mwunit-invalid-assertion' )->plain() );
 			return '';
 		}
 
@@ -69,17 +64,17 @@ class AssertionController {
 			return null;
 		}
 
-		$failure_message = '';
+        $failure_message = '';
+		$test_result = TestRun::$test_result;
 		$result = $class::assert( $failure_message, ...$arguments );
 
 		if ( $result === null ) {
-			TestCaseRun::$test_result->setRisky( $failure_message );
-		}
+            $test_result->setRisky( $failure_message );
+		} else if ( $result === false ) {
+            $test_result->setFailed( $failure_message );
+        }
 
-		TestCaseRun::$test_result->addAssertionResult( [
-			'predicate_result' => $result,
-			'failure_message' => $failure_message
-		] );
+        $test_result->incrementAssertionCount();
 
 		return $result;
 	}

@@ -13,7 +13,7 @@ use MWUnit\TestResult;
  */
 class SpecialMWUnit extends \SpecialPage {
 	/**
-	 * @var \MWUnit\UnitTestRunner
+	 * @var \MWUnit\TestSuiteRunner
 	 */
 	private $runner;
 
@@ -24,7 +24,6 @@ class SpecialMWUnit extends \SpecialPage {
 	public function __construct() {
 		parent::__construct( "MWUnit", "mwunit-runtests", true );
 		parent::requireLogin();
-
 
 		set_time_limit( $this->getConfig()->get( 'MWUnitMaxTestExecutionTime' ) );
 	}
@@ -67,7 +66,6 @@ class SpecialMWUnit extends \SpecialPage {
 			$this->getOutput()->setSubtitle( $nav );
 
 			$test_results = $this->runner->getResults();
-
 			$this->renderTestResults( $test_results );
 		} else {
 			$this->showForms();
@@ -135,7 +133,7 @@ class SpecialMWUnit extends \SpecialPage {
 			return false;
 		}
 
-		$this->runner = new \MWUnit\UnitTestRunner( $tests );
+		$this->runner = new \MWUnit\TestSuiteRunner( $tests );
 		$this->runner->run();
 
 		return true;
@@ -347,7 +345,6 @@ class SpecialMWUnit extends \SpecialPage {
 		$title = \Title::newFromText( $page_name );
 
 		if ( $title === null || $title === false ) {
-			// TODO: Improve error handling
 			return null;
 		}
 

@@ -110,7 +110,7 @@ class RunTests extends \Maintenance {
 				(bool)$this->getOption( 'no-progress', false )
 			);
 
-		$unit_test_runner = new \MWUnit\UnitTestRunner( $tests );
+		$unit_test_runner = new \MWUnit\TestSuiteRunner( $tests );
 		$unit_test_runner->run( [ $interface, "testCompletionCallback" ] );
 
 		$interface->outputTestResults( $unit_test_runner );

@@ -47,7 +47,6 @@ class MWUnit {
 	public static function onLoadExtensionSchemaUpdates( \DatabaseUpdater $updater ) {
 		$directory = $GLOBALS['wgExtensionDirectory'] . '/MWUnit/sql';
 		$type = $updater->getDB()->getType();
-
 		$mwunit_tests_sql = sprintf( "%s/%s/table_mwunit_tests.sql", $directory, $type );
 
 		if ( !file_exists( $mwunit_tests_sql ) ) {

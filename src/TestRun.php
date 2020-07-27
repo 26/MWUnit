@@ -6,10 +6,15 @@ use MWUnit\Exception\MWUnitException;
 use Title;
 
 /**
- * Class TestCaseRun
+ * Class TestRun
+ *
+ * This class runs a test case. This class is always initiated from the BaseTestRunner class. The
+ * communication with other classes about the result of this TestRun is delegated to the
+ * BaseTestRunner class.
+ *
  * @package MWUnit
  */
-class TestCaseRun {
+class TestRun {
 	/**
 	 * @var TestResult
 	 */
@@ -117,7 +122,7 @@ class TestCaseRun {
 			\Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case ] );
 
 			// Run test case
-			( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->parse(
+			\MediaWiki\MediaWikiServices::getInstance()->getParser()->parse(
 				$this->test_case->getInput(),
 				$this->test_case->getFrame()->getTitle(),
 				\ParserOptions::newCanonical( $context ),

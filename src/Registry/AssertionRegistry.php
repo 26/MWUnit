@@ -69,7 +69,7 @@ class AssertionRegistry {
 		\Hooks::run( "MWUnitGetAssertionClasses", [ &$classes ] );
 
 		$this->classes = $classes;
-		$this->parser = MediaWikiServices::getInstance()->getParser();
+		$this->parser  = MediaWikiServices::getInstance()->getParser();
 	}
 
 	/**
@@ -78,9 +78,7 @@ class AssertionRegistry {
 	 * @return AssertionRegistry
 	 */
 	public static function getInstance() {
-		if ( self::$instance === null ) {
-			self::$instance = new self();
-		}
+		if ( self::$instance === null ) self::$instance = new self();
 
 		return self::$instance;
 	}
@@ -133,17 +131,19 @@ class AssertionRegistry {
 			"assertion" => $assertion::getName()
 		] );
 
+		$callback_function = function ( Parser $parser, PPFrame $frame, array $args ) use ( $assertion ) {
+            return AssertionController::handleAssertionParserHook(
+                $parser,
+                $frame,
+                $args,
+                $assertion
+            );
+        };
+
 		$assertion_name = $assertion::getName();
 		$this->parser->setFunctionHook(
 			"assert_$assertion_name",
-			function ( Parser $parser, PPFrame $frame, $args ) use ( $assertion ) {
-				return AssertionController::handleAssertionParserHook(
-					$parser,
-					$frame,
-					$args,
-					$assertion
-				);
-			},
+            $callback_function,
 			Parser::SFH_OBJECT_ARGS
 		);
 

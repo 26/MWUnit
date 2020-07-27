@@ -18,8 +18,8 @@ interface CommandLineResultPrinter {
 	/**
 	 * Outputs the given test to the console.
 	 *
-	 * @param \MWUnit\UnitTestRunner $runner The associated UnitTestRunner object
+	 * @param \MWUnit\TestSuiteRunner $runner The associated UnitTestRunner object
 	 * @return void
 	 */
-	public function outputTestResults( \MWUnit\UnitTestRunner $runner );
+	public function outputTestResults( \MWUnit\TestSuiteRunner $runner );
 }
