@@ -59,6 +59,10 @@
     "MWUnitForceCoversAnnotation": {
       "value": false,
       "descriptionmsg": "mwunit-config-force-covers-annotation"
+    },
+    "MWUnitAllowRunningTestAsOtherUser": {
+      "value": false,
+      "descriptionmsg": "mwunit-config-allow-running-test-as-other-user"
     }
   },
   "namespaces": [
@@ -78,7 +82,8 @@
   ],
   "GroupPermissions": {
     "sysop": {
-      "mwunit-runtests": true
+      "mwunit-runtests": true,
+      "mwunit-mock-user": true
     }
   }
 }
