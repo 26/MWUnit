@@ -35,7 +35,7 @@ class TestCaseRegister {
 		$registered = self::isTestRegistered( $test_case );
 
 		if ( $registered === true ) {
-			MWUnit::getLogger()->notice("Did not register testcase {testcase} because it was already registered", [
+			MWUnit::getLogger()->notice( "Did not register testcase {testcase} because it was already registered", [
 				"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
 			] );
 
@@ -60,23 +60,23 @@ class TestCaseRegister {
 			$fields[ 'covers' ] = $test_case->getOption( 'covers' );
 		}
 
-		MWUnit::getLogger()->notice("Registering testcase {testcase}", [
+		MWUnit::getLogger()->notice( "Registering testcase {testcase}", [
 			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
 		] );
 
 		$database = wfGetDb( DB_MASTER );
 		$database->insert( 'mwunit_tests', $fields );
 
-		MWUnit::getLogger()->debug("Registered testcase {testcase}", [
+		MWUnit::getLogger()->debug( "Registered testcase {testcase}", [
 			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
 		] );
 	}
 
-    /**
-     * Removes all test cases on a page from the database.
-     *
-     * @param integer $article_id The article ID of the page from which the tests should be deregistered.
-     */
+	/**
+	 * Removes all test cases on a page from the database.
+	 *
+	 * @param int $article_id The article ID of the page from which the tests should be deregistered.
+	 */
 	public static function deregisterTests( int $article_id ) {
 		$database = wfGetDb( DB_MASTER );
 		$database->delete(

@@ -72,10 +72,10 @@ class UpdateHandler {
 		$originalRevId,
 		int $undidRevId
 	) {
-        if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
-            // Do not run hook outside of "Test" namespace
-            return;
-        }
+		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return;
+		}
 
 		self::parseWikitext( $wikiPage, $mainContent );
 
@@ -111,10 +111,10 @@ class UpdateHandler {
 		&$flags,
 		Revision $revision
 	) {
-        if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
-            // Do not run hook outside of "Test" namespace
-            return;
-        }
+		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return;
+		}
 
 		self::parseWikitext( $wikiPage, $content );
 
@@ -174,18 +174,18 @@ class UpdateHandler {
 	 * @throws \MWException
 	 */
 	private static function parseWikitext( WikiPage $wikiPage, Content $content ) {
-	    MWUnit::getLogger()->debug( 'Reparsing wikitext for article {id} because the page got updated', [
+		MWUnit::getLogger()->debug( 'Reparsing wikitext for article {id} because the page got updated', [
 			'id' => $wikiPage->getTitle()->getFullText()
 		] );
 
-	    global $wgVersion;
-        $context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
+		global $wgVersion;
+		$context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
 
-        $parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
-        $parser->parse(
-            \ContentHandler::getContentText( $content ),
-            $wikiPage->getTitle(),
-            \ParserOptions::newCanonical( $context )
-        );
+		$parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
+		$parser->parse(
+			\ContentHandler::getContentText( $content ),
+			$wikiPage->getTitle(),
+			\ParserOptions::newCanonical( $context )
+		);
 	}
 }

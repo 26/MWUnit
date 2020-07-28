@@ -27,8 +27,10 @@ class AssertionController {
 			return MWUnit::error( "mwunit-outside-test-namespace" );
 		}
 
-		if ( !MWUnit::isRunning() ) return '';
-		if ( !TestRun::$test_result->didTestSucceed() ) return '';
+		if ( !MWUnit::isRunning() ) { return '';
+		}
+		if ( !TestRun::$test_result->didTestSucceed() ) { return '';
+		}
 
 		$required_arg_count = $class::getRequiredArgumentCount();
 		$actual_arg_count 	= count( $arguments );
@@ -64,17 +66,17 @@ class AssertionController {
 			return null;
 		}
 
-        $failure_message = '';
+		$failure_message = '';
 		$test_result = TestRun::$test_result;
 		$result = $class::assert( $failure_message, ...$arguments );
 
 		if ( $result === null ) {
-            $test_result->setRisky( $failure_message );
-		} else if ( $result === false ) {
-            $test_result->setFailed( $failure_message );
-        }
+			$test_result->setRisky( $failure_message );
+		} elseif ( $result === false ) {
+			$test_result->setFailed( $failure_message );
+		}
 
-        $test_result->incrementAssertionCount();
+		$test_result->incrementAssertionCount();
 
 		return $result;
 	}

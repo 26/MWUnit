@@ -12,23 +12,25 @@ use Title;
 
 class MockController {
 	/**
-     * Hooked to the #create_mock parser function.
-     *
+	 * Hooked to the #create_mock parser function.
+	 *
 	 * @param Parser $parser
 	 * @param PPFrame $frame
 	 * @param array $args
 	 * @return string
 	 */
 	public static function handleCreateMock( Parser $parser, PPFrame $frame, array $args ) {
-		if ( !isset( $args[0] ) ) return MWUnit::error(
-		    "mwunit-create-mock-missing-argument",
-            [ "1st (page title)" ]
-        );
+		if ( !isset( $args[0] ) ) { return MWUnit::error(
+			"mwunit-create-mock-missing-argument",
+			[ "1st (page title)" ]
+		);
+		}
 
-		if ( !isset( $args[1] ) ) return MWUnit::error(
-		    "mwunit-create-mock-missing-argument",
-            [ "2nd (mock content)" ]
-        );
+		if ( !isset( $args[1] ) ) { return MWUnit::error(
+			"mwunit-create-mock-missing-argument",
+			[ "2nd (mock content)" ]
+		);
+		}
 
 		$page = trim( $frame->expand( $args[0] ) );
 		$mock_content = trim(
@@ -40,11 +42,12 @@ class MockController {
 
 		// Interpret page title without namespace prefix as a template.
 		$title = strpos( $page, ":" ) === false ?
-            Title::newFromText( $page, NS_TEMPLATE ) :
-            Title::newFromText( $page );
+			Title::newFromText( $page, NS_TEMPLATE ) :
+			Title::newFromText( $page );
 
-		if ( !$title instanceof Title || !$title->exists() )
-		    return MWUnit::error( "mwunit-create-mock-bad-title" );
+		if ( !$title instanceof Title || !$title->exists() ) {
+			return MWUnit::error( "mwunit-create-mock-bad-title" );
+		}
 
 		$mock_registry = MockRegistry::getInstance();
 		$mock_registry->registerMock( $title, $mock_content );
@@ -59,8 +62,8 @@ class MockController {
 	 * @param Parser $parser
 	 * @param Title $title
 	 * @param Revision $revision
-	 * @param string|false|null $text
-	 * @param array $deps
+	 * @param string|false|null &$text
+	 * @param array &$deps
 	 */
 	public static function onParserFetchTemplate(
 		Parser $parser,
@@ -69,16 +72,18 @@ class MockController {
 		&$text,
 		array &$deps
 	) {
-		if ( !MWUnit::isRunning() ) return;
+		if ( !MWUnit::isRunning() ) { return;
+		}
 
 		$registry = MockRegistry::getInstance();
 
-		if ( !$registry->isMocked( $title ) ) return;
-        if ( $title->getNamespace() === NS_TEMPLATE && strtolower( $title->getText() ) === strtolower( TestRun::$covered ) ) {
-            TestRun::$test_result->setRisky( wfMessage( "mwunit-mocked-cover-template" ) );
-            return;
-        }
+		if ( !$registry->isMocked( $title ) ) { return;
+		}
+		if ( $title->getNamespace() === NS_TEMPLATE && strtolower( $title->getText() ) === strtolower( TestRun::$covered ) ) {
+			TestRun::$test_result->setRisky( wfMessage( "mwunit-mocked-cover-template" ) );
+			return;
+		}
 
-        $text = $registry->getMock( $title );
+		$text = $registry->getMock( $title );
 	}
 }

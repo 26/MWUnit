@@ -110,10 +110,9 @@ class TestSuiteRunner {
 	 * @return int
 	 */
 	public function getNotPassedCount(): int {
-	    return array_reduce( self::$test_results, function( int $carry, TestResult $item ) {
-		    return $carry + ( $item->didTestSucceed() ? 0 : 1 );
-        }, 0 );
-
+		return array_reduce( self::$test_results, function ( int $carry, TestResult $item ) {
+			return $carry + ( $item->didTestSucceed() ? 0 : 1 );
+		}, 0 );
 	}
 
 	/**

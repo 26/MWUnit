@@ -33,7 +33,7 @@ class That implements Assertion {
 	 * - on
 	 * - 1
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $proposition
 	 * @param string|null $message
 	 * @return bool

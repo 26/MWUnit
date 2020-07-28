@@ -46,7 +46,7 @@ class ErrorTest extends MediaWikiIntegrationTestCase {
 		$attributes = [ "foobar", "example", "no-error" ];
 
 		foreach ( $valid_tags as $tag ) {
-			foreach( $attributes as $attribute ) {
+			foreach ( $attributes as $attribute ) {
 				$error_content = sprintf(
 					'<%s class="error %s">Foobar</%s>',
 					$tag, $attribute, $tag

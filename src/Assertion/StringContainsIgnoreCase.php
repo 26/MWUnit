@@ -28,7 +28,7 @@ class StringContainsIgnoreCase implements Assertion {
 	 * Returns false if and only if $needle is not contained within $haystack. Differences in casing
 	 * are ignored in the comparison.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $needle
 	 * @param string $haystack
 	 * @param string|null $message

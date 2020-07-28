@@ -24,13 +24,14 @@ class BaseTestRunner {
 		$this->test_case = $test_case;
 	}
 
-	/**
-	 * Runs the given TestCase.
-	 *
-	 * @throws Exception\MWUnitException
-	 * @throws \FatalError
-	 * @throws \MWException
-	 */
+    /**
+     * Runs the given TestCase.
+     *
+     * @throws Exception\MWUnitException
+     * @throws \FatalError
+     * @throws \MWException
+     * @throws \ConfigException
+     */
 	public function run() {
 		if ( !array_key_exists(
 			MWUnit::getCanonicalTestNameFromTestCase( $this->test_case ),

@@ -28,7 +28,7 @@ class PageExists implements Assertion {
 	 * Returns false if and only if the page specified by $page_name does not exist. $page_name must include the
 	 * namespace prefix if the page is not located in the main namespace.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $page_name
 	 * @param string|null $message
 	 * @return bool

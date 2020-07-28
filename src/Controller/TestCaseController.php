@@ -2,13 +2,13 @@
 
 namespace MWUnit\Controller;
 
+use MWUnit\BaseTestRunner;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseException;
 use MWUnit\Exception\TestCaseRegistrationException;
 use MWUnit\MWUnit;
 use MWUnit\TestCase;
 use MWUnit\TestCaseRegister;
-use MWUnit\BaseTestRunner;
 
 /**
  * Class TestCaseController

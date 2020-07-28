@@ -41,18 +41,18 @@ class IsNumericTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testAssert() {
 		$message = "foobar";
-		$numeric = array(
+		$numeric = [
 			"42",
 			"1337",
 			"02471",
 			"1337e0",
 			"02471",
 			"1337e0"
-		);
+		];
 
-		$not_numeric = array(
+		$not_numeric = [
 			"not numeric",
-		);
+		];
 
 		foreach ( $numeric as $num ) {
 			$this->assertTrue( IsNumeric::assert(

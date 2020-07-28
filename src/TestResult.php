@@ -7,14 +7,14 @@ class TestResult {
 	const T_FAILED  = 1; /* phpcs:ignore */
 	const T_RISKY   = 2; /* phpcs:ignore */
 
-    /**
-     * @var int
-     */
+	/**
+	 * @var int
+	 */
 	private $test_result = self::T_SUCCESS;
 
-    /**
-     * @var string
-     */
+	/**
+	 * @var string
+	 */
 	private $canonical_testname;
 
 	/**
@@ -32,12 +32,12 @@ class TestResult {
 	 */
 	private $covers = false;
 
-    /**
-     * @var int
-     */
-    private $assertion_count = 0;
+	/**
+	 * @var int
+	 */
+	private $assertion_count = 0;
 
-    /**
+	/**
 	 * TestResult constructor.
 	 * @param string $canonical_testname
 	 */
@@ -45,16 +45,16 @@ class TestResult {
 		$this->canonical_testname = $canonical_testname;
 	}
 
-    /**
-     * Increments the count of assertions for this test case.
-     */
+	/**
+	 * Increments the count of assertions for this test case.
+	 */
 	public function incrementAssertionCount() {
-	    $this->assertion_count++;
-    }
+		$this->assertion_count++;
+	}
 
 	/**
 	 * Sets the test result to "FAILED" and sets the message for the "failed" message.
-     *
+	 *
 	 * @param string $message
 	 */
 	public function setFailed( $message ) {
@@ -64,7 +64,7 @@ class TestResult {
 
 	/**
 	 * Sets the test result to "RISKY" and sets the message for the "risky" message.
-     *
+	 *
 	 * @param string $message
 	 */
 	public function setRisky( $message ) {

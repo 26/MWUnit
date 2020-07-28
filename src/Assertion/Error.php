@@ -29,7 +29,7 @@ class Error implements Assertion {
 	 * attribute 'class="error"'. Tags with this attribute are usually returned by
 	 * other parser functions.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $haystack
 	 * @param string|null $message
 	 * @return bool

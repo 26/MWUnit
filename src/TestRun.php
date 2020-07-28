@@ -44,12 +44,12 @@ class TestRun {
 	 */
 	private $globals;
 
-    /**
-     * @var \User
-     */
-    private $user;
+	/**
+	 * @var \User
+	 */
+	private $user;
 
-    /**
+	/**
 	 * Called when the parser fetches a template. Used for strict coverage checking.
 	 *
 	 * @param \Parser|bool $parser
@@ -84,12 +84,12 @@ class TestRun {
 		self::$covered = $test_case->getOption( 'covers' );
 	}
 
-    /**
-     * @throws \FatalError
-     * @throws \MWException
-     * @throws MWUnitException
-     * @throws \ConfigException
-     */
+	/**
+	 * @throws \FatalError
+	 * @throws \MWException
+	 * @throws MWUnitException
+	 * @throws \ConfigException
+	 */
 	public function runTest() {
 		// Store a clone of the initial parser, so we can properly perform coverage checks, without
 		// breaking fixtures and global state.
@@ -97,78 +97,73 @@ class TestRun {
 			self::$initial_parser = clone \MediaWiki\MediaWikiServices::getInstance()->getParser();
 		}
 
+        $context_option = $this->test_case->getOption( 'context' );
+        $user_option    = $this->test_case->getOption( 'user' );
+
         $this->backupUser();
 
 		try {
-            $context_option = $this->test_case->getOption( 'context' );
-            $user_option    = $this->test_case->getOption( 'user'    );
+			switch ( $context_option ) {
+				case 'canonical':
+				case false:
+					global $wgVersion;
+					$context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
+					break;
+				case 'user':
+					if ( !$user_option ) {
+						$context = \RequestContext::getMain()->getUser();
+						break;
+					}
 
-            switch ( $context_option ) {
-                case 'canonical':
-                case false:
-                    global $wgVersion;
-                    $context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
-
-                    break;
-                case 'user':
-                    if ( $user_option ) {
-                        if ( !$this->canMockUsers() ) {
-                            self::$test_result->setRisky( wfMessage( 'mwunit-missing-permissions-mock-user' )->plain() );
-                            return;
-                        }
-
-                        $context = \User::newFromName( $user_option );
-
-                        if ( !$context instanceof \User ) {
-                            MWUnit::getLogger()->debug( "Invalid user {user} on {test}", [
-                                'user' => $user_option,
-                                'test' => MWUnit::getCanonicalTestNameFromTestCase( $this->test_case )
-                            ] );
-
-                            self::$test_result->setRisky( wfMessage( 'mwunit-invalid-user' )->plain() );
-                            return;
-                        }
-
-                        $this->setUser( $context );
-                    } else {
-                        $context = \RequestContext::getMain()->getUser();
+                    if ( !$this->canMockUsers() ) {
+                        self::$test_result->setRisky( wfMessage( 'mwunit-missing-permissions-mock-user' )->plain() );
+                        return;
                     }
 
-                    break;
-                default:
-                    MWUnit::getLogger()->debug( "Invalid context on {context} on {test}", [
-                        'context' => $context_option,
-                        'test'    => MWUnit::getCanonicalTestNameFromTestCase( $this->test_case )
-                    ] );
+                    $context = \User::newFromName( $user_option );
 
-                    self::$test_result->setRisky( wfMessage( 'mwunit-invalid-context' )->plain() );
-                    return;
-            }
+                    if ( !$context instanceof \User ) {
+                        self::$test_result->setRisky( wfMessage( 'mwunit-invalid-user' )->plain() );
+                        return;
+                    }
 
-            $this->backupGlobals();
+                    $this->setUser( $context );
+					break;
+				default:
+					MWUnit::getLogger()->debug( "Invalid context on {context} on {test}", [
+						'context' => $context_option,
+						'test'    => MWUnit::getCanonicalTestNameFromTestCase( $this->test_case )
+					] );
 
-            try {
-                if ( !self::$covered || $this->isTemplateCached( self::$covered, self::$initial_parser ) )
-                    self::$test_result->setTemplateCovered();
+					self::$test_result->setRisky( wfMessage( 'mwunit-invalid-context' )->plain() );
+					return;
+			}
 
-                \Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case ] );
+			$this->backupGlobals();
 
-                // Run test case
-                \MediaWiki\MediaWikiServices::getInstance()->getParser()->parse(
-                    $this->test_case->getInput(),
-                    $this->test_case->getFrame()->getTitle(),
-                    \ParserOptions::newCanonical( $context ),
-                    true,
-                    false
-                );
+			try {
+				if ( !self::$covered || $this->isTemplateCached( self::$covered, self::$initial_parser ) ) {
+					self::$test_result->setTemplateCovered();
+				}
 
-                $this->checkTemplateCoverage();
-            } finally {
-                $this->restoreGlobals();
-            }
-        } finally {
-		    $this->restoreUser();
-        }
+				\Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case ] );
+
+				// Run test case
+				\MediaWiki\MediaWikiServices::getInstance()->getParser()->parse(
+					$this->test_case->getInput(),
+					$this->test_case->getFrame()->getTitle(),
+					\ParserOptions::newCanonical( $context ),
+					true,
+					false
+				);
+
+				$this->checkTemplateCoverage();
+			} finally {
+				$this->restoreGlobals();
+			}
+		} finally {
+			$this->restoreUser();
+		}
 	}
 
 	/**
@@ -208,11 +203,11 @@ class TestRun {
 		}
 	}
 
-    /**
-     * Restores globals backed up previously. This function should not be called before backupGlobals() is called.
-     * @throws MWUnitException
-     * @throws \ConfigException
-     */
+	/**
+	 * Restores globals backed up previously. This function should not be called before backupGlobals() is called.
+	 * @throws MWUnitException
+	 * @throws \ConfigException
+	 */
 	private function restoreGlobals() {
 		$option = \MediaWiki\MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
 		if ( $option ) {
@@ -234,20 +229,22 @@ class TestRun {
 		}
 	}
 
-    /**
-     * Returns true if and only if the template that is covered is cached.
-     *
-     * @param string $template
-     * @param \Parser $parser
-     * @return bool
-     * @internal
-     */
+	/**
+	 * Returns true if and only if the template that is covered is cached.
+	 *
+	 * @param string $template
+	 * @param \Parser $parser
+	 * @return bool
+	 * @internal
+	 */
 	private function isTemplateCached( string $template, \Parser $parser ): bool {
-		if ( !$template ) return false;
+		if ( !$template ) { return false;
+		}
 
 		$title = Title::newFromText( $template, NS_TEMPLATE );
 
-		if ( !$title instanceof Title ) return false;
+		if ( !$title instanceof Title ) { return false;
+		}
 
 		$titleText = $title->getPrefixedDBkey();
 
@@ -263,7 +260,7 @@ class TestRun {
 
 	/**
 	 * Checks if the template specified in "covers" is covered and marks $test_result accordingly.
-     *
+	 *
 	 * @internal
 	 */
 	private function checkTemplateCoverage() {
@@ -276,52 +273,52 @@ class TestRun {
 		}
 	}
 
-    /**
-     * Stores the current User from RequestContext into a local variable.
-     */
-    private function backupUser() {
-	    $this->user = serialize( \RequestContext::getMain()->getUser() );
-    }
+	/**
+	 * Serializes the current User from RequestContext and stores the result in a class variable.
+	 */
+	private function backupUser() {
+		$this->user = serialize( \RequestContext::getMain()->getUser() );
+	}
 
-    /**
-     * Restores the backed up User object.
-     */
-    private function restoreUser() {
-        assert( isset( $this->user ) );
+	/**
+	 * Unserializes the backed up User object and restores the User object globally.
+	 */
+	private function restoreUser() {
+		assert( isset( $this->user ) );
 
-        $this->setUser( unserialize( $this->user ) );
-    }
+		$this->setUser( unserialize( $this->user ) );
+	}
 
-    /**
-     * Sets the User object globally. This is used to mock other users while running a certain test. The $wgUser
-     * global will and the RequestContext user will be replaced with the given user.
-     *
-     * @param \User $user
-     */
-    private function setUser( \User $user ) {
-        \RequestContext::getMain()->setUser( $user );
+	/**
+	 * Sets the User object globally. This is used to mock other users while running a certain test. The $wgUser
+	 * global will and the RequestContext user will be replaced with the given user.
+	 *
+	 * @param \User $user
+	 */
+	private function setUser( \User $user ) {
+		\RequestContext::getMain()->setUser( $user );
 
-        // For extension still using the old $wgUser variable
-        global $wgUser;
-        $wgUser = $user;
-    }
+		// For extension still using the old $wgUser variable
+		global $wgUser;
+		$wgUser = $user;
+	}
 
-    /**
-     * Returns true if and only if the current logged in user is allowed to mock other
-     * users while running a test.
-     *
-     * @return bool
-     */
-    private function canMockUsers(): bool {
-        try {
-            $allow_running_tests_as_other_user = \MediaWiki\MediaWikiServices::getInstance()
-                ->getMainConfig()
-                ->get( 'MWUnitAllowRunningTestAsOtherUser' );
-        } catch( \ConfigException $exception ) {
-            return false;
-        }
+	/**
+	 * Returns true if and only if the current logged in user is allowed to mock other
+	 * users while running a test.
+	 *
+	 * @return bool
+	 */
+	private function canMockUsers(): bool {
+		try {
+			$allow_running_tests_as_other_user = \MediaWiki\MediaWikiServices::getInstance()
+				->getMainConfig()
+				->get( 'MWUnitAllowRunningTestAsOtherUser' );
+		} catch ( \ConfigException $exception ) {
+			return false;
+		}
 
-        return $allow_running_tests_as_other_user === true &&
-            in_array( 'mwunit-mock-user', \RequestContext::getMain()->getUser()->getRights() );
-    }
+		return $allow_running_tests_as_other_user === true &&
+			in_array( 'mwunit-mock-user', \RequestContext::getMain()->getUser()->getRights() );
+	}
 }

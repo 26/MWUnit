@@ -28,7 +28,7 @@ class EqualsIgnoreCase implements Assertion {
 	 * Returns false if and only if the two variables, $expected and $actual are not identical to each
 	 * other. Differences in casing are ignored in the comparison.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $expected
 	 * @param string $actual
 	 * @param string|null $message

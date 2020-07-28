@@ -28,7 +28,7 @@ class Equals implements Assertion {
 	 * Returns false if and only if the two variables, $expected and $actual are not identical to each
 	 * other.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $expected
 	 * @param string $actual
 	 * @param string|null $message
