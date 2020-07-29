@@ -27,7 +27,7 @@ class StringEndsWith implements Assertion {
 	/**
 	 * Returns false if and only if $needle is not at the end of $haystack.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $needle
 	 * @param string $haystack
 	 * @param string|null $message

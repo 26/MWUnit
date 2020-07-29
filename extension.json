@@ -6,7 +6,7 @@
   "author": [
     "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
   ],
-  "version": "0.9.3",
+  "version": "0.9.4",
   "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
   "description": "A unit testing framework for MediaWiki",
   "descriptionmsg": "mwunit-description",
@@ -59,6 +59,10 @@
     "MWUnitForceCoversAnnotation": {
       "value": false,
       "descriptionmsg": "mwunit-config-force-covers-annotation"
+    },
+    "MWUnitAllowRunningTestAsOtherUser": {
+      "value": false,
+      "descriptionmsg": "mwunit-config-allow-running-test-as-other-user"
     }
   },
   "namespaces": [
@@ -78,7 +82,8 @@
   ],
   "GroupPermissions": {
     "sysop": {
-      "mwunit-runtests": true
+      "mwunit-runtests": true,
+      "mwunit-mock-user": true
     }
   }
 }

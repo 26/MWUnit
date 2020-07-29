@@ -27,7 +27,7 @@ class IsInteger implements Assertion {
 	/**
 	 * Returns false if and only if $haystack is not an integer.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $haystack
 	 * @param string|null $message
 	 * @return bool

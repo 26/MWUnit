@@ -2,13 +2,13 @@
 
 namespace MWUnit\Controller;
 
+use MWUnit\BaseTestRunner;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseException;
 use MWUnit\Exception\TestCaseRegistrationException;
 use MWUnit\MWUnit;
 use MWUnit\TestCase;
 use MWUnit\TestCaseRegister;
-use MWUnit\TestCaseRunner;
 
 /**
  * Class TestCaseController
@@ -48,7 +48,7 @@ class TestCaseController {
 		}
 
 		if ( $is_running ) {
-			$runner = new TestCaseRunner( $test_case );
+			$runner = new BaseTestRunner( $test_case );
 			$runner->run();
 		} else {
 			try {
@@ -62,7 +62,7 @@ class TestCaseController {
 	}
 
 	/**
-	 * Renders a dialog windows for the given TestCase object.
+	 * Renders a dialog window for the given TestCase object.
 	 *
 	 * @param TestCase $test_case
 	 * @return string The dialog object's HTML (safe)

@@ -59,16 +59,20 @@
   "mwunit-invalid-context": "Test risky message shown when a test has an invalid context annotation",
   "mwunit-invalid-assertion": "Test risky message shown when a test has one or more assertions with an invalid amount of parameters",
   "mwunit-mocked-cover-template": "Test risky message shown when the covers annotation of a test is a mocked template",
+  "mwunit-missing-permissions-mock-user": "Test risky message shown when the test is required to be ran as another user, but running a test as another user is disabled or disallowed.",
   "mwunit-config-max-test-execution-time": "Configuration parameter description for the configuration parameter defining the max execution time of a group of tests",
   "mwunit-config-default-testdox": "Configuration parameter description for the configuration parameter defining whether or not to use TestDox as the default ResultPrinter when using the command-line test runner",
   "mwunit-config-backup-globals": "Configuration parameter description for the configuration parameter defining whether or not to backup globals and superglobals for each test case",
   "mwunit-config-strict-coverage": "Configuration parameter description for the configuration parameter defining whether or not to to be strict about untruthful covers annotations",
   "mwunit-config-force-covers-annotation": "Configuration parameter description for the configuration parameter defining whether or not to force the @covers annotation",
+  "mwunit-config-allow-running-test-as-other-user": "Configuration parameter description for the configuration parameter defining whether or not to allow people with the 'mwunit-mock-user' right to mock other users during testing.",
   "mwunit-special-title": "Header for the MWUnit special page",
   "mwunit-special-result-title": "Header for the MWUnit special page when showing test results",
   "mwunit-special-group-label": "Form label used for the group form",
   "mwunit-test-result-intro": "The special page intro text shown when the result summary is shown",
   "specialpages-group-mwunit": "Name of the special page group as shown on Special:SpecialPages",
-  "right-mwunit-runtests": "The name of the 'mwunit-runtests' right",
-  "action-mwunit-runtests": "The plural action right given by 'mwunit-runtests'"
+  "right-mwunit-runtests": "The description of the 'mwunit-runtests' right",
+  "action-mwunit-runtests": "The plural action right given by 'mwunit-runtests'",
+  "right-mwunit-mock-user": "The description of the 'mwunit-mock-user' right",
+  "action-mwunit-mock-user": "The plural action right given by 'mwunit-mock-user'"
 }

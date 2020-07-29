@@ -3,10 +3,14 @@
 namespace MWUnit;
 
 /**
- * Class TestCaseRunner
+ * Class BaseTestRunner
+ *
+ * This class handles the initialisation of a TestRun and the communication with other classes
+ * about the result of that TestRun.
+ *
  * @package MWUnit
  */
-class TestCaseRunner {
+class BaseTestRunner {
 	/**
 	 * @var TestCase The test case
 	 */
@@ -20,17 +24,18 @@ class TestCaseRunner {
 		$this->test_case = $test_case;
 	}
 
-	/**
-	 * Runs the given TestCase.
-	 *
-	 * @throws Exception\MWUnitException
-	 * @throws \FatalError
-	 * @throws \MWException
-	 */
+    /**
+     * Runs the given TestCase.
+     *
+     * @throws Exception\MWUnitException
+     * @throws \FatalError
+     * @throws \MWException
+     * @throws \ConfigException
+     */
 	public function run() {
 		if ( !array_key_exists(
 			MWUnit::getCanonicalTestNameFromTestCase( $this->test_case ),
-			UnitTestRunner::$tests ) ) {
+			TestSuiteRunner::$tests ) ) {
 			// This test is not in the list of tests to run.
 			return;
 		}
@@ -39,11 +44,11 @@ class TestCaseRunner {
 			'testcase' => MWUnit::getCanonicalTestNameFromTestCase( $this->test_case )
 		] );
 
-		$run = new TestCaseRun( $this->test_case );
+		$run = new TestRun( $this->test_case );
 		$run->runTest();
 
-		UnitTestRunner::$total_assertions_count += $run->getAssertionCount();
-		UnitTestRunner::$total_test_count += 1;
+		TestSuiteRunner::$total_assertions_count += $run->getAssertionCount();
+		TestSuiteRunner::$total_test_count += 1;
 
 		if ( !$run->getTestResult()->isTestRisky() && $run->getAssertionCount() === 0 ) {
 			$run::$test_result->setRisky( wfMessage( 'mwunit-no-assertions' )->plain() );
@@ -51,14 +56,14 @@ class TestCaseRunner {
 
 		\Hooks::run( 'MWUnitAfterTestComplete', [ &$run ] );
 
-		UnitTestRunner::$test_results[] = $run->getTestResult();
+		TestSuiteRunner::$test_results[] = $run->getTestResult();
 
-		if ( is_callable( UnitTestRunner::$callback ) ) {
+		if ( is_callable( TestSuiteRunner::$callback ) ) {
 			MWUnit::getLogger()->debug( "Calling test case completion callback {callback}", [
-				UnitTestRunner::$callback
+				TestSuiteRunner::$callback
 			] );
 
-			$callable = UnitTestRunner::$callback;
+			$callable = TestSuiteRunner::$callback;
 			$callable( $run->getTestResult() );
 		}
 	}

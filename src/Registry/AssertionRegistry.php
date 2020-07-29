@@ -69,7 +69,7 @@ class AssertionRegistry {
 		\Hooks::run( "MWUnitGetAssertionClasses", [ &$classes ] );
 
 		$this->classes = $classes;
-		$this->parser = MediaWikiServices::getInstance()->getParser();
+		$this->parser  = MediaWikiServices::getInstance()->getParser();
 	}
 
 	/**
@@ -78,8 +78,7 @@ class AssertionRegistry {
 	 * @return AssertionRegistry
 	 */
 	public static function getInstance() {
-		if ( self::$instance === null ) {
-			self::$instance = new self();
+		if ( self::$instance === null ) { self::$instance = new self();
 		}
 
 		return self::$instance;
@@ -106,7 +105,7 @@ class AssertionRegistry {
 	/**
 	 * Registers the given assertion class to the parser.
 	 *
-	 * @param $assertion
+	 * @param string $assertion The assertion class name
 	 * @return bool True on success, false on failure
 	 * @throws \MWException
 	 */
@@ -115,9 +114,12 @@ class AssertionRegistry {
 			$reflection_class = new \ReflectionClass( $assertion );
 
 			if ( !$reflection_class->implementsInterface( Assertion::class ) ) {
-				MWUnit::getLogger()->warning("Unable to register assertion given by class {class} because it does not implement the Assertion interface", [
-					"class" => $assertion
-				] );
+				MWUnit::getLogger()->warning(
+					"Unable to register assertion given by class {class} because it does not implement the Assertion interface",
+					[
+						"class" => $assertion
+					]
+				);
 
 				return false;
 			}
@@ -129,21 +131,23 @@ class AssertionRegistry {
 			return false;
 		}
 
-		MWUnit::getLogger()->notice("Registering assertion {assertion}", [
+		MWUnit::getLogger()->notice( "Registering assertion {assertion}", [
 			"assertion" => $assertion::getName()
 		] );
+
+		$callback_function = function ( Parser $parser, PPFrame $frame, array $args ) use ( $assertion ) {
+			return AssertionController::handleAssertionParserHook(
+				$parser,
+				$frame,
+				$args,
+				$assertion
+			);
+		};
 
 		$assertion_name = $assertion::getName();
 		$this->parser->setFunctionHook(
 			"assert_$assertion_name",
-			function ( Parser $parser, PPFrame $frame, $args ) use ( $assertion ) {
-				return AssertionController::handleAssertionParserHook(
-					$parser,
-					$frame,
-					$args,
-					$assertion
-				);
-			},
+			$callback_function,
 			Parser::SFH_OBJECT_ARGS
 		);
 

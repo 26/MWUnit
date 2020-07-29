@@ -13,7 +13,7 @@ use MWUnit\TestResult;
  */
 class SpecialMWUnit extends \SpecialPage {
 	/**
-	 * @var \MWUnit\UnitTestRunner
+	 * @var \MWUnit\TestSuiteRunner
 	 */
 	private $runner;
 
@@ -24,7 +24,6 @@ class SpecialMWUnit extends \SpecialPage {
 	public function __construct() {
 		parent::__construct( "MWUnit", "mwunit-runtests", true );
 		parent::requireLogin();
-
 
 		set_time_limit( $this->getConfig()->get( 'MWUnitMaxTestExecutionTime' ) );
 	}
@@ -67,7 +66,6 @@ class SpecialMWUnit extends \SpecialPage {
 			$this->getOutput()->setSubtitle( $nav );
 
 			$test_results = $this->runner->getResults();
-
 			$this->renderTestResults( $test_results );
 		} else {
 			$this->showForms();
@@ -91,7 +89,8 @@ class SpecialMWUnit extends \SpecialPage {
 			}
 		} elseif ( $this->getRequest()->getVal( 'unitTestIndividual' ) !== null ) {
 			// Run the specified individual test
-			if ( strpos( $this->getRequest()->getVal( 'unitTestIndividual' ), '::' ) === false ) return false;
+			if ( strpos( $this->getRequest()->getVal( 'unitTestIndividual' ), '::' ) === false ) { return false;
+			}
 
 			list( $page_title, $name ) = explode(
 				'::',
@@ -100,8 +99,10 @@ class SpecialMWUnit extends \SpecialPage {
 
 			$title = \Title::newFromText( $page_title, NS_TEST );
 
-			if ( !$title instanceof \Title || !$title->exists() ) return false;
-			if ( !\MWUnit\TestCaseRegister::testExists( $title->getFullText(), $name ) ) return false;
+			if ( !$title instanceof \Title || !$title->exists() ) { return false;
+			}
+			if ( !\MWUnit\TestCaseRegister::testExists( $title->getFullText(), $name ) ) { return false;
+			}
 
 			$tests = [ $this->getRequest()->getVal( 'unitTestIndividual' ) => $title->getArticleID() ];
 		} elseif ( $this->getRequest()->getVal( 'unitTestCoverTemplate' ) ) {
@@ -110,7 +111,8 @@ class SpecialMWUnit extends \SpecialPage {
 				NS_TEMPLATE
 			);
 
-			if ( !$title instanceof \Title || !$title->exists() ) return false;
+			if ( !$title instanceof \Title || !$title->exists() ) { return false;
+			}
 
 			try {
 				$tests = \MWUnit\TestCaseRegister::getTestsCoveringTemplate( $title );
@@ -121,8 +123,10 @@ class SpecialMWUnit extends \SpecialPage {
 			// Run the specified page
 			$title = \Title::newFromText( $this->getRequest()->getVal( 'unitTestPage' ) );
 
-			if ( !$title instanceof \Title || !$title->exists() ) return false;
-			if ( $title->getNamespace() !== NS_TEST ) return false;
+			if ( !$title instanceof \Title || !$title->exists() ) { return false;
+			}
+			if ( $title->getNamespace() !== NS_TEST ) { return false;
+			}
 
 			try {
 				$tests = \MWUnit\TestCaseRegister::getTestsFromTitle( $title );
@@ -135,7 +139,7 @@ class SpecialMWUnit extends \SpecialPage {
 			return false;
 		}
 
-		$this->runner = new \MWUnit\UnitTestRunner( $tests );
+		$this->runner = new \MWUnit\TestSuiteRunner( $tests );
 		$this->runner->run();
 
 		return true;
@@ -347,7 +351,6 @@ class SpecialMWUnit extends \SpecialPage {
 		$title = \Title::newFromText( $page_name );
 
 		if ( $title === null || $title === false ) {
-			// TODO: Improve error handling
 			return null;
 		}
 

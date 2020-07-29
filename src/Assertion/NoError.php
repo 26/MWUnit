@@ -29,7 +29,7 @@ class NoError implements Assertion {
 	 * with the attribute 'class="error"'. Tags with this element are usually returned by other parser
 	 * functions.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $haystack
 	 * @param string|null $message
 	 * @return bool

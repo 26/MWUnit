@@ -59,11 +59,13 @@
   "mwunit-invalid-context": "This test is marked as risky, because the given context is invalid. The context option must either be <i>empty</i>, 'canonical' or 'user'.",
   "mwunit-invalid-assertion": "This test is marked as risky, because at least one assertion has one or more invalid parameters.",
   "mwunit-mocked-cover-template": "This test is marked as risky, because the template that should get covered in this test is mocked.",
+  "mwunit-missing-permissions-mock-user": "This test is marked as risky, because it is required to be ran as another user, but running a test as another user is disabled or disallowed.",
   "mwunit-config-max-test-execution-time": "The maximum execution time for (all tests in) a test run",
   "mwunit-config-default-testdox": "Whether or not TestDox is the default result printer for the command-line test runner",
   "mwunit-config-backup-globals": "Whether or not to backup before and restore PHP globals and superglobals after every test case",
   "mwunit-config-strict-coverage": "Whether or not to to be strict about untruthful covers annotations. A test that is annotated with @covers and does not execute the template listed in that @covers annotation, will be marked as risky when this check is enabled.",
   "mwunit-config-force-covers-annotation": "Whether or not to force the @covers annotation. Tests without the @covers annotation will not be executed when this check is enabled.",
+  "mwunit-config-allow-running-test-as-other-user": "Whether or not to allow people with the 'mwunit-mock-user' right to mock other users during testing.",
   "mwunit-special-title": "Run unit tests",
   "mwunit-special-result-title": "Unit test results",
   "mwunit-special-group-label": "Only run tests from the specified group. A test can be tagged as belonging to a group using the 'group' annotation.",
@@ -72,5 +74,7 @@
   "mwunit-create-mock-bad-title": "The page you are trying to mock does not exist; it is not possible to mock non-existent pages",
   "specialpages-group-mwunit": "Unit testing",
   "right-mwunit-runtests": "Run unit tests",
-  "action-mwunit-runtests": "run unit tests"
+  "action-mwunit-runtests": "run unit tests",
+  "right-mwunit-mock-user": "Mock other users during testing",
+  "action-mwunit-mock-user": "mock other users during testing"
 }

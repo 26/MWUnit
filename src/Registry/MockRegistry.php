@@ -14,12 +14,16 @@ class MockRegistry {
 	 */
 	private $mocks = [];
 
+	/**
+	 * @var MockRegistry|null
+	 */
 	private static $instance = null;
 
 	/**
 	 * MockRegistry constructor.
 	 */
-	private function __construct() {}
+	private function __construct() {
+	}
 
 	/**
 	 * Gets the instance of the MockRegistry.
@@ -27,10 +31,8 @@ class MockRegistry {
 	 * @return MockRegistry
 	 */
 	public static function getInstance() {
-		if ( self::$instance === null ) {
-			self::$instance = new self();
+		if ( self::$instance === null ) { self::$instance = new self();
 		}
-
 		return self::$instance;
 	}
 
@@ -41,8 +43,7 @@ class MockRegistry {
 	 * @return bool
 	 */
 	public function isMocked( Title $title ): bool {
-		$id = $title->getArticleID();
-		return isset( $this->mocks[ $id ] );
+		return isset( $this->mocks[ $title->getArticleID() ] );
 	}
 
 	/**
@@ -53,10 +54,8 @@ class MockRegistry {
 	 * @return string
 	 */
 	public function getMock( Title $title ): string {
-		if ( !$this->isMocked( $title ) ) {
-			return null;
+		if ( !$this->isMocked( $title ) ) { return null;
 		}
-
 		return $this->mocks[ $title->getArticleID() ];
 	}
 
@@ -70,7 +69,7 @@ class MockRegistry {
 		$id = $title->getArticleID();
 		$this->mocks[ $id ] = $content;
 
-		MWUnit::getLogger()->notice("Registering mock for {title}", [
+		MWUnit::getLogger()->notice( "Registering mock for {title}", [
 			"title" => $title->getFullText()
 		] );
 	}

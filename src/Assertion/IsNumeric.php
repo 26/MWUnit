@@ -29,7 +29,7 @@ class IsNumeric implements Assertion {
 	 *
 	 * @see https://www.php.net/manual/en/function.is-numeric.php
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $haystack
 	 * @param string|null $message
 	 * @return bool
