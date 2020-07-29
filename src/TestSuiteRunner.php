@@ -69,7 +69,7 @@ class TestSuiteRunner {
 			return;
 		}
 
-		$result = \Hooks::run( 'MWUnitBeforeFirstTestHook', [ &$pages ] );
+		$result = \Hooks::run( 'MWUnitBeforeFirstTest', [ &$pages ] );
 
 		if ( !$result ) {
 			return;
