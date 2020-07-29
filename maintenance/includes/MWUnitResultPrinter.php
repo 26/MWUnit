@@ -61,7 +61,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 	/**
 	 * @inheritDoc
 	 */
-	public function outputTestResults( \MWUnit\UnitTestRunner $runner ) {
+	public function outputTestResults( \MWUnit\TestSuiteRunner $runner ) {
 		$no_tests 		= $runner->getTotalTestCount();
 		$no_assertions	= $runner->getTotalAssertionsCount();
 		$no_not_passed 	= $runner->getNotPassedCount();

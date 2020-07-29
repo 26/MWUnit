@@ -27,7 +27,7 @@ class NotEmpty implements Assertion {
 	/**
 	 * Returns false if and only if $haystack is empty.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $haystack
 	 * @param string|null $message
 	 * @return bool

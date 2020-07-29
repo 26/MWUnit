@@ -8,6 +8,7 @@ use Revision;
 use Status;
 use User;
 use WikiPage;
+use MWUnit\Registry\TestCaseRegistry;
 
 /**
  * Class UpdateHandler
@@ -15,30 +16,7 @@ use WikiPage;
  * @package MWUnit
  */
 class UpdateHandler {
-	public static function onPageContentSave(
-		WikiPage $wikiPage,
-		User $user,
-		Content $content,
-		&$summary,
-		bool $isMinor,
-		bool $isWatch,
-		$section,
-		$flags,
-		$status
-	) {
-		$article_id = $wikiPage->getTitle()->getArticleID();
-
-		MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
-			'id' => $article_id
-		] );
-
-		// Deregister all tests on the page and let the parser re-register them.
-		TestCaseRegister::deregisterTests( $article_id );
-
-		return true;
-	}
-
-	/**
+    /**
 	 * Occurs after the save page request has been processed.
 	 *
 	 * @param WikiPage $wikiPage
@@ -72,6 +50,20 @@ class UpdateHandler {
 		$originalRevId,
 		int $undidRevId
 	) {
+		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return;
+		}
+
+        $article_id = $wikiPage->getTitle()->getArticleID();
+
+        MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
+            'id' => $article_id
+        ] );
+
+        // Deregister all tests on the page and let the parser re-register them.
+        TestCaseRegistry::deregisterTests( $article_id );
+
 		self::parseWikitext( $wikiPage, $mainContent );
 
 		return true;
@@ -106,6 +98,11 @@ class UpdateHandler {
 		&$flags,
 		Revision $revision
 	) {
+		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return;
+		}
+
 		self::parseWikitext( $wikiPage, $content );
 
 		return true;
@@ -151,7 +148,7 @@ class UpdateHandler {
 			'id' => $deleted_id
 		] );
 
-		TestCaseRegister::deregisterTests( $deleted_id );
+		TestCaseRegistry::deregisterTests( $deleted_id );
 
 		return true;
 	}
@@ -164,27 +161,18 @@ class UpdateHandler {
 	 * @throws \MWException
 	 */
 	private static function parseWikitext( WikiPage $wikiPage, Content $content ) {
-		$article_id = $wikiPage->getId();
-
-		if ( $article_id === null ) {
-			MWUnit::getLogger()->error( 'Unable to parse wikitext on update for article {id}', [
-				'id' => $article_id
-			] );
-
-			throw new \MWException( "Article ID musn't be `null`." );
-		}
-
-		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
-			// Do not run hook outside of "Test" namespace
-			return;
-		}
-
 		MWUnit::getLogger()->debug( 'Reparsing wikitext for article {id} because the page got updated', [
-			'id' => $article_id
+			'id' => $wikiPage->getTitle()->getFullText()
 		] );
 
-		// Reparse Content to make sure the test has been registered.
-		$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
-		$parser->recursiveTagParse( \ContentHandler::getContentText( $content ) );
+		global $wgVersion;
+		$context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
+
+		$parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
+		$parser->parse(
+			\ContentHandler::getContentText( $content ),
+			$wikiPage->getTitle(),
+			\ParserOptions::newCanonical( $context )
+		);
 	}
 }

@@ -7,9 +7,14 @@ class TestResult {
 	const T_FAILED  = 1; /* phpcs:ignore */
 	const T_RISKY   = 2; /* phpcs:ignore */
 
-	private $assertion_results = [];
-
+	/**
+	 * @var int
+	 */
 	private $test_result = self::T_SUCCESS;
+
+	/**
+	 * @var string
+	 */
 	private $canonical_testname;
 
 	/**
@@ -28,6 +33,11 @@ class TestResult {
 	private $covers = false;
 
 	/**
+	 * @var int
+	 */
+	private $assertion_count = 0;
+
+	/**
 	 * TestResult constructor.
 	 * @param string $canonical_testname
 	 */
@@ -36,21 +46,15 @@ class TestResult {
 	}
 
 	/**
-	 * Adds the given array to the list of assertion results and automatically sets
-	 * the TestResult object to failed if a failed assertion is given.
-	 *
-	 * @param array $assertion_result
+	 * Increments the count of assertions for this test case.
 	 */
-	public function addAssertionResult( array $assertion_result ) {
-		if ( $assertion_result['predicate_result'] === false ) {
-			$this->setFailed( $assertion_result['failure_message'] );
-		}
-
-		$this->assertion_results[] = $assertion_result;
+	public function incrementAssertionCount() {
+		$this->assertion_count++;
 	}
 
 	/**
-	 * Sets the test result to "FAILED".
+	 * Sets the test result to "FAILED" and sets the message for the "failed" message.
+	 *
 	 * @param string $message
 	 */
 	public function setFailed( $message ) {
@@ -60,6 +64,7 @@ class TestResult {
 
 	/**
 	 * Sets the test result to "RISKY" and sets the message for the "risky" message.
+	 *
 	 * @param string $message
 	 */
 	public function setRisky( $message ) {
@@ -143,7 +148,7 @@ class TestResult {
 	 * @return int
 	 */
 	public function getAssertionCount(): int {
-		return count( $this->assertion_results );
+		return $this->assertion_count;
 	}
 
 	/**

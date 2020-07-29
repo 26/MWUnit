@@ -15,32 +15,6 @@ use MWUnit\TestResult;
 class TestResultTest extends MediaWikiIntegrationTestCase {
 	const CANONICAL_TESTNAME = "TestResult::Test";
 
-	/**
-	 * @covers \MWUnit\TestResult::addAssertionResult
-	 */
-	public function testAddAssertionResult() {
-		$test_result = new TestResult( self::CANONICAL_TESTNAME );
-		$test_result->addAssertionResult( [
-			'predicate_result' => true
-		] );
-
-		$this->assertEquals( 1, $test_result->getAssertionCount(), "Failed to assert that the assertion was added" );
-	}
-
-	public function testUpdateResultOnFailedAssertion() {
-		$test_result = new TestResult( self::CANONICAL_TESTNAME );
-
-		$this->assertSame( TestResult::T_SUCCESS, $test_result->getResult(), "Failed to assert that initial result value is SUCCESS" );
-
-		$test_result->addAssertionResult( [
-			'predicate_result' => false,
-			'failure_message' => 'foobar'
-		] );
-
-		$this->assertSame( TestResult::T_FAILED, $test_result->getResult(), "Failed to assert that status got updated on failed assertion" );
-		$this->assertSame( 'foobar', $test_result->getFailureMessage(), "Failed asserting that failure_message got updated on failed assertion" );
-	}
-
 	public function testSetFailed() {
 		$test_result = new TestResult( self::CANONICAL_TESTNAME );
 

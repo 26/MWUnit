@@ -1,8 +1,13 @@
 <?php
 
-namespace MWUnit;
+namespace MWUnit\Registry;
 
-class TestCaseRegister {
+use MWUnit\Exception\MWUnitException;
+use MWUnit\Exception\TestCaseRegistrationException;
+use MWUnit\MWUnit;
+use MWUnit\TestCase;
+
+class TestCaseRegistry {
 	/**
 	 * @var array Names of the test register initialisations in the current run of the parser.
 	 */
@@ -14,8 +19,8 @@ class TestCaseRegister {
 	 * the test is located.
 	 *
 	 * @param TestCase $test_case
-	 * @throws Exception\MWUnitException
-	 * @throws Exception\TestCaseRegistrationException
+	 * @throws MWUnitException
+	 * @throws TestCaseRegistrationException
 	 * @throws \FatalError
 	 * @throws \MWException
 	 */
@@ -35,12 +40,12 @@ class TestCaseRegister {
 		$registered = self::isTestRegistered( $test_case );
 
 		if ( $registered === true ) {
-			MWUnit::getLogger()->notice("Did not register testcase {testcase} because it was already registered", [
+			MWUnit::getLogger()->notice( "Did not register testcase {testcase} because it was already registered", [
 				"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
 			] );
 
 			// This test has already been registered on this page
-			throw new Exception\TestCaseRegistrationException(
+			throw new TestCaseRegistrationException(
 				'mwunit-duplicate-test',
 				[ htmlspecialchars( $test_case->getName() ) ]
 			);
@@ -60,23 +65,23 @@ class TestCaseRegister {
 			$fields[ 'covers' ] = $test_case->getOption( 'covers' );
 		}
 
-		MWUnit::getLogger()->notice("Registering testcase {testcase}", [
+		MWUnit::getLogger()->notice( "Registering testcase {testcase}", [
 			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
 		] );
 
 		$database = wfGetDb( DB_MASTER );
 		$database->insert( 'mwunit_tests', $fields );
 
-		MWUnit::getLogger()->debug("Registered testcase {testcase}", [
+		MWUnit::getLogger()->debug( "Registered testcase {testcase}", [
 			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
 		] );
 	}
 
-    /**
-     * Removes all test cases on a page from the database.
-     *
-     * @param integer $article_id The article ID of the page from which the tests should be deregistered.
-     */
+	/**
+	 * Removes all test cases on a page from the database.
+	 *
+	 * @param int $article_id The article ID of the page from which the tests should be deregistered.
+	 */
 	public static function deregisterTests( int $article_id ) {
 		$database = wfGetDb( DB_MASTER );
 		$database->delete(
@@ -128,7 +133,7 @@ class TestCaseRegister {
 	 *
 	 * @param string $test_group
 	 * @return array
-	 * @throws Exception\MWUnitException
+	 * @throws MWUnitException
 	 */
 	public static function getTestsForGroup( string $test_group ) {
 		$result = wfGetDb( DB_REPLICA )->select(
@@ -156,7 +161,7 @@ class TestCaseRegister {
 	 *
 	 * @param \Title $title
 	 * @return array
-	 * @throws Exception\MWUnitException
+	 * @throws MWUnitException
 	 */
 	public static function getTestsFromTitle( \Title $title ): array {
 		$article_id = $title->getArticleID();
@@ -186,7 +191,7 @@ class TestCaseRegister {
 	 *
 	 * @param \Title $title
 	 * @return array
-	 * @throws Exception\MWUnitException
+	 * @throws MWUnitException
 	 */
 	public static function getTestsCoveringTemplate( \Title $title ): array {
 		if ( !$title->exists() ) { return [];
@@ -243,7 +248,7 @@ class TestCaseRegister {
 	 * @param TestCase $test_case
 	 * @return bool|null True when it has already been registered, false when it has not been registered or
 	 * null when we have already registered the given test, but it was not a duplicate.
-	 * @throws Exception\MWUnitException
+	 * @throws MWUnitException
 	 */
 	private static function isTestRegistered( TestCase $test_case ) {
 		$database = wfGetDb( DB_MASTER );

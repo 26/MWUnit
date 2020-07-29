@@ -27,7 +27,7 @@ class StringContains implements Assertion {
 	/**
 	 * Returns false if and only if $needle is not contained within $haystack.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $needle
 	 * @param string $haystack
 	 * @param string|null $message

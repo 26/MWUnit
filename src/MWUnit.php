@@ -6,6 +6,7 @@ use MediaWiki\Logger\LoggerFactory;
 use MWException;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Registry\AssertionRegistry;
+use MWUnit\Registry\TestCaseRegistry;
 use Parser;
 
 class MWUnit {
@@ -36,6 +37,12 @@ class MWUnit {
 			[ Controller\MockController::class, 'handleCreateMock' ],
 			SFH_OBJECT_ARGS
 		);
+
+		$parser->setFunctionHook(
+		    'create_parser_mock',
+            [ Controller\ParserMockController::class, 'handleCreateMock' ],
+            SFH_OBJECT_ARGS
+        );
 	}
 
 	/**
@@ -47,7 +54,6 @@ class MWUnit {
 	public static function onLoadExtensionSchemaUpdates( \DatabaseUpdater $updater ) {
 		$directory = $GLOBALS['wgExtensionDirectory'] . '/MWUnit/sql';
 		$type = $updater->getDB()->getType();
-
 		$mwunit_tests_sql = sprintf( "%s/%s/table_mwunit_tests.sql", $directory, $type );
 
 		if ( !file_exists( $mwunit_tests_sql ) ) {
@@ -69,7 +75,7 @@ class MWUnit {
 	 */
 	public static function onSkinBuildSidebar( \Skin $skin, array &$sidebar ) {
 		if ( $skin->getTitle()->getNamespace() === NS_TEMPLATE &&
-			TestCaseRegister::isTemplateCovered( $skin->getTitle() ) ) {
+			TestCaseRegistry::isTemplateCovered( $skin->getTitle() ) ) {
 			$special_title = \Title::newFromText( 'Special:MWUnit' );
 			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
 				[

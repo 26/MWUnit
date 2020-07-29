@@ -33,7 +33,7 @@ class HasProperty implements Assertion {
 	 * Returns false if and only if the page given by $page_title does not have the property
 	 * given by $property_name.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $page_title
 	 * @param string $property_name
 	 * @param string|null $message

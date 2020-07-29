@@ -19,9 +19,9 @@ class PropertyHasValue implements Assertion {
 		return \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' );
 	}
 
-        /**
-	 * @inheritDoc
-	 */
+		/**
+		 * @inheritDoc
+		 */
 	public static function getRequiredArgumentCount(): int {
 		return 3;
 	}
@@ -29,8 +29,8 @@ class PropertyHasValue implements Assertion {
 	/**
 	 * Returns false if and only if the property given by $property_name on the page given
 	 * by $page_title does not have the value given by $expected_value.
-         *
-	 * @param string $failure_message
+	 *
+	 * @param string &$failure_message
 	 * @param string $page_title
 	 * @param string $property_name
 	 * @param string $expected_value
@@ -44,7 +44,7 @@ class PropertyHasValue implements Assertion {
 			$failure_message = wfMessage( "mwunit-invalid-page-name" )->plain();
 			return null;
 		}
-		
+
 		$page = \SMWDIWikiPage::newFromTitle( $title );
 		$store = \SMW\StoreFactory::getStore();
 		$data = $store->getSemanticData( $page );
@@ -60,7 +60,7 @@ class PropertyHasValue implements Assertion {
 				)->plain()
 			);
 
-		return count( array_filter( $values, function( \SMW\DIWikiPage $value ) use ( $expected_value ) {
+		return count( array_filter( $values, function ( \SMW\DIWikiPage $value ) use ( $expected_value ) {
 			return $value->getDBkey() === $expected_value;
 		} ) ) > 0;
 	}

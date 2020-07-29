@@ -27,7 +27,7 @@ class LessThanOrEqual implements Assertion {
 	/**
 	 * Returns false if and only if $left is not less than or equal to $right.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $left
 	 * @param string $right
 	 * @param string|null $message

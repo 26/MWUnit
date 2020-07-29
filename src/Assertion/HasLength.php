@@ -27,7 +27,7 @@ class HasLength implements Assertion {
 	/**
 	 * Returns false if and only if $haystack is not exactly $expected_length characters in size.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $haystack
 	 * @param string $expected_length
 	 * @param string|null $message

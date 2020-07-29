@@ -27,7 +27,7 @@ class LessThan implements Assertion {
 	/**
 	 * Return false if and only if $left is not less than $right.
 	 *
-	 * @param string $failure_message
+	 * @param string &$failure_message
 	 * @param string $left
 	 * @param string $right
 	 * @param string|null $message

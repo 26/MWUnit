@@ -2,7 +2,19 @@
 
 namespace MWUnit;
 
-class UnitTestRunner {
+use MWUnit\Controller\ParserMockController;
+use MWUnit\Registry\MockRegistry;
+
+/**
+ * Class TestSuiteRunner
+ *
+ * This class runs all tests given in the constructor of this class, regardless on
+ * which page a test is located. It handles the running of tests and the collection
+ * of the results of the tests it ran.
+ *
+ * @package MWUnit
+ */
+class TestSuiteRunner {
 	/**
 	 * An associative array of the tests to be ran, where the key is the test identifier
 	 * and the value is the article ID the test is on.
@@ -39,17 +51,17 @@ class UnitTestRunner {
 	 */
 	public function __construct( array $tests ) {
 		MWUnit::setRunning();
-
 		self::$tests = $tests;
 	}
 
-	/**
-	 * Runs all tests in the group specified in the constructor.
-	 *
-	 * @param callable|null $callback Callback function that gets called after every completed test
-	 * @throws \FatalError
-	 * @throws \MWException
-	 */
+    /**
+     * Runs all tests in the group specified in the constructor.
+     *
+     * @param callable|null $callback Callback function that gets called after every completed test
+     * @throws \FatalError
+     * @throws \MWException
+     * @throws Exception\MWUnitException
+     */
 	public function run( callable $callback = null ) {
 		$pages = array_unique( array_values( self::$tests ) );
 
@@ -66,8 +78,22 @@ class UnitTestRunner {
 		self::$callback = $callback;
 		foreach ( $pages as $page ) {
 			$this->runTestsOnPage( $page );
+			$this->cleanupAfterFixture( $page );
 		}
 	}
+
+    /**
+     * Called after having run the tests on a page.
+     *
+     * @param $page int The article ID of the page
+     * @throws Exception\MWUnitException
+     */
+	public function cleanupAfterFixture( $page ) {
+	    \Hooks::run( 'MWUnitCleanupAfterPage', [ $page ] );
+
+	    MockRegistry::getInstance()->reset();
+	    ParserMockController::restoreAndReset();
+    }
 
 	/**
 	 * Returns the result of the current run.
@@ -102,14 +128,9 @@ class UnitTestRunner {
 	 * @return int
 	 */
 	public function getNotPassedCount(): int {
-		$failures = 0;
-		foreach ( self::$test_results as $result ) {
-			if ( !$result->didTestSucceed() ) {
-				$failures++;
-			}
-		}
-
-		return $failures;
+		return array_reduce( self::$test_results, function ( int $carry, TestResult $item ) {
+			return $carry + ( $item->didTestSucceed() ? 0 : 1 );
+		}, 0 );
 	}
 
 	/**
@@ -162,7 +183,6 @@ class UnitTestRunner {
 			$content = $wiki_page->getRevision()->getContent( \Revision::RAW );
 			$parser  = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->getFreshParser();
 			$parser_options = $wiki_page->makeParserOptions( "canonical" );
-
 			$text = \ContentHandler::getContentText( $content );
 		} catch ( \MWException $e ) {
 			MWUnit::getLogger()->debug( 'Unable to create fresh parser for test suite {article}: {exception}', [
