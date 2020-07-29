@@ -73,4 +73,11 @@ class MockRegistry {
 			"title" => $title->getFullText()
 		] );
 	}
+
+    /**
+     * Resets the MockRegistry.
+     */
+	public function reset() {
+	    $this->mocks = [];
+    }
 }

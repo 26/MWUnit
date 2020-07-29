@@ -5,6 +5,8 @@ namespace MWUnit\Special;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\TestResult;
+use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\TestSuiteRunner;
 
 /**
  * Class SpecialMWUnit
@@ -13,7 +15,7 @@ use MWUnit\TestResult;
  */
 class SpecialMWUnit extends \SpecialPage {
 	/**
-	 * @var \MWUnit\TestSuiteRunner
+	 * @var TestSuiteRunner
 	 */
 	private $runner;
 
@@ -77,13 +79,13 @@ class SpecialMWUnit extends \SpecialPage {
 	private function runTests(): bool {
 		if ( $this->getRequest()->getVal( 'unitTestGroup' ) !== null ) {
 			// Run all tests in the given unit test group
-			if ( !\MWUnit\TestCaseRegister::testGroupExists(
+			if ( !TestCaseRegistry::testGroupExists(
 				$this->getRequest()->getVal( 'unitTestGroup' ) ) ) {
 				return false;
 			}
 
 			try {
-				$tests = \MWUnit\TestCaseRegister::getTestsForGroup( $this->getRequest()->getVal( 'unitTestGroup' ) );
+				$tests = TestCaseRegistry::getTestsForGroup( $this->getRequest()->getVal( 'unitTestGroup' ) );
 			} catch ( MWUnitException $e ) {
 				return false;
 			}
@@ -101,7 +103,7 @@ class SpecialMWUnit extends \SpecialPage {
 
 			if ( !$title instanceof \Title || !$title->exists() ) { return false;
 			}
-			if ( !\MWUnit\TestCaseRegister::testExists( $title->getFullText(), $name ) ) { return false;
+			if ( !TestCaseRegistry::testExists( $title->getFullText(), $name ) ) { return false;
 			}
 
 			$tests = [ $this->getRequest()->getVal( 'unitTestIndividual' ) => $title->getArticleID() ];
@@ -115,7 +117,7 @@ class SpecialMWUnit extends \SpecialPage {
 			}
 
 			try {
-				$tests = \MWUnit\TestCaseRegister::getTestsCoveringTemplate( $title );
+				$tests = TestCaseRegistry::getTestsCoveringTemplate( $title );
 			} catch ( MWUnitException $e ) {
 				return false;
 			}
@@ -129,7 +131,7 @@ class SpecialMWUnit extends \SpecialPage {
 			}
 
 			try {
-				$tests = \MWUnit\TestCaseRegister::getTestsFromTitle( $title );
+				$tests = TestCaseRegistry::getTestsFromTitle( $title );
 			} catch ( MWUnitException $e ) {
 				return false;
 			}
@@ -139,7 +141,7 @@ class SpecialMWUnit extends \SpecialPage {
 			return false;
 		}
 
-		$this->runner = new \MWUnit\TestSuiteRunner( $tests );
+		$this->runner = new TestSuiteRunner( $tests );
 		$this->runner->run();
 
 		return true;

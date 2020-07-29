@@ -29,6 +29,7 @@ class AssertionController {
 
 		if ( !MWUnit::isRunning() ) { return '';
 		}
+
 		if ( !TestRun::$test_result->didTestSucceed() ) { return '';
 		}
 

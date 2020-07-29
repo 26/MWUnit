@@ -2,6 +2,8 @@
 
 namespace MWUnit\Maintenance;
 
+use MWUnit\Registry\TestCaseRegistry;
+
 /**
  * Load the required class
  */
@@ -235,11 +237,11 @@ class RunTests extends \Maintenance {
 
 		if ( $group !== false ) {
 			// Run group
-			if ( !\MWUnit\TestCaseRegister::testGroupExists( $group ) ) {
+			if ( !TestCaseRegistry::testGroupExists( $group ) ) {
 				$this->fatalError( "The group '$group' does not exist." );
 			}
 
-			return \MWUnit\TestCaseRegister::getTestsForGroup( $group );
+			return TestCaseRegistry::getTestsForGroup( $group );
 		}
 
 		if ( $testsuite !== false ) {
@@ -250,7 +252,7 @@ class RunTests extends \Maintenance {
 				$this->fatalError( "The given testsuite '$testsuite' does not exist." );
 			}
 
-			return \MWUnit\TestCaseRegister::getTestsFromTitle( $title );
+			return TestCaseRegistry::getTestsFromTitle( $title );
 		}
 
 		if ( $covers !== false ) {
@@ -261,7 +263,7 @@ class RunTests extends \Maintenance {
 				$this->fatalError( "The given template '$covers' does not exist." );
 			}
 
-			return \MWUnit\TestCaseRegister::getTestsCoveringTemplate( $title );
+			return TestCaseRegistry::getTestsCoveringTemplate( $title );
 		}
 
 		// Run test
@@ -276,7 +278,7 @@ class RunTests extends \Maintenance {
 		if ( $title === null ||
 			$title === false ||
 			!$title->exists() ||
-			!\MWUnit\TestCaseRegister::testExists( $title->getFullText(), $name ) ) {
+			!TestCaseRegistry::testExists( $title->getFullText(), $name ) ) {
 			$this->fatalError( "The test '$test' does not exist." );
 		}
 

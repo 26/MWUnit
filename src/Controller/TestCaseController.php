@@ -8,7 +8,7 @@ use MWUnit\Exception\TestCaseException;
 use MWUnit\Exception\TestCaseRegistrationException;
 use MWUnit\MWUnit;
 use MWUnit\TestCase;
-use MWUnit\TestCaseRegister;
+use MWUnit\Registry\TestCaseRegistry;
 
 /**
  * Class TestCaseController
@@ -52,7 +52,7 @@ class TestCaseController {
 			$runner->run();
 		} else {
 			try {
-				TestCaseRegister::register( $test_case );
+				TestCaseRegistry::register( $test_case );
 			} catch ( TestCaseRegistrationException $exception ) {
 				return MWUnit::error( $exception->message_name, $exception->arguments );
 			}
