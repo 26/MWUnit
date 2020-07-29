@@ -8,6 +8,7 @@ use Revision;
 use Status;
 use User;
 use WikiPage;
+use MWUnit\Registry\TestCaseRegistry;
 
 /**
  * Class UpdateHandler
@@ -15,30 +16,7 @@ use WikiPage;
  * @package MWUnit
  */
 class UpdateHandler {
-	public static function onPageContentSave(
-		WikiPage $wikiPage,
-		User $user,
-		Content $content,
-		&$summary,
-		bool $isMinor,
-		bool $isWatch,
-		$section,
-		$flags,
-		$status
-	) {
-		$article_id = $wikiPage->getTitle()->getArticleID();
-
-		MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
-			'id' => $article_id
-		] );
-
-		// Deregister all tests on the page and let the parser re-register them.
-		TestCaseRegister::deregisterTests( $article_id );
-
-		return true;
-	}
-
-	/**
+    /**
 	 * Occurs after the save page request has been processed.
 	 *
 	 * @param WikiPage $wikiPage
@@ -76,6 +54,15 @@ class UpdateHandler {
 			// Do not run hook outside of "Test" namespace
 			return;
 		}
+
+        $article_id = $wikiPage->getTitle()->getArticleID();
+
+        MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
+            'id' => $article_id
+        ] );
+
+        // Deregister all tests on the page and let the parser re-register them.
+        TestCaseRegistry::deregisterTests( $article_id );
 
 		self::parseWikitext( $wikiPage, $mainContent );
 
@@ -161,7 +148,7 @@ class UpdateHandler {
 			'id' => $deleted_id
 		] );
 
-		TestCaseRegister::deregisterTests( $deleted_id );
+		TestCaseRegistry::deregisterTests( $deleted_id );
 
 		return true;
 	}

@@ -2,6 +2,9 @@
 
 namespace MWUnit;
 
+use MWUnit\Controller\ParserMockController;
+use MWUnit\Registry\MockRegistry;
+
 /**
  * Class TestSuiteRunner
  *
@@ -51,13 +54,14 @@ class TestSuiteRunner {
 		self::$tests = $tests;
 	}
 
-	/**
-	 * Runs all tests in the group specified in the constructor.
-	 *
-	 * @param callable|null $callback Callback function that gets called after every completed test
-	 * @throws \FatalError
-	 * @throws \MWException
-	 */
+    /**
+     * Runs all tests in the group specified in the constructor.
+     *
+     * @param callable|null $callback Callback function that gets called after every completed test
+     * @throws \FatalError
+     * @throws \MWException
+     * @throws Exception\MWUnitException
+     */
 	public function run( callable $callback = null ) {
 		$pages = array_unique( array_values( self::$tests ) );
 
@@ -74,8 +78,22 @@ class TestSuiteRunner {
 		self::$callback = $callback;
 		foreach ( $pages as $page ) {
 			$this->runTestsOnPage( $page );
+			$this->cleanupAfterFixture( $page );
 		}
 	}
+
+    /**
+     * Called after having run the tests on a page.
+     *
+     * @param $page int The article ID of the page
+     * @throws Exception\MWUnitException
+     */
+	public function cleanupAfterFixture( $page ) {
+	    \Hooks::run( 'MWUnitCleanupAfterPage', [ $page ] );
+
+	    MockRegistry::getInstance()->reset();
+	    ParserMockController::restoreAndReset();
+    }
 
 	/**
 	 * Returns the result of the current run.
