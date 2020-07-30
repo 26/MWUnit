@@ -24,14 +24,14 @@ class BaseTestRunner {
 		$this->test_case = $test_case;
 	}
 
-    /**
-     * Runs the given TestCase.
-     *
-     * @throws Exception\MWUnitException
-     * @throws \FatalError
-     * @throws \MWException
-     * @throws \ConfigException
-     */
+	/**
+	 * Runs the given TestCase.
+	 *
+	 * @throws Exception\MWUnitException
+	 * @throws \FatalError
+	 * @throws \MWException
+	 * @throws \ConfigException
+	 */
 	public function run() {
 		if ( !array_key_exists(
 			MWUnit::getCanonicalTestNameFromTestCase( $this->test_case ),
@@ -50,7 +50,11 @@ class BaseTestRunner {
 		TestSuiteRunner::$total_assertions_count += $run->getAssertionCount();
 		TestSuiteRunner::$total_test_count += 1;
 
-		if ( !$run->getTestResult()->isTestRisky() && $run->getAssertionCount() === 0 ) {
+		if (
+			$this->test_case->getOption( 'doesnotperformassertions' ) === false &&
+			!$run->getTestResult()->isTestRisky() &&
+			$run->getAssertionCount() === 0
+		) {
 			$run::$test_result->setRisky( wfMessage( 'mwunit-no-assertions' )->plain() );
 		}
 

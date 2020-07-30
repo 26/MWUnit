@@ -28,6 +28,11 @@ class RunTests extends \Maintenance {
 	];
 
 	/**
+	 * @var bool
+	 */
+	private $rebuild_required;
+
+	/**
 	 * RunTests constructor.
 	 *
 	 * @inheritDoc
@@ -113,9 +118,13 @@ class RunTests extends \Maintenance {
 			);
 
 		$unit_test_runner = new \MWUnit\TestSuiteRunner( $tests );
-		$unit_test_runner->run( [ $interface, "testCompletionCallback" ] );
+		$result = $unit_test_runner->run( [ $interface, "testCompletionCallback" ] );
 
 		$interface->outputTestResults( $unit_test_runner );
+
+		if ( $result === true && $unit_test_runner->areAllTestsPerformed() ) {
+			$this->output( "\n\033[31m" . wfMessage( 'mwunit-rebuild-required-text-notice' )->plain() . "\033[0m\n" );
+		}
 
 		return true;
 	}

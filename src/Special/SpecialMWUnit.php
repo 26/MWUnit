@@ -4,8 +4,8 @@ namespace MWUnit\Special;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
-use MWUnit\TestResult;
 use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\TestResult;
 use MWUnit\TestSuiteRunner;
 
 /**
@@ -14,6 +14,11 @@ use MWUnit\TestSuiteRunner;
  * @package MWUnit\Special
  */
 class SpecialMWUnit extends \SpecialPage {
+	/**
+	 * @var bool
+	 */
+	private $rebuild_required = false;
+
 	/**
 	 * @var TestSuiteRunner
 	 */
@@ -142,7 +147,11 @@ class SpecialMWUnit extends \SpecialPage {
 		}
 
 		$this->runner = new TestSuiteRunner( $tests );
-		$this->runner->run();
+		$result = $this->runner->run( null );
+
+		if ( $result === true ) {
+            $this->rebuild_required = $this->runner->areAllTestsPerformed();
+        }
 
 		return true;
 	}
@@ -273,8 +282,13 @@ class SpecialMWUnit extends \SpecialPage {
 		$assertion_count = $this->runner->getTotalAssertionsCount();
 		$failures_count = $this->runner->getNotPassedCount();
 
+		$rebuild_required_notice = $this->rebuild_required ?
+			wfMessage( 'mwunit-rebuild-required-html-notice' )->plain() :
+			null;
+
 		$this->getOutput()->addHTML(
 			"<p>" . wfMessage( 'mwunit-test-result-intro' )->plain() . "</p>" .
+			"<p>" . $rebuild_required_notice . "</p>" .
 			"<p><b>" . wfMessage(
 				'mwunit-test-result-summary',
 				$test_count,

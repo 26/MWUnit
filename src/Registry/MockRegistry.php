@@ -53,8 +53,9 @@ class MockRegistry {
 	 * @param Title $title
 	 * @return string
 	 */
-	public function getMock( Title $title ): string {
-		if ( !$this->isMocked( $title ) ) { return null;
+	public function getMock( Title $title ) {
+		if ( !$this->isMocked( $title ) ) {
+		    return null;
 		}
 		return $this->mocks[ $title->getArticleID() ];
 	}
@@ -74,10 +75,10 @@ class MockRegistry {
 		] );
 	}
 
-    /**
-     * Resets the MockRegistry.
-     */
+	/**
+	 * Resets the MockRegistry.
+	 */
 	public function reset() {
-	    $this->mocks = [];
-    }
+		$this->mocks = [];
+	}
 }

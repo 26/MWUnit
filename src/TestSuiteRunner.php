@@ -2,8 +2,13 @@
 
 namespace MWUnit;
 
+use ContentHandler;
+use MediaWiki\MediaWikiServices;
+use MWException;
 use MWUnit\Controller\ParserMockController;
 use MWUnit\Registry\MockRegistry;
+use Revision;
+use WikiPage;
 
 /**
  * Class TestSuiteRunner
@@ -54,25 +59,25 @@ class TestSuiteRunner {
 		self::$tests = $tests;
 	}
 
-    /**
-     * Runs all tests in the group specified in the constructor.
-     *
-     * @param callable|null $callback Callback function that gets called after every completed test
-     * @throws \FatalError
-     * @throws \MWException
-     * @throws Exception\MWUnitException
-     */
+	/**
+	 * Runs all tests in the group specified in the constructor.
+	 *
+	 * @param callable|null $callback Callback function that gets called after every completed test
+	 * @return bool
+	 *
+	 * @throws Exception\MWUnitException
+	 */
 	public function run( callable $callback = null ) {
 		$pages = array_unique( array_values( self::$tests ) );
 
 		if ( count( $pages ) === 0 ) {
-			return;
+			return false;
 		}
 
 		$result = \Hooks::run( 'MWUnitBeforeFirstTest', [ &$pages ] );
 
 		if ( !$result ) {
-			return;
+			return false;
 		}
 
 		self::$callback = $callback;
@@ -80,20 +85,24 @@ class TestSuiteRunner {
 			$this->runTestsOnPage( $page );
 			$this->cleanupAfterFixture( $page );
 		}
+
+		\Hooks::run( 'MWUnitAfterTests', [ &self::$test_results ] );
+
+		return true;
 	}
 
-    /**
-     * Called after having run the tests on a page.
-     *
-     * @param $page int The article ID of the page
-     * @throws Exception\MWUnitException
-     */
+	/**
+	 * Called after having run the tests on a page.
+	 *
+	 * @param $page int The article ID of the page
+	 * @throws Exception\MWUnitException
+	 */
 	public function cleanupAfterFixture( $page ) {
-	    \Hooks::run( 'MWUnitCleanupAfterPage', [ $page ] );
+		\Hooks::run( 'MWUnitCleanupAfterPage', [ $page ] );
 
-	    MockRegistry::getInstance()->reset();
-	    ParserMockController::restoreAndReset();
-    }
+		MockRegistry::getInstance()->reset();
+		ParserMockController::restoreAndReset();
+	}
 
 	/**
 	 * Returns the result of the current run.
@@ -155,13 +164,40 @@ class TestSuiteRunner {
 		} );
 	}
 
+    /**
+     * Returns true if and only if all tests were performed. This function
+     * checks whether the list of performed test names is equal to the
+     * list of tests that needed to be ran.
+     *
+     * @return bool
+     */
+    public function areAllTestsPerformed(): bool {
+        return count(
+            array_diff(
+                array_keys( self::$tests ),
+                self::getTestsRan()
+            )
+        ) === 0;
+    }
+
+    /**
+     * Returns an array of the canonical test names of the tests that actually ran.
+     *
+     * @return string[]
+     */
+    public static function getTestsRan(): array {
+        return array_map( function ( TestResult $test_result ): string {
+            return $test_result->getCanonicalTestName();
+        }, self::$test_results );
+    }
+
 	/**
 	 * Runs a specific test page.
 	 *
 	 * @param int $article_id
 	 */
 	private function runTestsOnPage( int $article_id ) {
-		$wiki_page = \WikiPage::newFromID( $article_id );
+		$wiki_page = WikiPage::newFromID( $article_id );
 
 		if ( $wiki_page === false ) {
 			MWUnit::getLogger()->warning( 'Unable to run tests on article {article_id} because it does not exist', [
@@ -180,11 +216,8 @@ class TestSuiteRunner {
 		}
 
 		try {
-			$content = $wiki_page->getRevision()->getContent( \Revision::RAW );
-			$parser  = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser()->getFreshParser();
-			$parser_options = $wiki_page->makeParserOptions( "canonical" );
-			$text = \ContentHandler::getContentText( $content );
-		} catch ( \MWException $e ) {
+			$content = $wiki_page->getRevision()->getContent( Revision::RAW );
+		} catch ( MWException $e ) {
 			MWUnit::getLogger()->debug( 'Unable to create fresh parser for test suite {article}: {exception}', [
 				'article' => $wiki_page->getTitle()->getFullText(),
 				'exception' => $e
@@ -193,11 +226,7 @@ class TestSuiteRunner {
 			return;
 		}
 
-		MWUnit::getLogger()->debug( 'Running tests on article {article_id}', [
-			'article' => $article_id
-		] );
-
-		// Run test cases
-		$parser->parse( $text, $wiki_page->getTitle(), $parser_options );
+		MWUnit::getLogger()->debug( 'Running tests on article {article_id}', [ 'article' => $article_id ] );
+        WikitextParser::parseContentFromWikiPage( $wiki_page, $content, true );
 	}
 }

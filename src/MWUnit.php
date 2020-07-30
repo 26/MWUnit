@@ -39,10 +39,10 @@ class MWUnit {
 		);
 
 		$parser->setFunctionHook(
-		    'create_parser_mock',
-            [ Controller\ParserMockController::class, 'handleCreateMock' ],
-            SFH_OBJECT_ARGS
-        );
+			'create_parser_mock',
+			[ Controller\ParserMockController::class, 'handleCreateMock' ],
+			SFH_OBJECT_ARGS
+		);
 	}
 
 	/**

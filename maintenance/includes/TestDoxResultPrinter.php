@@ -61,10 +61,8 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 			print( "\n\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
 				"Assertions: $no_assertions, " .
 				"Failures: $no_not_passed.\033[0m\n" );
-			exit( 1 );
 		} else {
 			print( "\nOK ($no_tests tests, $no_assertions assertions)\n" );
-			exit( 0 );
 		}
 	}
 

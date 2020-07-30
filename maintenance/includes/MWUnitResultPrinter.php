@@ -70,7 +70,6 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 		if ( $no_not_passed === 0 ) {
 			print( "OK ($no_tests tests, $no_assertions assertions)\n" );
-			exit( 0 );
 		}
 
 		$failed_tests = $runner->getFailedTests();
@@ -101,15 +100,14 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 			print( "\n\n" );
 
-			foreach ( $risky_tests as $test ) { $this->printTest( $test );
+			foreach ( $risky_tests as $test ) {
+				$this->printTest( $test );
 			}
 		}
 
 		print( "\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
 			"Assertions: $no_assertions, " .
 			"Failures: $no_not_passed.\033[0m\n" );
-
-		exit( 1 );
 	}
 
 	/**

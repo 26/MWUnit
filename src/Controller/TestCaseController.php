@@ -7,8 +7,8 @@ use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseException;
 use MWUnit\Exception\TestCaseRegistrationException;
 use MWUnit\MWUnit;
-use MWUnit\TestCase;
 use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\TestCase;
 
 /**
  * Class TestCaseController

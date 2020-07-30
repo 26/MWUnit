@@ -49,12 +49,12 @@ class MockController {
 			return MWUnit::error( "mwunit-create-mock-bad-title" );
 		}
 
-        if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
-            return MWUnit::error( "mwunit-outside-test-namespace" );
-        }
+		if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
+			return MWUnit::error( "mwunit-outside-test-namespace" );
+		}
 
-        if ( !MWUnit::isRunning() ) { return '';
-        }
+		if ( !MWUnit::isRunning() ) { return '';
+		}
 
 		$mock_registry = MockRegistry::getInstance();
 		$mock_registry->registerMock( $title, $mock_content );

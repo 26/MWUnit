@@ -4,11 +4,11 @@ namespace MWUnit;
 
 use Content;
 use LogEntry;
+use MWUnit\Registry\TestCaseRegistry;
 use Revision;
 use Status;
 use User;
 use WikiPage;
-use MWUnit\Registry\TestCaseRegistry;
 
 /**
  * Class UpdateHandler
@@ -16,7 +16,7 @@ use MWUnit\Registry\TestCaseRegistry;
  * @package MWUnit
  */
 class UpdateHandler {
-    /**
+	/**
 	 * Occurs after the save page request has been processed.
 	 *
 	 * @param WikiPage $wikiPage
@@ -39,7 +39,7 @@ class UpdateHandler {
 	public static function onPageContentSaveComplete(
 		WikiPage $wikiPage,
 		User $user,
-		Content $mainContent,
+		Content $content,
 		string $summaryText,
 		bool $isMinor,
 		$isWatch,
@@ -52,19 +52,18 @@ class UpdateHandler {
 	) {
 		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
 			// Do not run hook outside of "Test" namespace
-			return;
+			return true;
 		}
 
-        $article_id = $wikiPage->getTitle()->getArticleID();
+		$article_id = $wikiPage->getTitle()->getArticleID();
 
-        MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
-            'id' => $article_id
-        ] );
+		MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
+			'id' => $article_id
+		] );
 
-        // Deregister all tests on the page and let the parser re-register them.
-        TestCaseRegistry::deregisterTests( $article_id );
-
-		self::parseWikitext( $wikiPage, $mainContent );
+		// Deregister all tests on the page and let the parser re-register them.
+		TestCaseRegistry::deregisterTests( $article_id );
+		WikitextParser::parseContentFromWikiPage( $wikiPage, $content );
 
 		return true;
 	}
@@ -100,10 +99,10 @@ class UpdateHandler {
 	) {
 		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
 			// Do not run hook outside of "Test" namespace
-			return;
+			return true;
 		}
 
-		self::parseWikitext( $wikiPage, $content );
+        WikitextParser::parseContentFromWikiPage( $wikiPage, $content );
 
 		return true;
 	}
@@ -151,28 +150,5 @@ class UpdateHandler {
 		TestCaseRegistry::deregisterTests( $deleted_id );
 
 		return true;
-	}
-
-	/**
-	 * Parses the given content in the given page's context.
-	 *
-	 * @param WikiPage $wikiPage
-	 * @param Content $content
-	 * @throws \MWException
-	 */
-	private static function parseWikitext( WikiPage $wikiPage, Content $content ) {
-		MWUnit::getLogger()->debug( 'Reparsing wikitext for article {id} because the page got updated', [
-			'id' => $wikiPage->getTitle()->getFullText()
-		] );
-
-		global $wgVersion;
-		$context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
-
-		$parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
-		$parser->parse(
-			\ContentHandler::getContentText( $content ),
-			$wikiPage->getTitle(),
-			\ParserOptions::newCanonical( $context )
-		);
 	}
 }

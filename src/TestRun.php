@@ -3,6 +3,7 @@
 namespace MWUnit;
 
 use MWUnit\Exception\MWUnitException;
+use RequestContext;
 use Title;
 
 /**
@@ -80,8 +81,8 @@ class TestRun {
 
 		$test = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
 
-		self::$test_result = new TestResult( $test );
-		self::$covered = $test_case->getOption( 'covers' );
+		self::$test_result  = new TestResult( $test );
+		self::$covered      = $test_case->getOption( 'covers' );
 	}
 
 	/**
@@ -97,10 +98,10 @@ class TestRun {
 			self::$initial_parser = clone \MediaWiki\MediaWikiServices::getInstance()->getParser();
 		}
 
-        $context_option = $this->test_case->getOption( 'context' );
-        $user_option    = $this->test_case->getOption( 'user' );
+		$context_option = $this->test_case->getOption( 'context' );
+		$user_option    = $this->test_case->getOption( 'user' );
 
-        $this->backupUser();
+		$this->backupUser();
 
 		try {
 			switch ( $context_option ) {
@@ -111,23 +112,23 @@ class TestRun {
 					break;
 				case 'user':
 					if ( !$user_option ) {
-						$context = \RequestContext::getMain()->getUser();
+						$context = RequestContext::getMain()->getUser();
 						break;
 					}
 
-                    if ( !$this->canMockUsers() ) {
-                        self::$test_result->setRisky( wfMessage( 'mwunit-missing-permissions-mock-user' )->plain() );
-                        return;
-                    }
+					if ( !$this->canMockUsers() ) {
+						self::$test_result->setRisky( wfMessage( 'mwunit-missing-permissions-mock-user' )->plain() );
+						return;
+					}
 
-                    $context = \User::newFromName( $user_option );
+					$context = \User::newFromName( $user_option );
 
-                    if ( !$context instanceof \User ) {
-                        self::$test_result->setRisky( wfMessage( 'mwunit-invalid-user' )->plain() );
-                        return;
-                    }
+					if ( !$context instanceof \User ) {
+						self::$test_result->setRisky( wfMessage( 'mwunit-invalid-user' )->plain() );
+						return;
+					}
 
-                    $this->setUser( $context );
+					$this->setUser( $context );
 					break;
 				default:
 					MWUnit::getLogger()->debug( "Invalid context on {context} on {test}", [
@@ -277,11 +278,11 @@ class TestRun {
 	 * Serializes the current User from RequestContext and stores the result in a class variable.
 	 */
 	private function backupUser() {
-		$this->user = serialize( \RequestContext::getMain()->getUser() );
+		$this->user = serialize( RequestContext::getMain()->getUser() );
 	}
 
 	/**
-	 * Unserializes the backed up User object and restores the User object globally.
+	 * Deserializes the backed up User object and restores the User object globally.
 	 */
 	private function restoreUser() {
 		assert( isset( $this->user ) );
@@ -296,7 +297,7 @@ class TestRun {
 	 * @param \User $user
 	 */
 	private function setUser( \User $user ) {
-		\RequestContext::getMain()->setUser( $user );
+		RequestContext::getMain()->setUser( $user );
 
 		// For extension still using the old $wgUser variable
 		global $wgUser;
@@ -319,6 +320,6 @@ class TestRun {
 		}
 
 		return $allow_running_tests_as_other_user === true &&
-			in_array( 'mwunit-mock-user', \RequestContext::getMain()->getUser()->getRights() );
+			in_array( 'mwunit-mock-user', RequestContext::getMain()->getUser()->getRights() );
 	}
 }
