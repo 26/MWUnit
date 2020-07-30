@@ -36,7 +36,7 @@ class MockController {
 		$mock_content = trim(
 			$frame->expand(
 				$args[1],
-				PPFrame::NO_ARGS & PPFrame::NO_IGNORE & PPFrame::NO_TAGS & PPFrame::NO_TEMPLATES
+				PPFrame::NO_ARGS | PPFrame::NO_IGNORE | PPFrame::NO_TAGS | PPFrame::NO_TEMPLATES
 			)
 		);
 
