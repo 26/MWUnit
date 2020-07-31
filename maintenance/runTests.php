@@ -149,7 +149,7 @@ class RunTests extends \Maintenance {
 	private function listGroups() {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
-			'tests',
+			'mwunit_tests',
 			'test_group',
 			[],
 			'Database::select',
@@ -178,7 +178,7 @@ class RunTests extends \Maintenance {
 	private function listTests() {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
-			'tests',
+			'mwunit_tests',
 			[ 'article_id', 'test_name' ],
 			[],
 			'Database::select',
@@ -207,7 +207,7 @@ class RunTests extends \Maintenance {
 	private function listSuites() {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
-			'tests',
+			'mwunit_tests',
 			[ 'article_id' ],
 			[],
 			'Database::select',
