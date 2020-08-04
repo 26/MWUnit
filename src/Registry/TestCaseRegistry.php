@@ -6,6 +6,7 @@ use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseRegistrationException;
 use MWUnit\MWUnit;
 use MWUnit\TestCase;
+use Title;
 
 class TestCaseRegistry {
 	/**
@@ -30,18 +31,20 @@ class TestCaseRegistry {
 			return;
 		}
 
-		$result = \Hooks::run( 'MWUnitBeforeRegisterTestCase', [ &$test_case ] );
-		if ( $result === false ) {
+		$hook = \Hooks::run( 'MWUnitBeforeRegisterTestCase', [ &$test_case ] );
+		if ( $hook === false ) {
 			return;
 		}
 
-		self::$init_registered_tests[] = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
+		$test_name = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
+
+		self::$init_registered_tests[] = $test_name;
 
 		$registered = self::isTestRegistered( $test_case );
 
 		if ( $registered === true ) {
 			MWUnit::getLogger()->notice( "Did not register testcase {testcase} because it was already registered", [
-				"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
+				"testcase" => $test_name
 			] );
 
 			// This test has already been registered on this page
@@ -66,14 +69,14 @@ class TestCaseRegistry {
 		}
 
 		MWUnit::getLogger()->notice( "Registering testcase {testcase}", [
-			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
+			"testcase" => $test_name
 		] );
 
 		$database = wfGetDb( DB_MASTER );
 		$database->insert( 'mwunit_tests', $fields );
 
 		MWUnit::getLogger()->debug( "Registered testcase {testcase}", [
-			"testcase" => MWUnit::getCanonicalTestNameFromTestCase( $test_case )
+			"testcase" => $test_name
 		] );
 	}
 
@@ -86,9 +89,7 @@ class TestCaseRegistry {
 		$database = wfGetDb( DB_MASTER );
 		$database->delete(
 			'mwunit_tests',
-			[
-				'article_id' => $article_id
-			]
+            [ 'article_id' => $article_id ]
 		);
 	}
 
@@ -100,16 +101,17 @@ class TestCaseRegistry {
 	 * @return bool
 	 */
 	public static function testExists( string $page_title, string $test_name ) {
-		$title = \Title::newFromText( $page_title );
+		$title = Title::newFromText( $page_title );
 
-		if ( $title === null || $title === false ) { return false;
+		if ( !$title instanceof Title ) {
+		    return false;
 		}
 
 		return wfGetDb( DB_REPLICA )->select(
 			'mwunit_tests',
 			[ 'test_name' ],
 			[ 'article_id' => $title->getArticleID(), 'test_name' => $test_name ],
-			'Database::select'
+            __METHOD__
 		)->numRows() > 0;
 	}
 
@@ -124,7 +126,7 @@ class TestCaseRegistry {
 			'mwunit_tests',
 			[ 'test_name' ],
 			[ 'test_group' => $test_group ],
-			'Database::select'
+            __METHOD__
 		)->numRows() > 0;
 	}
 
@@ -140,7 +142,7 @@ class TestCaseRegistry {
 			'mwunit_tests',
 			[ 'article_id', 'test_name' ],
 			[ 'test_group' => $test_group ],
-			'Database::select',
+            __METHOD__,
 			'DISTINCT'
 		);
 
@@ -148,8 +150,11 @@ class TestCaseRegistry {
 		$test_count = $result->numRows();
 
 		for ( $i = 0; $i < $test_count; $i++ ) {
-			$row = $result->current();
-			$tests[ MWUnit::getCanonicalTestName( $row->article_id, $row->test_name ) ] = (int)$row->article_id;
+		    $row = $result->current();
+
+            $test_name = MWUnit::getCanonicalTestName( $row->article_id, $row->test_name );
+			$tests[ $test_name ] = (int)$row->article_id;
+
 			$result->next();
 		}
 
@@ -159,17 +164,17 @@ class TestCaseRegistry {
 	/**
 	 * Returns an array of tests on the given page corresponding to the given Title object.
 	 *
-	 * @param \Title $title
+	 * @param Title $title
 	 * @return array
 	 * @throws MWUnitException
 	 */
-	public static function getTestsFromTitle( \Title $title ): array {
+	public static function getTestsFromTitle( Title $title ): array {
 		$article_id = $title->getArticleID();
 		$result = wfGetDb( DB_REPLICA )->select(
 			'mwunit_tests',
-			[ 'test_name' ],
+			[ 'article_id', 'test_name' ],
 			[ 'article_id' => (int)$article_id ],
-			'Database::select',
+            __METHOD__,
 			'DISTINCT'
 		);
 
@@ -178,7 +183,10 @@ class TestCaseRegistry {
 
 		for ( $i = 0; $i < $test_count; $i++ ) {
 			$row = $result->current();
-			$tests[ MWUnit::getCanonicalTestName( (int)$article_id, $row->test_name ) ] = (int)$article_id;
+
+            $test_name = MWUnit::getCanonicalTestName( $row->article_id, $row->test_name );
+			$tests[ $test_name ] = (int)$article_id;
+
 			$result->next();
 		}
 
@@ -189,14 +197,17 @@ class TestCaseRegistry {
 	 * Returns an array of tests that cover the given Title object. The given page must be an existing template,
 	 * else an empty array is returned.
 	 *
-	 * @param \Title $title
+	 * @param Title $title
 	 * @return array
 	 * @throws MWUnitException
 	 */
-	public static function getTestsCoveringTemplate( \Title $title ): array {
-		if ( !$title->exists() ) { return [];
+	public static function getTestsCoveringTemplate( Title $title ): array {
+		if ( !$title->exists() ) {
+		    return [];
 		}
-		if ( $title->getNamespace() !== NS_TEMPLATE ) { return [];
+
+		if ( $title->getNamespace() !== NS_TEMPLATE ) {
+		    return [];
 		}
 
 		$template_name = $title->getText();
@@ -205,7 +216,7 @@ class TestCaseRegistry {
 			'mwunit_tests',
 			[ 'article_id', 'test_name' ],
 			[ 'covers' => $template_name ],
-			'Database::select'
+            __METHOD__
 		);
 
 		$tests = [];
@@ -213,7 +224,10 @@ class TestCaseRegistry {
 
 		for ( $i = 0; $i < $test_count; $i++ ) {
 			$row = $result->current();
-			$tests[ MWUnit::getCanonicalTestName( (int)$row->article_id, $row->test_name ) ] = (int)$row->article_id;
+
+			$test_name = MWUnit::getCanonicalTestName( (int)$row->article_id, $row->test_name );
+			$tests[ $test_name ] = (int)$row->article_id;
+
 			$result->next();
 		}
 
@@ -223,13 +237,16 @@ class TestCaseRegistry {
 	/**
 	 * Returns true if and only if the given Title object exists, is a template and has tests written for it.
 	 *
-	 * @param \Title $title
+	 * @param Title $title
 	 * @return bool
 	 */
-	public static function isTemplateCovered( \Title $title ): bool {
-		if ( !$title->exists() ) { return false;
+	public static function isTemplateCovered( Title $title ): bool {
+		if ( !$title->exists() ) {
+		    return false;
 		}
-		if ( $title->getNamespace() !== NS_TEMPLATE ) { return false;
+
+		if ( $title->getNamespace() !== NS_TEMPLATE ) {
+		    return false;
 		}
 
 		$template_name = $title->getText();
@@ -238,7 +255,7 @@ class TestCaseRegistry {
 			'mwunit_tests',
 			[ 'article_id' ],
 			[ 'covers' => $template_name ],
-			'Database::select'
+            __METHOD__
 		)->numRows() > 0;
 	}
 
@@ -254,9 +271,7 @@ class TestCaseRegistry {
 		$database = wfGetDb( DB_MASTER );
 		$result = $database->select(
 			'mwunit_tests',
-			[
-				'article_id'
-			],
+			[ 'article_id' ],
 			[
 				'test_name' => $test_case->getName(),
 				'article_id' => $test_case->getParser()->getTitle()->getArticleID()

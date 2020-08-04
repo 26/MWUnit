@@ -31,8 +31,10 @@ class MockRegistry {
 	 * @return MockRegistry
 	 */
 	public static function getInstance() {
-		if ( self::$instance === null ) { self::$instance = new self();
+		if ( self::$instance === null ) {
+		    self::$instance = new self();
 		}
+
 		return self::$instance;
 	}
 

@@ -2,6 +2,9 @@
 
 namespace MWUnit;
 
+use Parser;
+use PPFrame;
+
 /**
  * Class TestCase
  *
@@ -22,16 +25,16 @@ class TestCase {
 	 * @param string $name The name of this test case
 	 * @param string $group The group this test case is in
 	 * @param array $options Associative array of additional options
-	 * @param \Parser $parser The parent Parser object for this test case
-	 * @param \PPFrame $frame The parent PPFrame object for this test case
+	 * @param Parser $parser The parent Parser object for this test case
+	 * @param PPFrame $frame The parent PPFrame object for this test case
 	 */
 	public function __construct(
 		string $input,
 		string $name,
 		string $group,
 		array $options,
-		\Parser $parser,
-		\PPFrame $frame ) {
+		Parser $parser,
+		PPFrame $frame ) {
 		$this->input = $input;
 		$this->name = $name;
 		$this->group = $group;
@@ -45,31 +48,29 @@ class TestCase {
 	 *
 	 * @param string $tag_input The input given directly to the tag
 	 * @param array $tag_arguments The arguments given to the tag, entered like HTML tag attributes
-	 * @param \Parser $parser The parent parser
-	 * @param \PPFrame $frame The parent frame
+	 * @param Parser $parser The parent parser
+	 * @param PPFrame $frame The parent frame
 	 * @return TestCase The newly created TestCase object
 	 * @throws Exception\TestCaseException Thrown whenever some required argument is missing from $arguments.
 	 */
-	public static function newFromTag( string $tag_input, array $tag_arguments, \Parser $parser, \PPFrame $frame ) {
-		if ( isset( $tag_arguments[ 'name' ] ) ) {
-			$name = $tag_arguments[ 'name' ];
-			unset( $tag_arguments[ 'name' ] );
-		} else {
-			// The "name" argument is required.
-			throw new Exception\TestCaseException( 'mwunit-missing-test-name' );
+	public static function newFromTag( string $tag_input, array $tag_arguments, Parser $parser, PPFrame $frame ) {
+		if ( !isset( $tag_arguments[ 'name' ] ) ) {
+            // The "name" argument is required.
+            throw new Exception\TestCaseException( 'mwunit-missing-test-name' );
 		}
+
+        $name = self::array_shift_key( 'name', $tag_arguments );
 
 		if ( strlen( $name ) > 255 || preg_match( '/^[A-Za-z0-9_\-]+$/', $name ) !== 1 ) {
 			throw new Exception\TestCaseException( 'mwunit-invalid-test-name', [ $name ] );
 		}
 
-		if ( isset( $tag_arguments[ 'group' ] ) ) {
-			$group = $tag_arguments[ 'group' ];
-			unset( $tag_arguments[ 'group' ] );
-		} else {
-			// The "group" argument is required.
-			throw new Exception\TestCaseException( 'mwunit-missing-group' );
+		if ( !isset( $tag_arguments[ 'group' ] ) ) {
+            // The "group" argument is required.
+            throw new Exception\TestCaseException( 'mwunit-missing-group' );
 		}
+
+        $group = self::array_shift_key( 'group', $tag_arguments );
 
 		if ( strlen( $group ) > 255 || preg_match( '/^[A-Za-z0-9_\- ]+$/', $group ) !== 1 ) {
 			throw new Exception\TestCaseException( 'mwunit-invalid-group-name', [ $group ] );
@@ -78,6 +79,7 @@ class TestCase {
 		$force_covers = \MediaWiki\MediaWikiServices::getInstance()
 			->getMainConfig()
 			->get( 'MWUnitForceCoversAnnotation' );
+
 		if ( $force_covers && !isset( $tag_arguments[ 'covers' ] ) ) {
 			throw new Exception\TestCaseException( 'mwunit-missing-covers-annotation', [ $name ] );
 		}
@@ -115,18 +117,18 @@ class TestCase {
 	/**
 	 * Returns the parent Parser object for this test case.
 	 *
-	 * @return \Parser The parent Parser object for this test case
+	 * @return Parser The parent Parser object for this test case
 	 */
-	public function getParser(): \Parser {
+	public function getParser(): Parser {
 		return $this->parser;
 	}
 
 	/**
 	 * Returns the parent PPFrame (frame) object for this test case.
 	 *
-	 * @return \PPFrame The parent PPFrame object for this test case
+	 * @return PPFrame The parent PPFrame object for this test case
 	 */
-	public function getFrame(): \PPFrame {
+	public function getFrame(): PPFrame {
 		return $this->frame;
 	}
 
@@ -148,4 +150,18 @@ class TestCase {
 	public function getOptions(): array {
 		return $this->options;
 	}
+
+    /**
+     * Removes the element in the given array specified by the given key and returns it.
+     *
+     * @param $key
+     * @param $array
+     * @return mixed
+     */
+	private static function array_shift_key( $key, &$array ) {
+	    $value = $array[$key];
+	    unset( $array[$key] );
+
+	    return $value;
+    }
 }

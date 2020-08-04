@@ -2,16 +2,29 @@
 
 namespace MWUnit\Controller;
 
+use MWUnit\Injector\TestRunInjector;
 use MWUnit\MWUnit;
 use MWUnit\Registry\MockRegistry;
-use MWUnit\TestRun;
+use MWUnit\Runner\TestRun;
 use Parser;
 use PPFrame;
 use Revision;
 use Title;
 
-class MockController {
-	/**
+class MockController implements TestRunInjector {
+    /**
+     * @var TestRun
+     */
+    private static $run;
+
+    /**
+     * @inheritDoc
+     */
+    public static function setTestRun(TestRun $run) {
+        self::$run = $run;
+    }
+
+    /**
 	 * Hooked to the #create_mock parser function.
 	 *
 	 * @param Parser $parser
@@ -84,10 +97,13 @@ class MockController {
 
 		$registry = MockRegistry::getInstance();
 
-		if ( !$registry->isMocked( $title ) ) { return;
+		if ( !$registry->isMocked( $title ) ) {
+		    return;
 		}
-		if ( $title->getNamespace() === NS_TEMPLATE && strtolower( $title->getText() ) === strtolower( TestRun::$covered ) ) {
-			TestRun::$test_result->setRisky( wfMessage( "mwunit-mocked-cover-template" ) );
+
+		if ( $title->getNamespace() === NS_TEMPLATE &&
+            strtolower( $title->getText() ) === strtolower( self::$run->getCovered() ) ) {
+			self::$run->setRisky( wfMessage( "mwunit-mocked-cover-template" )->plain() );
 			return;
 		}
 

@@ -31,7 +31,7 @@
   "mwunit-test-failed": "Failed:",
   "mwunit-expected": "Expected",
   "mwunit-actual": "Actual",
-  "mwunit-strict-coverage-violation": "This test is marked as risky, because the template specified in the 'covers' annotation is never used during the test. This check can be disabled by setting <code>$wgMWUnitStrictCoverage</code> to <code>false</code> or by annotating this test with <code>ignoreStrictCoverage</code>.",
+  "mwunit-strict-coverage-violation": "This test is marked as risky, because the template specified in the 'covers' annotation is never used during, or before, the test. This check can be disabled by setting <code>$wgMWUnitStrictCoverage</code> to <code>false</code> or by annotating this test with <code>ignoreStrictCoverage</code>.",
   "mwunit-assert-failure-equal": "Failed asserting that two strings are equal.",
   "mwunit-assert-failure-contains-string": "Failed asserting that \"$2\" contains \"$1\".",
   "mwunit-assert-failure-string-starts-with": "Failed asserting that \"$2\" starts with \"$1\".",

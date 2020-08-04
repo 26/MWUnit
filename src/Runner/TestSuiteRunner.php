@@ -1,12 +1,17 @@
 <?php
 
-namespace MWUnit;
+namespace MWUnit\Runner;
 
 use ContentHandler;
 use MediaWiki\MediaWikiServices;
 use MWException;
 use MWUnit\Controller\ParserMockController;
+use MWUnit\Exception;
+use MWUnit\MWUnit;
 use MWUnit\Registry\MockRegistry;
+use MWUnit\Runner\Result\SuccessTestResult;
+use MWUnit\Runner\Result\TestResult;
+use MWUnit\WikitextParser;
 use Revision;
 use WikiPage;
 
@@ -26,29 +31,29 @@ class TestSuiteRunner {
 	 *
 	 * @var array
 	 */
-	public static $tests;
+	private $tests;
 
 	/**
 	 * The results of this unit test run.
 	 *
 	 * @var array An array of TestResult objects
 	 */
-	public static $test_results = [];
+	private $test_results = [];
 
 	/**
 	 * @var int The total number of assertions for the current run.
 	 */
-	public static $total_assertions_count = 0;
+	private $total_assertions_count = 0;
 
 	/**
 	 * @var int The total number of tests for the current run.
 	 */
-	public static $total_test_count = 0;
+	private $test_count = 0;
 
 	/**
 	 * @var callable
 	 */
-	public static $callback;
+	private $callback;
 
 	/**
 	 * UnitTestRunner constructor.
@@ -56,7 +61,11 @@ class TestSuiteRunner {
 	 */
 	public function __construct( array $tests ) {
 		MWUnit::setRunning();
-		self::$tests = $tests;
+
+		$this->tests = $tests;
+
+        // Dependency injection
+        BaseTestRunner::setTestSuiteRunner( $this );
 	}
 
 	/**
@@ -68,7 +77,7 @@ class TestSuiteRunner {
 	 * @throws Exception\MWUnitException
 	 */
 	public function run( callable $callback = null ) {
-		$pages = array_unique( array_values( self::$tests ) );
+		$pages = array_unique( array_values( $this->tests ) );
 
 		if ( count( $pages ) === 0 ) {
 			return false;
@@ -80,29 +89,61 @@ class TestSuiteRunner {
 			return false;
 		}
 
-		self::$callback = $callback;
+        $this->callback = $callback;
 		foreach ( $pages as $page ) {
 			$this->runTestsOnPage( $page );
 			$this->cleanupAfterFixture( $page );
 		}
 
-		\Hooks::run( 'MWUnitAfterTests', [ &self::$test_results ] );
+		\Hooks::run( 'MWUnitAfterTests', [ &$this->test_results ] );
 
 		return true;
 	}
 
-	/**
-	 * Called after having run the tests on a page.
-	 *
-	 * @param $page int The article ID of the page
-	 * @throws Exception\MWUnitException
-	 */
-	public function cleanupAfterFixture( $page ) {
-		\Hooks::run( 'MWUnitCleanupAfterPage', [ $page ] );
+    /**
+     * Increments the total assertion count by the given amount.
+     *
+     * @param int $count
+     */
+	public function incrementTotalAssertionCount( int $count ) {
+	    $this->total_assertions_count += $count;
+    }
 
-		MockRegistry::getInstance()->reset();
-		ParserMockController::restoreAndReset();
-	}
+    /**
+     * Increments the total assertion count by the given amount, or by one if no amount is given.
+     *
+     * @param int $count
+     */
+    public function incrementTestCount( int $count = 1 ) {
+	    $this->test_count += $count;
+    }
+
+    /**
+     * Adds a test result.
+     *
+     * @param TestResult $result
+     */
+	public function addTestResult( TestResult $result ) {
+	    $this->test_results[] = $result;
+    }
+
+    /**
+     * Returns the tests in this test sutie.
+     *
+     * @return array
+     */
+	public function getTests(): array {
+	    return $this->tests;
+    }
+
+    /**
+     * Returns the callback function called after each test result.
+     *
+     * @return callable
+     */
+    public function getCallback() {
+	    return $this->callback;
+    }
 
 	/**
 	 * Returns the result of the current run.
@@ -110,7 +151,7 @@ class TestSuiteRunner {
 	 * @return array An array of TestResult objects
 	 */
 	public function getResults(): array {
-		return self::$test_results;
+		return $this->test_results;
 	}
 
 	/**
@@ -119,7 +160,7 @@ class TestSuiteRunner {
 	 * @return int The total number of assertions for the current run
 	 */
 	public function getTotalAssertionsCount(): int {
-		return self::$total_assertions_count;
+		return $this->total_assertions_count;
 	}
 
 	/**
@@ -127,8 +168,8 @@ class TestSuiteRunner {
 	 *
 	 * @return int The total number of tests ran
 	 */
-	public function getTotalTestCount(): int {
-		return self::$total_test_count;
+	public function getTestCount(): int {
+		return $this->test_count;
 	}
 
 	/**
@@ -137,8 +178,8 @@ class TestSuiteRunner {
 	 * @return int
 	 */
 	public function getNotPassedCount(): int {
-		return array_reduce( self::$test_results, function ( int $carry, TestResult $item ) {
-			return $carry + ( $item->didTestSucceed() ? 0 : 1 );
+		return array_reduce( $this->test_results, function ( int $carry, TestResult $item ) {
+			return $carry + ( $item->getResult() === TestResult::T_SUCCESS ? 0 : 1 );
 		}, 0 );
 	}
 
@@ -169,26 +210,39 @@ class TestSuiteRunner {
      * checks whether the list of performed test names is equal to the
      * list of tests that needed to be ran.
      *
-     * @return bool
+     * @return bool True if all tests are performed, false otherwise
      */
     public function areAllTestsPerformed(): bool {
         return count(
-            array_diff(
-                array_keys( self::$tests ),
-                self::getTestsRan()
-            )
-        ) === 0;
+                array_diff(
+                    array_keys( $this->tests ),
+                    $this->getTestsRun()
+                )
+            ) === 0;
     }
 
     /**
      * Returns an array of the canonical test names of the tests that actually ran.
      *
-     * @return string[]
+     * @return string[] Array of strings containing the canonical names of the tests that were ran
      */
-    public static function getTestsRan(): array {
+    private function getTestsRun(): array {
         return array_map( function ( TestResult $test_result ): string {
             return $test_result->getCanonicalTestName();
-        }, self::$test_results );
+        }, $this->test_results );
+    }
+
+    /**
+     * Called after having run the tests on a page.
+     *
+     * @param $page int The article ID of the page
+     * @throws Exception\MWUnitException
+     */
+    private function cleanupAfterFixture( $page ) {
+        \Hooks::run( 'MWUnitCleanupAfterPage', [ $page ] );
+
+        MockRegistry::getInstance()->reset();
+        ParserMockController::restoreAndReset();
     }
 
 	/**

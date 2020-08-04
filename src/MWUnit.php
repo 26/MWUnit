@@ -8,6 +8,8 @@ use MWUnit\Exception\MWUnitException;
 use MWUnit\Registry\AssertionRegistry;
 use MWUnit\Registry\TestCaseRegistry;
 use Parser;
+use Psr\Log\LoggerInterface;
+use Title;
 
 class MWUnit {
 	const LOGGING_CHANNEL = "MWUnit"; // phpcs:ignore
@@ -76,7 +78,7 @@ class MWUnit {
 	public static function onSkinBuildSidebar( \Skin $skin, array &$sidebar ) {
 		if ( $skin->getTitle()->getNamespace() === NS_TEMPLATE &&
 			TestCaseRegistry::isTemplateCovered( $skin->getTitle() ) ) {
-			$special_title = \Title::newFromText( 'Special:MWUnit' );
+			$special_title = Title::newFromText( 'Special:MWUnit' );
 			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
 				[
 					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->plain(),
@@ -96,7 +98,7 @@ class MWUnit {
 			return true;
 		}
 
-		$special_title = \Title::newFromText( 'Special:MWUnit' );
+		$special_title = Title::newFromText( 'Special:MWUnit' );
 		$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
 			[
 				'text' => wfMessage( 'mwunit-sidebar-run-tests' )->plain(),
@@ -148,8 +150,8 @@ class MWUnit {
 	 * @throws MWUnitException Thrown when an invalid article ID is given
 	 */
 	public static function getCanonicalTestName( int $article_id, string $test_name ): string {
-		$title = \Title::newFromID( $article_id );
-		if ( $title === null || $title === false || !$title->exists() ) {
+		$title = Title::newFromID( $article_id );
+		if ( !$title instanceof Title || !$title->exists() ) {
 			throw new MWUnitException( 'mwunit-invalid-article' );
 		}
 
@@ -172,9 +174,29 @@ class MWUnit {
 	 *
 	 * @see https://www.mediawiki.org/wiki/Manual:Structured_logging
 	 *
-	 * @return \Psr\Log\LoggerInterface The logger interface
+	 * @return LoggerInterface The logger interface
 	 */
-	public static function getLogger(): \Psr\Log\LoggerInterface {
+	public static function getLogger(): LoggerInterface {
 		return LoggerFactory::getInstance( self::LOGGING_CHANNEL );
 	}
+
+    /**
+     * Formats the given test name, in either camel case or snake case, into a more
+     * human-readable sentence.
+     *
+     * @param string $test_name The test name
+     * @return string
+     */
+    public static function testNameToSentence(string $test_name ) {
+        $parts = preg_split( '/(?=[A-Z_\-])/', $test_name, -1, PREG_SPLIT_NO_EMPTY );
+        $parts = array_map( function ( $part ): string {
+            return ucfirst( trim( $part, '_- ' ) );
+        }, $parts );
+
+        if ( $parts[0] === "Test" ) {
+            unset( $parts[0] );
+        }
+
+        return implode( " ", $parts );
+    }
 }

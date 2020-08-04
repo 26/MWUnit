@@ -2,7 +2,7 @@
 
 namespace MWUnit\Maintenance;
 
-use MWUnit\TestResult;
+use MWUnit\Runner\Result\TestResult;
 
 require_once "CommandLineResultPrinter.php";
 
@@ -61,8 +61,8 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 	/**
 	 * @inheritDoc
 	 */
-	public function outputTestResults( \MWUnit\TestSuiteRunner $runner ) {
-		$no_tests 		= $runner->getTotalTestCount();
+	public function outputTestResults(\MWUnit\Runner\TestSuiteRunner $runner ) {
+		$no_tests 		= $runner->getTestCount();
 		$no_assertions	= $runner->getTotalAssertionsCount();
 		$no_not_passed 	= $runner->getNotPassedCount();
 
@@ -87,7 +87,8 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 			print( "\n\n" );
 
-			foreach ( $failed_tests as $test ) { $this->printTest( $test );
+			foreach ( $failed_tests as $test ) {
+			    $this->printTest( $test );
 			}
 		}
 
@@ -120,9 +121,9 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 		print( $test->getCanonicalTestName() . "\n" );
 
 		if ( $test->getResult() === TestResult::T_FAILED ) {
-			print( $test->getFailureMessage() );
+			print( $test->getMessage() );
 		} elseif ( $test->getResult() === TestResult::T_RISKY ) {
-			print( $test->getRiskyMessage() );
+			print( $test->getMessage() );
 		}
 
 		print( "\n\n" );

@@ -17,9 +17,9 @@ class WikitextParser {
     /**
      * Parses the given content in the given page's context.
      *
-     * @param WikiPage $wikiPage
-     * @param Content $content
-     * @throws \MWException
+     * @param WikiPage $wikiPage The WikiPage object to use for context
+     * @param Content $content The Content object to parse
+     * @param bool $use_fresh_parser Whether or not to use a fresh parser, or the parser from MediaWikiServices
      */
     public static function parseContentFromWikiPage(
         WikiPage $wikiPage,
@@ -33,13 +33,10 @@ class WikitextParser {
         // In the future, $wgVersion will be replaced with the MW_VERSION constant. For backwards
         // compatibility reasons, $wgVersion will still be used here.
 
-        global $wgVersion;
-        $context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
-
         $text  = ContentHandler::getContentText( $content );
         $title = $wikiPage->getTitle();
 
-        $options = $wikiPage->makeParserOptions( $context );
+        $options = $wikiPage->makeParserOptions( 'canonical' );
 
         $parser = MediaWikiServices::getInstance()->getParser();
 

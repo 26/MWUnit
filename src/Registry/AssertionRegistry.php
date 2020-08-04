@@ -26,6 +26,7 @@ use MWUnit\Assertion\StringEndsWith;
 use MWUnit\Assertion\StringStartsWith;
 use MWUnit\Assertion\That;
 use MWUnit\Controller\AssertionController;
+use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use Parser;
 use PPFrame;
@@ -102,13 +103,14 @@ class AssertionRegistry {
 		}
 	}
 
-	/**
-	 * Registers the given assertion class to the parser.
-	 *
-	 * @param string $assertion The assertion class name
-	 * @return bool True on success, false on failure
-	 * @throws \MWException
-	 */
+    /**
+     * Registers the given assertion class to the parser.
+     *
+     * @param string $assertion The assertion class name
+     * @return bool True on success, false on failure
+     * @throws \MWException
+     * @throws MWUnitException
+     */
 	public function registerAssertionClass( $assertion ) {
 		try {
 			$reflection_class = new \ReflectionClass( $assertion );

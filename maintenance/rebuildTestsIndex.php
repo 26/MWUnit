@@ -2,6 +2,8 @@
 
 namespace MWUnit\Maintenance;
 
+error_reporting( 0 );
+
 /**
  * Load the required class
  */

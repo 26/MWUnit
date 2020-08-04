@@ -4,6 +4,8 @@ namespace MWUnit\Maintenance;
 
 use MWUnit\Registry\TestCaseRegistry;
 
+error_reporting( 0 );
+
 /**
  * Load the required class
  */
@@ -117,12 +119,12 @@ class RunTests extends \Maintenance {
 				(bool)$this->getOption( 'no-progress', false )
 			);
 
-		$unit_test_runner = new \MWUnit\TestSuiteRunner( $tests );
+		$unit_test_runner = new \MWUnit\Runner\TestSuiteRunner( $tests );
 		$result = $unit_test_runner->run( [ $interface, "testCompletionCallback" ] );
 
 		$interface->outputTestResults( $unit_test_runner );
 
-		if ( $result === true && $unit_test_runner->areAllTestsPerformed() ) {
+		if ( $result === true && !$unit_test_runner->areAllTestsPerformed() ) {
 			$this->output( "\n\033[31m" . wfMessage( 'mwunit-rebuild-required-text-notice' )->plain() . "\033[0m\n" );
 		}
 

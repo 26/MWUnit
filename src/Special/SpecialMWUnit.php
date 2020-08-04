@@ -5,8 +5,10 @@ namespace MWUnit\Special;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\Registry\TestCaseRegistry;
-use MWUnit\TestResult;
-use MWUnit\TestSuiteRunner;
+use MWUnit\Runner\Result\RiskyTestResult;
+use MWUnit\Runner\Result\SuccessTestResult;
+use MWUnit\Runner\Result\TestResult;
+use MWUnit\Runner\TestSuiteRunner;
 
 /**
  * Class SpecialMWUnit
@@ -150,7 +152,7 @@ class SpecialMWUnit extends \SpecialPage {
 		$result = $this->runner->run( null );
 
 		if ( $result === true ) {
-            $this->rebuild_required = $this->runner->areAllTestsPerformed();
+            $this->rebuild_required = !$this->runner->areAllTestsPerformed();
         }
 
 		return true;
@@ -278,7 +280,7 @@ class SpecialMWUnit extends \SpecialPage {
 			return;
 		}
 
-		$test_count = $this->runner->getTotalTestCount();
+		$test_count = $this->runner->getTestCount();
 		$assertion_count = $this->runner->getTotalAssertionsCount();
 		$failures_count = $this->runner->getNotPassedCount();
 
@@ -309,8 +311,8 @@ class SpecialMWUnit extends \SpecialPage {
 	 * @return string
 	 */
 	private function renderTestResult( TestResult $result ): string {
-		if ( $result->isTestRisky() ) {
-			$summary = $result->getRiskyMessage();
+		if ( $result->getResult() === TestResult::T_RISKY ) {
+			$summary = $result->getMessage();
 			$summary_formatted = $summary === null ? $summary : "<hr/><pre>$summary</pre>";
 
 			return sprintf(
@@ -323,7 +325,7 @@ class SpecialMWUnit extends \SpecialPage {
 			);
 		}
 
-		if ( $result->didTestSucceed() ) {
+		if ( $result->getResult() === TestResult::T_SUCCESS ) {
 			return sprintf(
 				'<div class="successbox" style="display:block;">' .
 							'<p><span style="color:#14866d"><b>%s</b></span> %s</p>' .
@@ -339,7 +341,7 @@ class SpecialMWUnit extends \SpecialPage {
 						'<hr/><pre>%s</pre></div>',
 				$this->msg( 'mwunit-test-failed' ),
 				$this->renderTestHeader( $result ),
-				htmlspecialchars( $result->getFailureMessage() )
+				htmlspecialchars( $result->getMessage() )
 			);
 		}
 
@@ -357,12 +359,7 @@ class SpecialMWUnit extends \SpecialPage {
 		$page_name = $result->getPageName();
 		$test_name = $result->getTestName();
 
-		$parts = preg_split( '/(?=[A-Z_\-])/', $test_name, -1, PREG_SPLIT_NO_EMPTY );
-		$parts = array_map( function ( $part ): string {
-			return ucfirst( trim( $part, '_- ' ) );
-		}, $parts );
-
-		$test_title = implode( " ", $parts );
+		$test_title = MWUnit::testNameToSentence( $test_name );
 
 		$title = \Title::newFromText( $page_name );
 
