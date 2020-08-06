@@ -2,7 +2,9 @@
 
 namespace MWUnit\Maintenance;
 
+use MWUnit\Exception\MWUnitException;
 use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\TestSuite;
 
 error_reporting( 0 );
 
@@ -68,7 +70,7 @@ class RunTests extends \Maintenance {
 	/**
 	 * @inheritDoc
 	 *
-	 * @throws \MWUnit\Exception\MWUnitException
+	 * @throws MWUnitException
 	 */
 	public function execute() {
 		$version = \ExtensionRegistry::getInstance()->getAllThings()['MWUnit']['version'] ?? null;
@@ -120,13 +122,9 @@ class RunTests extends \Maintenance {
 			);
 
 		$unit_test_runner = new \MWUnit\Runner\TestSuiteRunner( $tests );
-		$result = $unit_test_runner->run( [ $interface, "testCompletionCallback" ] );
+		$unit_test_runner->run( [ $interface, "testCompletionCallback" ] );
 
 		$interface->outputTestResults( $unit_test_runner );
-
-		if ( $result === true && !$unit_test_runner->areAllTestsPerformed() ) {
-			$this->output( "\n\033[31m" . wfMessage( 'mwunit-rebuild-required-text-notice' )->plain() . "\033[0m\n" );
-		}
 
 		return true;
 	}
@@ -235,27 +233,25 @@ class RunTests extends \Maintenance {
 	}
 
 	/**
-	 * Returns the list of tests to run for the given CLI arguments.
+	 * Returns the TestSuite object to run for the given CLI arguments.
 	 *
-	 * @return array
-	 * @throws \MWUnit\Exception\MWUnitException
+	 * @return TestSuite
+	 * @throws MWUnitException
 	 */
-	private function getTests(): array {
+	private function getTests(): TestSuite {
 		$group = $this->getOption( 'group', false );
-		$test = $this->getOption( 'test', false );
-		$testsuite = $this->getOption( 'testsuite', false );
-		$covers = $this->getOption( 'covers', false );
-
 		if ( $group !== false ) {
 			// Run group
 			if ( !TestCaseRegistry::testGroupExists( $group ) ) {
 				$this->fatalError( "The group '$group' does not exist." );
 			}
 
-			return TestCaseRegistry::getTestsForGroup( $group );
+			return TestSuite::newFromGroup( $group );
 		}
 
-		if ( $testsuite !== false ) {
+
+        $testsuite = $this->getOption( 'testsuite', false );
+        if ( $testsuite !== false ) {
 			// Run testsuite
 			$title = \Title::newFromText( $testsuite, NS_TEST );
 
@@ -263,9 +259,10 @@ class RunTests extends \Maintenance {
 				$this->fatalError( "The given testsuite '$testsuite' does not exist." );
 			}
 
-			return TestCaseRegistry::getTestsFromTitle( $title );
+			return TestSuite::newFromTitle( $title );
 		}
 
+        $covers = $this->getOption( 'covers', false );
 		if ( $covers !== false ) {
 			// Run tests covering template
 			$title = \Title::newFromText( $covers, NS_TEMPLATE );
@@ -274,28 +271,17 @@ class RunTests extends \Maintenance {
 				$this->fatalError( "The given template '$covers' does not exist." );
 			}
 
-			return TestCaseRegistry::getTestsCoveringTemplate( $title );
+			return TestSuite::newFromCovers( $covers );
 		}
+
+        $test = $this->getOption( 'test', false );
 
 		// Run test
 		if ( strpos( $test, '::' ) === false ) {
 			$this->fatalError( "The test name '$test' is invalid." );
 		}
 
-		list( $page_title, $name ) = explode( '::', $test );
-
-		$title = \Title::newFromText( $page_title, NS_TEST );
-
-		if ( $title === null ||
-			$title === false ||
-			!$title->exists() ||
-			!TestCaseRegistry::testExists( $title->getFullText(), $name ) ) {
-			$this->fatalError( "The test '$test' does not exist." );
-		}
-
-		$tests[ $test ] = $title->getArticleID();
-
-		return $tests;
+		return TestSuite::newFromText( $test );
 	}
 }
 

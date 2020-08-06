@@ -142,34 +142,6 @@ class MWUnit {
 	}
 
 	/**
-	 * Returns the canonical test name for the given $article_id and $test_name.
-	 *
-	 * @param int $article_id
-	 * @param string $test_name
-	 * @return string
-	 * @throws MWUnitException Thrown when an invalid article ID is given
-	 */
-	public static function getCanonicalTestName( int $article_id, string $test_name ): string {
-		$title = Title::newFromID( $article_id );
-		if ( !$title instanceof Title || !$title->exists() ) {
-			throw new MWUnitException( 'mwunit-invalid-article' );
-		}
-
-		return $title->getText() . "::" . $test_name;
-	}
-
-	/**
-	 * Returns the canonical name of the given TestCase, which is used for
-	 * identifying tests.
-	 *
-	 * @param TestCase $testcase
-	 * @return string The canonical test name
-	 */
-	public static function getCanonicalTestNameFromTestCase( TestCase $testcase ): string {
-		return $testcase->getParser()->getTitle()->getText() . "::" . $testcase->getName();
-	}
-
-	/**
 	 * Returns MWUnit's logger interface.
 	 *
 	 * @see https://www.mediawiki.org/wiki/Manual:Structured_logging

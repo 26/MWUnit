@@ -8,7 +8,7 @@ use MWException;
 use MWUnit\Exception;
 use MWUnit\Injector\TestSuiteRunnerInjector;
 use MWUnit\MWUnit;
-use MWUnit\TestCase;
+use MWUnit\ConcreteTestCase;
 
 /**
  * Class BaseTestRunner
@@ -25,17 +25,9 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
     private static $runner;
 
     /**
-	 * @var TestCase The test case
+	 * @var ConcreteTestCase The test case
 	 */
 	private $test_case;
-
-	/**
-	 * TestCaseRunner constructor.
-	 * @param TestCase $test_case
-	 */
-	public function __construct( TestCase $test_case ) {
-		$this->test_case = $test_case;
-	}
 
     /**
      * @inheritDoc
@@ -43,6 +35,14 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
     public static function setTestSuiteRunner( TestSuiteRunner $runner ) {
         self::$runner = $runner;
     }
+
+	/**
+	 * TestCaseRunner constructor.
+	 * @param ConcreteTestCase $test_case
+	 */
+	public function __construct( ConcreteTestCase $test_case ) {
+		$this->test_case = $test_case;
+	}
 
 	/**
 	 * Runs the given TestCase.
@@ -54,18 +54,13 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
      * @return void
 	 */
 	public function run() {
-	    $run_test = array_key_exists(
-            MWUnit::getCanonicalTestNameFromTestCase( $this->test_case ),
-            self::$runner->getTests()
-        );
-
-		if ( !$run_test ) {
-			// This test is not in the list of tests to run.
+		if ( !self::$runner->getCurrentTestCase()->equals( $this->test_case ) ) {
+			// We don't want to run this test
 			return;
 		}
 
 		MWUnit::getLogger()->debug( "Running test case {testcase}", [
-			'testcase' => MWUnit::getCanonicalTestNameFromTestCase( $this->test_case )
+			'testcase' => $this->test_case->__toString()
 		] );
 
 		$run = new TestRun( $this->test_case );

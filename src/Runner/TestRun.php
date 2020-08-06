@@ -12,7 +12,7 @@ use MWUnit\MWUnit;
 use MWUnit\Runner\Result\FailureTestResult;
 use MWUnit\Runner\Result\RiskyTestResult;
 use MWUnit\Runner\Result\SuccessTestResult;
-use MWUnit\TestCase;
+use MWUnit\ConcreteTestCase;
 use MWUnit\Runner\Result\TestResult;
 use Parser;
 use ParserOptions;
@@ -54,7 +54,7 @@ class TestRun {
     private $result;
 
     /**
-	 * @var TestCase
+	 * @var ConcreteTestCase
 	 */
 	private $test_case;
 
@@ -102,12 +102,11 @@ class TestRun {
 	/**
 	 * TestCaseRun constructor.
 	 *
-	 * @param TestCase $test_case
+	 * @param ConcreteTestCase $test_case
 	 */
-	public function __construct( TestCase $test_case ) {
+	public function __construct( ConcreteTestCase $test_case ) {
 	    $this->test_case = $test_case;
         $this->covered   = strtolower( $test_case->getOption( 'covers' ) );
-		$this->test_name = MWUnit::getCanonicalTestNameFromTestCase( $test_case );
 
         // Dependency injection
         AssertionController::setTestRun( $this );
@@ -136,8 +135,7 @@ class TestRun {
     public function setRisky( string $message ) {
         $this->result = new RiskyTestResult(
             $message,
-            $this->test_name,
-            $this->assertion_count
+            $this->test_case
         );
     }
 
@@ -147,8 +145,7 @@ class TestRun {
     public function setFailure( string $message ) {
         $this->result = new FailureTestResult(
             $message,
-            $this->test_name,
-            $this->assertion_count
+            $this->test_case
         );
     }
 
@@ -212,7 +209,7 @@ class TestRun {
             // Run test case
             MediaWikiServices::getInstance()->getParser()->parse(
                 $this->test_case->getInput(),
-                $this->test_case->getFrame()->getTitle(),
+                $this->test_case->getTitle(),
                 ParserOptions::newCanonical( $context ),
                 true,
                 false
@@ -328,8 +325,7 @@ class TestRun {
         }
 
         $this->result = new SuccessTestResult(
-            $this->test_name,
-            $this->assertion_count
+            $this->test_case
         );
     }
 

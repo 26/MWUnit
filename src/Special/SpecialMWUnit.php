@@ -9,6 +9,7 @@ use MWUnit\Runner\Result\RiskyTestResult;
 use MWUnit\Runner\Result\SuccessTestResult;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestSuiteRunner;
+use MWUnit\TestSuite;
 
 /**
  * Class SpecialMWUnit
@@ -17,19 +18,14 @@ use MWUnit\Runner\TestSuiteRunner;
  */
 class SpecialMWUnit extends \SpecialPage {
 	/**
-	 * @var bool
-	 */
-	private $rebuild_required = false;
-
-	/**
 	 * @var TestSuiteRunner
 	 */
 	private $runner;
 
 	/**
 	 * SpecialMWUnit constructor.
-	 * @throws \UserNotLoggedIn
-	 */
+	 * @throws \UserNotLoggedIn|\ConfigException
+     */
 	public function __construct() {
 		parent::__construct( "MWUnit", "mwunit-runtests", true );
 		parent::requireLogin();
@@ -86,45 +82,31 @@ class SpecialMWUnit extends \SpecialPage {
 	private function runTests(): bool {
 		if ( $this->getRequest()->getVal( 'unitTestGroup' ) !== null ) {
 			// Run all tests in the given unit test group
-			if ( !TestCaseRegistry::testGroupExists(
-				$this->getRequest()->getVal( 'unitTestGroup' ) ) ) {
-				return false;
-			}
+			$group = $this->getRequest()->getVal( 'unitTestGroup' );
 
 			try {
-				$tests = TestCaseRegistry::getTestsForGroup( $this->getRequest()->getVal( 'unitTestGroup' ) );
+				$test_suite = TestSuite::newFromGroup( $group );
 			} catch ( MWUnitException $e ) {
 				return false;
 			}
 		} elseif ( $this->getRequest()->getVal( 'unitTestIndividual' ) !== null ) {
 			// Run the specified individual test
-			if ( strpos( $this->getRequest()->getVal( 'unitTestIndividual' ), '::' ) === false ) { return false;
+			if ( strpos( $this->getRequest()->getVal( 'unitTestIndividual' ), '::' ) === false ) {
+			    return false;
 			}
 
-			list( $page_title, $name ) = explode(
-				'::',
-				$this->getRequest()->getVal( 'unitTestIndividual' )
-			);
-
-			$title = \Title::newFromText( $page_title, NS_TEST );
-
-			if ( !$title instanceof \Title || !$title->exists() ) { return false;
-			}
-			if ( !TestCaseRegistry::testExists( $title->getFullText(), $name ) ) { return false;
-			}
-
-			$tests = [ $this->getRequest()->getVal( 'unitTestIndividual' ) => $title->getArticleID() ];
-		} elseif ( $this->getRequest()->getVal( 'unitTestCoverTemplate' ) ) {
-			$title = \Title::newFromText(
-				$this->getRequest()->getVal( 'unitTestCoverTemplate' ),
-				NS_TEMPLATE
-			);
-
-			if ( !$title instanceof \Title || !$title->exists() ) { return false;
-			}
+			$test_name = $this->getRequest()->getVal( 'unitTestIndividual' );
 
 			try {
-				$tests = TestCaseRegistry::getTestsCoveringTemplate( $title );
+                $test_suite = TestSuite::newFromText( $test_name );
+            } catch( MWUnitException $e ) {
+			    return false;
+            }
+		} elseif ( $this->getRequest()->getVal( 'unitTestCoverTemplate' ) ) {
+            $covers = $this->getRequest()->getVal( 'unitTestCoverTemplate' );
+
+			try {
+				$test_suite = TestSuite::newFromCovers( $covers );
 			} catch ( MWUnitException $e ) {
 				return false;
 			}
@@ -132,30 +114,38 @@ class SpecialMWUnit extends \SpecialPage {
 			// Run the specified page
 			$title = \Title::newFromText( $this->getRequest()->getVal( 'unitTestPage' ) );
 
-			if ( !$title instanceof \Title || !$title->exists() ) { return false;
+			if ( !$title instanceof \Title || !$title->exists() ) {
+			    return false;
 			}
-			if ( $title->getNamespace() !== NS_TEST ) { return false;
+
+			if ( $title->getNamespace() !== NS_TEST ) {
+			    return false;
 			}
 
 			try {
-				$tests = TestCaseRegistry::getTestsFromTitle( $title );
+				$test_suite = TestSuite::newFromTitle( $title );
 			} catch ( MWUnitException $e ) {
 				return false;
 			}
 		}
 
-		if ( count( $tests ) === 0 ) {
+		if ( count( $test_suite ) === 0 ) {
 			return false;
 		}
 
-		$this->runner = new TestSuiteRunner( $tests );
-		$result = $this->runner->run( null );
+		$this->runner = new TestSuiteRunner( $test_suite );
 
-		if ( $result === true ) {
-            $this->rebuild_required = !$this->runner->areAllTestsPerformed();
+        try {
+            $result = $this->runner->run(null);
+        } catch (MWUnitException $e) {
+            return false;
         }
 
-		return true;
+        if ( $result === false ) {
+            return false;
+        }
+
+        return true;
 	}
 
 	/**
@@ -276,7 +266,7 @@ class SpecialMWUnit extends \SpecialPage {
 	 */
 	private function renderTestResults( array $test_results ) {
 		if ( count( $test_results ) === 0 ) {
-			$this->getOutput()->addHTML( "<b>No tests were ran</b>" );
+			$this->getOutput()->showErrorPage( 'mwunit-generic-error-title', 'mwunit-generic-error-description' );
 			return;
 		}
 
@@ -284,13 +274,8 @@ class SpecialMWUnit extends \SpecialPage {
 		$assertion_count = $this->runner->getTotalAssertionsCount();
 		$failures_count = $this->runner->getNotPassedCount();
 
-		$rebuild_required_notice = $this->rebuild_required ?
-			wfMessage( 'mwunit-rebuild-required-html-notice' )->plain() :
-			null;
-
 		$this->getOutput()->addHTML(
 			"<p>" . wfMessage( 'mwunit-test-result-intro' )->plain() . "</p>" .
-			"<p>" . $rebuild_required_notice . "</p>" .
 			"<p><b>" . wfMessage(
 				'mwunit-test-result-summary',
 				$test_count,
@@ -355,7 +340,6 @@ class SpecialMWUnit extends \SpecialPage {
 	 * @return string|null
 	 */
 	private function renderTestHeader( TestResult $result ) {
-		$canonical_name = $result->getCanonicalTestName();
 		$page_name = $result->getPageName();
 		$test_name = $result->getTestName();
 
@@ -374,7 +358,7 @@ class SpecialMWUnit extends \SpecialPage {
 			$test_title,
 			$test_url,
 			$page_name,
-			$canonical_name
+			$result->getTestCase()
 		);
 	}
 

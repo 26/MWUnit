@@ -16,26 +16,26 @@ use WikiPage;
  * @package MWUnit
  */
 class UpdateHandler {
-	/**
-	 * Occurs after the save page request has been processed.
-	 *
-	 * @param WikiPage $wikiPage
-	 * @param User $user
-	 * @param Content $mainContent
-	 * @param string $summaryText
-	 * @param bool $isMinor
-	 * @param null $isWatch Unused
-	 * @param null $section Unused
-	 * @param int $flags
-	 * @param Revision|null $revision
-	 * @param Status $status
-	 * @param int|false $originalRevId
-	 * @param int $undidRevId
-	 *
-	 * @return bool
-	 * @throws \MWException
-	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/PageContentSaveComplete
-	 */
+    /**
+     * Occurs after the save page request has been processed.
+     *
+     * @param WikiPage $wikiPage
+     * @param User $user
+     * @param Content $content
+     * @param string $summaryText
+     * @param bool $isMinor
+     * @param null $isWatch Unused
+     * @param null $section Unused
+     * @param int $flags
+     * @param Revision|null $revision
+     * @param Status $status
+     * @param int|false $originalRevId
+     * @param int $undidRevId
+     *
+     * @return bool
+     * @throws \MWException
+     * @see https://www.mediawiki.org/wiki/Manual:Hooks/PageContentSaveComplete
+     */
 	public static function onPageContentSaveComplete(
 		WikiPage $wikiPage,
 		User $user,

@@ -2,6 +2,8 @@
 
 namespace MWUnit\Runner\Result;
 
+use MWUnit\TestCase;
+
 /**
  * Class RiskyTestResult
  *
@@ -17,13 +19,11 @@ class RiskyTestResult extends TestResult {
      * RiskyTestResult constructor.
      *
      * @param string $message
-     * @param string $testname
-     * @param int $assertion_count
+     * @param TestCase $test_case
      */
-    public function __construct( string $message, string $testname, int $assertion_count ) {
+    public function __construct( string $message, TestCase $test_case ) {
         $this->message = $message;
-
-        parent::__construct( $testname, $assertion_count );
+        parent::__construct( $test_case );
     }
 
     /**

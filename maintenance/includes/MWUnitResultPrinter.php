@@ -118,7 +118,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 	 */
 	private function printTest( TestResult $test ) {
 		print( $this->count . ") " );
-		print( $test->getCanonicalTestName() . "\n" );
+		print( $test->getTestCase() . "\n" );
 
 		if ( $test->getResult() === TestResult::T_FAILED ) {
 			print( $test->getMessage() );

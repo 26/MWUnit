@@ -2,6 +2,8 @@
 
 namespace MWUnit\Runner\Result;
 
+use MWUnit\TestCase;
+
 /**
  * Class TestResult
  *
@@ -13,42 +15,26 @@ abstract class TestResult {
 	const T_RISKY   = 2; /* phpcs:ignore */
 
 	/**
-	 * @var string
+	 * @var TestCase
 	 */
-	private $testname;
-
-	/**
-	 * @var int
-	 */
-	private $assertion_count;
+	private $test_case;
 
     /**
      * TestResult constructor.
      *
-     * @param string $testname The canonical name of this test case
-     * @param int $assertion_count The number of assertions used in this test case
+     * @param TestCase $case
      */
-	public function __construct( string $testname, int $assertion_count ) {
-        $this->testname         = $testname;
-	    $this->assertion_count  = $assertion_count;
+	public function __construct( TestCase $case ) {
+        $this->test_case = $case;
 	}
 
 	/**
-	 * Returns the canonical test name of this object.
+	 * Returns the test case associated with this TestResult.
 	 *
-	 * @return string
+	 * @return TestCase
 	 */
-	public function getCanonicalTestName(): string {
-		return $this->testname;
-	}
-
-	/**
-	 * Returns the number of assertions in this test case.
-	 *
-	 * @return int
-	 */
-	public function getAssertionCount(): int {
-		return $this->assertion_count;
+	public function getTestCase(): TestCase {
+		return $this->test_case;
 	}
 
     /**
@@ -57,14 +43,7 @@ abstract class TestResult {
      * @return string|bool
      */
     public function getPageName(): string {
-        $page_text = explode( "::", $this->testname )[0];
-        $title_object = \Title::newFromText( $page_text, NS_TEST );
-
-        if ( !$title_object instanceof \Title ) {
-            return false;
-        }
-
-        return $title_object->getFullText();
+        return $this->getTestCase()->getTitle()->getFullText();
     }
 
     /**
@@ -73,7 +52,7 @@ abstract class TestResult {
      * @return string
      */
     public function getTestName(): string {
-        return explode( "::", $this->testname )[1];
+        return $this->test_case->getName();
     }
 
 	/**

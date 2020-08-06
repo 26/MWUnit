@@ -6,13 +6,16 @@ use ContentHandler;
 use MediaWiki\MediaWikiServices;
 use MWException;
 use MWUnit\Controller\ParserMockController;
+use MWUnit\Controller\TestCaseController;
 use MWUnit\Exception;
 use MWUnit\MWUnit;
+use MWUnit\TestCase;
+use MWUnit\TestSuite;
 use MWUnit\Registry\MockRegistry;
-use MWUnit\Runner\Result\SuccessTestResult;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\WikitextParser;
 use Revision;
+use Title;
 use WikiPage;
 
 /**
@@ -25,14 +28,6 @@ use WikiPage;
  * @package MWUnit
  */
 class TestSuiteRunner {
-	/**
-	 * An associative array of the tests to be ran, where the key is the test identifier
-	 * and the value is the article ID the test is on.
-	 *
-	 * @var array
-	 */
-	private $tests;
-
 	/**
 	 * The results of this unit test run.
 	 *
@@ -55,17 +50,28 @@ class TestSuiteRunner {
 	 */
 	private $callback;
 
-	/**
+    /**
+     * @var TestSuite
+     */
+    private $test_suite;
+
+    /**
+     * @var TestCase The TestCase that is currently running.
+     */
+    private $test_case;
+
+    /**
 	 * UnitTestRunner constructor.
-	 * @param array $tests
+	 * @param TestSuite $test_suite
 	 */
-	public function __construct( array $tests ) {
+	public function __construct( TestSuite $test_suite ) {
 		MWUnit::setRunning();
 
-		$this->tests = $tests;
+		$this->test_suite = $test_suite;
 
         // Dependency injection
         BaseTestRunner::setTestSuiteRunner( $this );
+        TestCaseController::setTestSuiteRunner( $this );
 	}
 
 	/**
@@ -77,27 +83,33 @@ class TestSuiteRunner {
 	 * @throws Exception\MWUnitException
 	 */
 	public function run( callable $callback = null ) {
-		$pages = array_unique( array_values( $this->tests ) );
-
-		if ( count( $pages ) === 0 ) {
-			return false;
-		}
-
-		$result = \Hooks::run( 'MWUnitBeforeFirstTest', [ &$pages ] );
-
-		if ( !$result ) {
-			return false;
-		}
-
         $this->callback = $callback;
-		foreach ( $pages as $page ) {
-			$this->runTestsOnPage( $page );
-			$this->cleanupAfterFixture( $page );
+
+        try {
+            if ( !\Hooks::run('MWUnitBeforeFirstTest', [ &$pages ] ) ) {
+                return false;
+            }
+        } catch ( \Exception $e ) {
+            return false;
+        }
+
+        foreach ( $this->test_suite as $test_case ) {
+			$result = $this->runTestCase( $test_case );
+
+			if ( $result === false ) {
+			    return false;
+            }
+
+			$this->cleanupAfterFixture( $test_case->getTitle() );
 		}
 
-		\Hooks::run( 'MWUnitAfterTests', [ &$this->test_results ] );
+        try {
+            \Hooks::run( 'MWUnitAfterTests', [ &$this->test_results ] );
+        } catch ( \Exception $e ) {
+            return false;
+        }
 
-		return true;
+        return true;
 	}
 
     /**
@@ -125,15 +137,6 @@ class TestSuiteRunner {
      */
 	public function addTestResult( TestResult $result ) {
 	    $this->test_results[] = $result;
-    }
-
-    /**
-     * Returns the tests in this test sutie.
-     *
-     * @return array
-     */
-	public function getTests(): array {
-	    return $this->tests;
     }
 
     /**
@@ -206,59 +209,54 @@ class TestSuiteRunner {
 	}
 
     /**
-     * Returns true if and only if all tests were performed. This function
-     * checks whether the list of performed test names is equal to the
-     * list of tests that needed to be ran.
+     * Returns the current TestCase object.
      *
-     * @return bool True if all tests are performed, false otherwise
+     * @return TestCase
      */
-    public function areAllTestsPerformed(): bool {
-        return count(
-                array_diff(
-                    array_keys( $this->tests ),
-                    $this->getTestsRun()
-                )
-            ) === 0;
-    }
-
-    /**
-     * Returns an array of the canonical test names of the tests that actually ran.
-     *
-     * @return string[] Array of strings containing the canonical names of the tests that were ran
-     */
-    private function getTestsRun(): array {
-        return array_map( function ( TestResult $test_result ): string {
-            return $test_result->getCanonicalTestName();
-        }, $this->test_results );
+    public function getCurrentTestCase(): TestCase {
+        return $this->test_case;
     }
 
     /**
      * Called after having run the tests on a page.
      *
-     * @param $page int The article ID of the page
+     * @param $page Title The article ID of the page
+     * @return bool Returns false on failure, true otherwise
      * @throws Exception\MWUnitException
      */
-    private function cleanupAfterFixture( $page ) {
-        \Hooks::run( 'MWUnitCleanupAfterPage', [ $page ] );
+    private function cleanupAfterFixture( Title $page ) {
+        try {
+            \Hooks::run('MWUnitCleanupAfterPage', [$page]);
+        } catch (\FatalError $e) {
+            return false;
+        } catch (MWException $e) {
+            return false;
+        }
 
         MockRegistry::getInstance()->reset();
         ParserMockController::restoreAndReset();
+
+        return true;
     }
 
-	/**
-	 * Runs a specific test page.
-	 *
-	 * @param int $article_id
-	 */
-	private function runTestsOnPage( int $article_id ) {
+    /**
+     * Runs a specific test page.
+     *
+     * @param TestCase $test_case
+     * @return bool Returns false on failure, true otherwise
+     */
+	private function runTestCase( TestCase $test_case ) {
+	    $article_id = $test_case->getTitle()->getArticleID();
 		$wiki_page = WikiPage::newFromID( $article_id );
+
+		$this->test_case = $test_case;
 
 		if ( $wiki_page === false ) {
 			MWUnit::getLogger()->warning( 'Unable to run tests on article {article_id} because it does not exist', [
 				'article_id' => $article_id
 			] );
 
-			return;
+			return false;
 		}
 
 		if ( $wiki_page->getTitle()->getNamespace() !== NS_TEST ) {
@@ -266,21 +264,21 @@ class TestSuiteRunner {
 				'article' => $wiki_page->getTitle()->getFullText()
 			] );
 
-			return;
+			return false;
 		}
 
-		try {
-			$content = $wiki_page->getRevision()->getContent( Revision::RAW );
-		} catch ( MWException $e ) {
-			MWUnit::getLogger()->debug( 'Unable to create fresh parser for test suite {article}: {exception}', [
-				'article' => $wiki_page->getTitle()->getFullText(),
-				'exception' => $e
-			] );
+		$content = $wiki_page->getRevision()->getContent( Revision::RAW );
 
-			return;
-		}
+		MWUnit::getLogger()->debug( 'Running tests on article {article_id}', [
+		    'article' => $article_id
+        ] );
 
-		MWUnit::getLogger()->debug( 'Running tests on article {article_id}', [ 'article' => $article_id ] );
-        WikitextParser::parseContentFromWikiPage( $wiki_page, $content, true );
+        try {
+            WikitextParser::parseContentFromWikiPage($wiki_page, $content, true);
+        } catch (MWException $e) {
+            return false;
+        }
+
+        return true;
 	}
 }
