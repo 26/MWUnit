@@ -31,7 +31,6 @@ class AssertionController implements TestRunInjector {
      * @param array $arguments
      * @param string $class The class corresponding to this assertion
      * @return string
-     * @throws MWUnitException
      */
 	public static function handleAssertionParserHook(
 		\Parser $parser,
@@ -72,8 +71,7 @@ class AssertionController implements TestRunInjector {
      * @param array $arguments The arguments to pass to the assert method
      * @param string $class The name of the class on which the assert method should be called
      *
-     * @return bool Returns the result of the assertion, or null on failure
-     * @throws MWUnitException
+     * @return null|bool Returns the result of the assertion, or null on failure
      */
 	private static function callAssertion( array $arguments, $class ) {
 		try {
@@ -89,9 +87,11 @@ class AssertionController implements TestRunInjector {
 		$failure_message = '';
 		$result = $class::assert( $failure_message, ...$arguments );
 
-        $result === null ?
-            self::$run->setRisky( $failure_message ) :
+        if ( $result === null ) {
+            self::$run->setRisky( $failure_message );
+        } else if ( $result === false ) {
             self::$run->setFailure( $failure_message );
+        }
 
         self::$run->incrementAssertionCount();
 

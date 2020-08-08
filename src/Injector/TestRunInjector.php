@@ -4,7 +4,11 @@ namespace MWUnit\Injector;
 
 use MWUnit\Runner\TestRun;
 
-interface TestRunInjector {
+/**
+ * Interface TestRunInjector
+ * @package MWUnit\Injector
+ */
+interface TestRunInjector extends InjectorInterface {
     /**
      * Dependency injector for the TestRun object.
      *

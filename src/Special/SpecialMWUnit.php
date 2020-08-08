@@ -133,10 +133,10 @@ class SpecialMWUnit extends \SpecialPage {
 			return false;
 		}
 
-		$this->runner = new TestSuiteRunner( $test_suite );
+		$this->runner = new TestSuiteRunner( $test_suite, null );
 
         try {
-            $result = $this->runner->run(null);
+            $result = $this->runner->run();
         } catch (MWUnitException $e) {
             return false;
         }

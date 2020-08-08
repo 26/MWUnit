@@ -5,7 +5,7 @@ namespace MWUnit\Runner;
 use Hooks;
 use MediaWiki\MediaWikiServices;
 use MWUnit\Controller\AssertionController;
-use MWUnit\Controller\MockController;
+use MWUnit\Controller\TemplateMockController;
 use MWUnit\Injector\TestRunInjector;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
@@ -108,9 +108,11 @@ class TestRun {
 	    $this->test_case = $test_case;
         $this->covered   = strtolower( $test_case->getOption( 'covers' ) );
 
+        self::$templates_used = [];
+
         // Dependency injection
         AssertionController::setTestRun( $this );
-        MockController::setTestRun( $this );
+        TemplateMockController::setTestRun( $this );
 	}
 
     /**
@@ -316,14 +318,8 @@ class TestRun {
 
     /**
      * Marks this test run as successful.
-     *
-     * @throws MWUnitException
      */
     private function setSuccess() {
-        if ( !isset( $this->test_name ) || !isset( $this->assertion_count ) ) {
-            throw new MWUnitException( "TestRun was not initialised" );
-        }
-
         $this->result = new SuccessTestResult(
             $this->test_case
         );

@@ -33,7 +33,7 @@
     "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
     "ParserFetchTemplate": [
       "MWUnit\\Runner\\TestRun::onParserFetchTemplate",
-      "MWUnit\\Controller\\MockController::onParserFetchTemplate"
+      "MWUnit\\Controller\\TemplateMockController::onParserFetchTemplate"
     ]
   },
   "SpecialPages": {

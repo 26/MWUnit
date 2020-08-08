@@ -4,6 +4,7 @@ namespace MWUnit\Maintenance;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestSuite;
 
 error_reporting( 0 );
@@ -70,8 +71,8 @@ class RunTests extends \Maintenance {
 	/**
 	 * @inheritDoc
 	 *
-	 * @throws MWUnitException
-	 */
+	 * @throws MWUnitException|\ConfigException
+     */
 	public function execute() {
 		$version = \ExtensionRegistry::getInstance()->getAllThings()['MWUnit']['version'] ?? null;
 		$this->output( "MWUnit $version by Marijn van Wezel and contributors.\n" );
@@ -121,8 +122,8 @@ class RunTests extends \Maintenance {
 				(bool)$this->getOption( 'no-progress', false )
 			);
 
-		$unit_test_runner = new \MWUnit\Runner\TestSuiteRunner( $tests );
-		$unit_test_runner->run( [ $interface, "testCompletionCallback" ] );
+		$unit_test_runner = new TestSuiteRunner( $tests, [ $interface, "testCompletionCallback" ] );
+		$unit_test_runner->run();
 
 		$interface->outputTestResults( $unit_test_runner );
 
@@ -242,7 +243,7 @@ class RunTests extends \Maintenance {
 		$group = $this->getOption( 'group', false );
 		if ( $group !== false ) {
 			// Run group
-			if ( !TestCaseRegistry::testGroupExists( $group ) ) {
+			if ( !TestCaseRegistry::getInstance()->testGroupExists( $group ) ) {
 				$this->fatalError( "The group '$group' does not exist." );
 			}
 

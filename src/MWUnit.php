@@ -36,7 +36,7 @@ class MWUnit {
 
 		$parser->setFunctionHook(
 			'create_mock',
-			[ Controller\MockController::class, 'handleCreateMock' ],
+			[ Controller\TemplateMockController::class, 'handleCreateMock' ],
 			SFH_OBJECT_ARGS
 		);
 
@@ -77,7 +77,7 @@ class MWUnit {
 	 */
 	public static function onSkinBuildSidebar( \Skin $skin, array &$sidebar ) {
 		if ( $skin->getTitle()->getNamespace() === NS_TEMPLATE &&
-			TestCaseRegistry::isTemplateCovered( $skin->getTitle() ) ) {
+			TestCaseRegistry::getInstance()->isTemplateCovered( $skin->getTitle() ) ) {
 			$special_title = Title::newFromText( 'Special:MWUnit' );
 			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
 				[

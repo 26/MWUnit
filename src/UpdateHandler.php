@@ -62,7 +62,7 @@ class UpdateHandler {
 		] );
 
 		// Deregister all tests on the page and let the parser re-register them.
-		TestCaseRegistry::deregisterTests( $article_id );
+		TestCaseRegistry::getInstance()->deregisterTests( $article_id );
 		WikitextParser::parseContentFromWikiPage( $wikiPage, $content );
 
 		return true;
@@ -132,22 +132,18 @@ class UpdateHandler {
 		LogEntry $logEntry,
 		$archivedRevisionCount
 	) {
+        if ( $article->getTitle()->getNamespace() !== NS_TEST ) {
+            // Do not run hook outside of "Test" namespace
+            return true;
+        }
+
 		$deleted_id = $article->getId();
-
-		if ( $deleted_id === null ) {
-			throw new \MWException( "Deleted article ID mustn't be `null`." );
-		}
-
-		if ( $article->getTitle()->getNamespace() !== NS_TEST ) {
-			// Do not run hook outside of "Test" namespace
-			return true;
-		}
 
 		MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got deleted', [
 			'id' => $deleted_id
 		] );
 
-		TestCaseRegistry::deregisterTests( $deleted_id );
+		TestCaseRegistry::getInstance()->deregisterTests( $deleted_id );
 
 		return true;
 	}

@@ -9,12 +9,34 @@ use MWUnit\ConcreteTestCase;
 use MWUnit\TestCase;
 use MWUnit\TestSuite;
 use Title;
+use Wikimedia\Rdbms\IResultWrapper;
+use Wikimedia\Rdbms\ResultWrapper;
 
-class TestCaseRegistry {
+class TestCaseRegistry extends AbstractRegistry {
+    protected static $instance = null;
+
 	/**
 	 * @var array Names of the test register initialisations in the current run of the parser.
 	 */
-	private static $init_registered_tests = [];
+	private $init_registered_tests = [];
+
+    /**
+     * @inheritDoc
+     * @return TestCaseRegistry
+     */
+    public static function getInstance(): AbstractRegistry {
+        self::setInstance();
+        return self::$instance;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected static function setInstance() {
+        if ( !isset( self::$instance ) ) {
+            self::$instance = new self();
+        }
+    }
 
 	/**
 	 * Registers a test case to the database. This is used to index test cases via the MWUnit special page and
@@ -27,7 +49,7 @@ class TestCaseRegistry {
 	 * @throws \FatalError
 	 * @throws \MWException
 	 */
-	public static function register( ConcreteTestCase $test_case ) {
+	public function register( ConcreteTestCase $test_case ) {
 		if ( !$test_case->getTitle()->exists() ) {
 			// This page has not yet been created.
 			return;
@@ -38,9 +60,9 @@ class TestCaseRegistry {
 			return;
 		}
 
-		self::$init_registered_tests[] = $test_case->__toString();
+		$this->init_registered_tests[] = $test_case->__toString();
 
-		$registered = self::isTestRegistered( $test_case );
+		$registered = $this->isTestRegistered( $test_case );
 
 		if ( $registered === true ) {
 			MWUnit::getLogger()->notice( "Did not register testcase {testcase} because it was already registered", [
@@ -85,7 +107,7 @@ class TestCaseRegistry {
 	 *
 	 * @param int $article_id The article ID of the page from which the tests should be deregistered.
 	 */
-	public static function deregisterTests( int $article_id ) {
+	public function deregisterTests( int $article_id ) {
 		$database = wfGetDb( DB_MASTER );
 		$database->delete(
 			'mwunit_tests',
@@ -94,34 +116,12 @@ class TestCaseRegistry {
 	}
 
 	/**
-	 * Returns true if and only if the given test exists.
-	 *
-	 * @param string $page_title
-	 * @param string $test_name
-	 * @return bool
-	 */
-	public static function testExists( string $page_title, string $test_name ) {
-		$title = Title::newFromText( $page_title );
-
-		if ( !$title instanceof Title ) {
-		    return false;
-		}
-
-		return wfGetDb( DB_REPLICA )->select(
-			'mwunit_tests',
-			[ 'test_name' ],
-			[ 'article_id' => $title->getArticleID(), 'test_name' => $test_name ],
-            __METHOD__
-		)->numRows() > 0;
-	}
-
-	/**
 	 * Returns true if and only if the given test group name exists.
 	 *
 	 * @param string $test_group
 	 * @return bool
 	 */
-	public static function testGroupExists( string $test_group ) {
+	public function testGroupExists( string $test_group ) {
 		return wfGetDb( DB_REPLICA )->select(
 			'mwunit_tests',
 			[ 'test_name' ],
@@ -130,13 +130,13 @@ class TestCaseRegistry {
 		)->numRows() > 0;
 	}
 
-	/**
-	 * Returns a TestSuite of tests in the given group.
-	 *
-	 * @param string $test_group
-	 * @throws MWUnitException
-	 */
-	public static function getTestsFromGroup( string $test_group ) {
+    /**
+     * Returns a TestSuite of tests in the given group.
+     *
+     * @param string $test_group
+     * @return bool|object|IResultWrapper|ResultWrapper
+     */
+	public function getTestsFromGroup( string $test_group ) {
 		return wfGetDb( DB_REPLICA )->select(
 			'mwunit_tests',
 			[ 'article_id', 'test_name', 'test_group' ],
@@ -150,8 +150,9 @@ class TestCaseRegistry {
      * Returns a TestSuite of tests on the given page corresponding to the given Title object.
      *
      * @param Title $title
+     * @return bool|object|IResultWrapper|ResultWrapper
      */
-	public static function getTestsFromTitle( Title $title ) {
+	public function getTestsFromTitle( Title $title ) {
 		$article_id = $title->getArticleID();
 		return wfGetDb( DB_REPLICA )->select(
 			'mwunit_tests',
@@ -167,8 +168,9 @@ class TestCaseRegistry {
      * else an empty TestSuite is returned.
      *
      * @param string $title
+     * @return bool|object|IResultWrapper|ResultWrapper
      */
-	public static function getTestsCoveringTemplate( string $title ) {
+	public function getTestsCoveringTemplate( string $title ) {
 	    $title = \Title::newFromText( $title, NS_TEMPLATE );
 
 	    if ( !$title instanceof \Title ) {
@@ -188,7 +190,11 @@ class TestCaseRegistry {
 		);
 	}
 
-	public static function getGroupFromTestName( string $test_name ) {
+    /**
+     * @param string $test_name
+     * @return false|IResultWrapper|ResultWrapper
+     */
+	public function getGroupFromTestName( string $test_name ) {
         list ( $page_name, $name ) = explode( "::", $test_name );
 
         $title = \Title::newFromText( $page_name, NS_TEST );
@@ -218,7 +224,7 @@ class TestCaseRegistry {
 	 * @param Title $title
 	 * @return bool
 	 */
-	public static function isTemplateCovered( Title $title ): bool {
+	public function isTemplateCovered( Title $title ): bool {
 		if ( !$title->exists() ) {
 		    return false;
 		}
@@ -244,7 +250,7 @@ class TestCaseRegistry {
 	 * @return bool|null True when it has already been registered, false when it has not been registered or
 	 * null when we have already registered the given test, but it was not a duplicate.
 	 */
-	private static function isTestRegistered( TestCase $test_case ) {
+	private function isTestRegistered( TestCase $test_case ) {
 		$database = wfGetDb( DB_MASTER );
 		$result = $database->select(
 			'mwunit_tests',
@@ -264,7 +270,7 @@ class TestCaseRegistry {
 			return false;
 		}
 
-		$init_registered_test_count = array_count_values( self::$init_registered_tests );
+		$init_registered_test_count = array_count_values( $this->init_registered_tests );
 		$test_name = $test_case->__toString();
 
 		if ( $init_registered_test_count[ $test_name ] < 2 ) {

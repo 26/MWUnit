@@ -25,7 +25,7 @@ class TestSuite implements Iterator {
      * @throws MWUnitException
      */
     public static function newFromGroup( string $group ): TestSuite {
-        $result = TestCaseRegistry::getTestsFromGroup( $group );
+        $result = TestCaseRegistry::getInstance()->getTestsFromGroup( $group );
 
         if ( !$result ) {
             return self::newEmpty();
@@ -49,7 +49,7 @@ class TestSuite implements Iterator {
      * @throws MWUnitException
      */
     public static function newFromTitle( \Title $title ): TestSuite {
-        $result = TestCaseRegistry::getTestsFromTitle( $title );
+        $result = TestCaseRegistry::getInstance()->getTestsFromTitle( $title );
 
         if ( !$result ) {
             return self::newEmpty();
@@ -76,7 +76,7 @@ class TestSuite implements Iterator {
             throw new MWUnitException( "Invalid test name" );
         }
 
-        $group = TestCaseRegistry::getGroupFromTestName( $test_name );
+        $group = TestCaseRegistry::getInstance()->getGroupFromTestName( $test_name );
 
         if ( !$group ) {
             return self::newEmpty();
@@ -104,7 +104,7 @@ class TestSuite implements Iterator {
      * @throws MWUnitException
      */
     public static function newFromCovers( string $covers ): TestSuite {
-        $result = TestCaseRegistry::getTestsCoveringTemplate( $covers );
+        $result = TestCaseRegistry::getInstance()->getTestsCoveringTemplate( $covers );
 
         if ( !$result ) {
             return self::newEmpty();

@@ -31,7 +31,14 @@ use MWUnit\MWUnit;
 use Parser;
 use PPFrame;
 
-class AssertionRegistry {
+/**
+ * Class AssertionRegistry
+ *
+ * @package MWUnit\Registry
+ */
+class AssertionRegistry extends AbstractRegistry {
+    protected static $instance = null;
+
 	/**
 	 * The parser to which to register the assertions.
 	 *
@@ -40,9 +47,7 @@ class AssertionRegistry {
 	private $parser;
 	private $classes;
 
-	private static $instance = null;
-
-	private function __construct() {
+	protected function __construct() {
 		$classes = [
 			Equals::class,
 			EqualsIgnoreCase::class,
@@ -71,26 +76,39 @@ class AssertionRegistry {
 
 		$this->classes = $classes;
 		$this->parser  = MediaWikiServices::getInstance()->getParser();
+
+		parent::__construct();
 	}
 
-	/**
-	 * Gets the instance of the AssertionRegistry.
-	 *
-	 * @return AssertionRegistry
-	 */
-	public static function getInstance() {
-		if ( self::$instance === null ) { self::$instance = new self();
-		}
+    /**
+     * @inheritDoc
+     * @return AssertionRegistry
+     */
+    public static function getInstance(): AbstractRegistry {
+        self::setInstance();
+        return self::$instance;
+    }
 
-		return self::$instance;
-	}
+    /**
+     * @inheritDoc
+     */
+    protected static function setInstance() {
+	    if ( !isset( self::$instance ) ) {
+	        self::$instance = new self();
+        }
+    }
 
-	/**
-	 * Registers the assertion classes to the parser object.
-	 */
+    /**
+     * Registers the assertion classes to the parser object.
+     */
 	public function registerAssertionClasses() {
 		$assertions = array_filter( $this->classes, function ( $class ): bool {
-			$reflection_class = new \ReflectionClass( $class );
+		    try {
+                $reflection_class = new \ReflectionClass( $class );
+            } catch ( \ReflectionException $e ) {
+		        return false;
+            }
+
 			return $reflection_class->implementsInterface( Assertion::class );
 		} );
 
@@ -99,8 +117,8 @@ class AssertionRegistry {
 		} );
 
 		foreach ( $registering_classes as $assertion ) {
-			$this->registerAssertionClass( $assertion );
-		}
+		    $this->registerAssertionClass( $assertion );
+        }
 	}
 
     /**
@@ -108,23 +126,10 @@ class AssertionRegistry {
      *
      * @param string $assertion The assertion class name
      * @return bool True on success, false on failure
-     * @throws \MWException
-     * @throws MWUnitException
      */
 	public function registerAssertionClass( $assertion ) {
 		try {
 			$reflection_class = new \ReflectionClass( $assertion );
-
-			if ( !$reflection_class->implementsInterface( Assertion::class ) ) {
-				MWUnit::getLogger()->warning(
-					"Unable to register assertion given by class {class} because it does not implement the Assertion interface",
-					[
-						"class" => $assertion
-					]
-				);
-
-				return false;
-			}
 		} catch ( \ReflectionException $e ) {
 			MWUnit::getLogger()->error( "Unable to register assertion because the class could not be reflected (does not exist): {e}", [
 				$e
@@ -132,6 +137,15 @@ class AssertionRegistry {
 
 			return false;
 		}
+
+        if ( !$reflection_class->implementsInterface( Assertion::class ) ) {
+            MWUnit::getLogger()->warning(
+                "Unable to register assertion given by class {class} because it does not implement the Assertion interface",
+                [ "class" => $assertion ]
+            );
+
+            return false;
+        }
 
 		MWUnit::getLogger()->notice( "Registering assertion {assertion}", [
 			"assertion" => $assertion::getName()
@@ -146,12 +160,13 @@ class AssertionRegistry {
 			);
 		};
 
-		$assertion_name = $assertion::getName();
-		$this->parser->setFunctionHook(
-			"assert_$assertion_name",
-			$callback_function,
-			Parser::SFH_OBJECT_ARGS
-		);
+		$id = "assert_" . $assertion::getName();
+
+		try {
+            $this->parser->setFunctionHook( $id, $callback_function, Parser::SFH_OBJECT_ARGS );
+        } catch( \MWException $e ) {
+		    return false;
+        }
 
 		return true;
 	}

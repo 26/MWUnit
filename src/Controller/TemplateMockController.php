@@ -2,16 +2,22 @@
 
 namespace MWUnit\Controller;
 
+use MWUnit\Exception\MWUnitException;
 use MWUnit\Injector\TestRunInjector;
+use MWUnit\Mock\Mock;
 use MWUnit\MWUnit;
-use MWUnit\Registry\MockRegistry;
+use MWUnit\Registry\TemplateMockRegistry;
 use MWUnit\Runner\TestRun;
 use Parser;
 use PPFrame;
 use Revision;
 use Title;
 
-class MockController implements TestRunInjector {
+/**
+ * Class TemplateMockController
+ * @package MWUnit\Controller
+ */
+class TemplateMockController implements TestRunInjector {
     /**
      * @var TestRun
      */
@@ -33,25 +39,28 @@ class MockController implements TestRunInjector {
 	 * @return string
 	 */
 	public static function handleCreateMock( Parser $parser, PPFrame $frame, array $args ) {
-		if ( !isset( $args[0] ) ) { return MWUnit::error(
-			"mwunit-create-mock-missing-argument",
-			[ "1st (page title)" ]
-		);
+		if ( !isset( $args[0] ) ) {
+		    return MWUnit::error(
+                "mwunit-create-mock-missing-argument",
+                [ "1st (page title)" ]
+            );
 		}
 
-		if ( !isset( $args[1] ) ) { return MWUnit::error(
-			"mwunit-create-mock-missing-argument",
-			[ "2nd (mock content)" ]
-		);
+		if ( !isset( $args[1] ) ) {
+		    return MWUnit::error(
+                "mwunit-create-mock-missing-argument",
+                [ "2nd (mock content)" ]
+            );
 		}
 
 		$page = trim( $frame->expand( $args[0] ) );
-		$mock_content = trim(
+		$content = trim(
 			$frame->expand(
 				$args[1],
 				PPFrame::NO_ARGS | PPFrame::NO_IGNORE | PPFrame::NO_TAGS | PPFrame::NO_TEMPLATES
 			)
 		);
+		$mock = new Mock( $content );
 
 		// Interpret page title without namespace prefix as a template.
 		$title = strpos( $page, ":" ) === false ?
@@ -66,25 +75,27 @@ class MockController implements TestRunInjector {
 			return MWUnit::error( "mwunit-outside-test-namespace" );
 		}
 
-		if ( !MWUnit::isRunning() ) { return '';
+		if ( !MWUnit::isRunning() ) {
+		    return '';
 		}
 
-		$mock_registry = MockRegistry::getInstance();
-		$mock_registry->registerMock( $title, $mock_content );
+		$mock_registry = TemplateMockRegistry::getInstance();
+		$mock_registry->registerMock( $title, $mock );
 
 		return '';
 	}
 
-	/**
-	 * Called when the parser fetches a template. Used to replace the template with
-	 * a mock.
-	 *
-	 * @param Parser $parser
-	 * @param Title $title
-	 * @param Revision $revision
-	 * @param string|false|null &$text
-	 * @param array &$deps
-	 */
+    /**
+     * Called when the parser fetches a template. Used to replace the template with
+     * a mock.
+     *
+     * @param Parser $parser
+     * @param Title $title
+     * @param Revision $revision
+     * @param string|false|null &$text
+     * @param array &$deps
+     * @throws MWUnitException
+     */
 	public static function onParserFetchTemplate(
 		Parser $parser,
 		Title $title,
@@ -92,10 +103,11 @@ class MockController implements TestRunInjector {
 		&$text,
 		array &$deps
 	) {
-		if ( !MWUnit::isRunning() ) { return;
+		if ( !MWUnit::isRunning() ) {
+		    return;
 		}
 
-		$registry = MockRegistry::getInstance();
+		$registry = TemplateMockRegistry::getInstance();
 
 		if ( !$registry->isMocked( $title ) ) {
 		    return;
@@ -107,6 +119,6 @@ class MockController implements TestRunInjector {
 			return;
 		}
 
-		$text = $registry->getMock( $title );
+		$text = $registry->getMock( $title )->getMock();
 	}
 }

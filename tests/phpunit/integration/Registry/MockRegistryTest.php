@@ -3,7 +3,7 @@
 namespace MWUnit\Tests\Integration\Registry;
 
 use MediaWikiIntegrationTestCase;
-use MWUnit\Registry\MockRegistry;
+use MWUnit\Registry\TemplateMockRegistry;
 use Title;
 
 /**
@@ -11,30 +11,30 @@ use Title;
  *
  * @package MWUnit\Tests\Integration\Assertion
  * @group Registry
- * @covers \MWUnit\Registry\MockRegistry
+ * @covers \MWUnit\Registry\TemplateMockRegistry
  */
 class MockRegistryTest extends MediaWikiIntegrationTestCase {
 	/**
-	 * @var MockRegistry
+	 * @var TemplateMockRegistry
 	 */
 	private $mock_registry_instance;
 
 	public function setUp() {
-		$this->mock_registry_instance = MockRegistry::getInstance();
+		$this->mock_registry_instance = TemplateMockRegistry::getInstance();
 		parent::setUp();
 	}
 
 	/**
-	 * @covers \MWUnit\Registry\MockRegistry::getInstance
+	 * @covers \MWUnit\Registry\TemplateMockRegistry::getInstance
 	 */
 	public function testGetInstance() {
-		$instance = MockRegistry::getInstance();
+		$instance = TemplateMockRegistry::getInstance();
 
-		$this->assertInstanceOf( MockRegistry::class, $instance );
+		$this->assertInstanceOf( TemplateMockRegistry::class, $instance );
 	}
 
 	/**
-	 * @covers \MWUnit\Registry\MockRegistry::registerMock
+	 * @covers \MWUnit\Registry\TemplateMockRegistry::registerMock
 	 * @throws \Exception
 	 */
 	public function testRegisterMock() {
@@ -50,7 +50,7 @@ class MockRegistryTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers \MWUnit\Registry\MockRegistry::getMock
+	 * @covers \MWUnit\Registry\TemplateMockRegistry::getMock
 	 * @throws \Exception
 	 */
 	public function testGetMock() {

@@ -11,7 +11,7 @@ use MWUnit\Exception;
 use MWUnit\MWUnit;
 use MWUnit\TestCase;
 use MWUnit\TestSuite;
-use MWUnit\Registry\MockRegistry;
+use MWUnit\Registry\TemplateMockRegistry;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\WikitextParser;
 use Revision;
@@ -61,13 +61,21 @@ class TestSuiteRunner {
     private $test_case;
 
     /**
+     * @var array Array of TestCases that have been from the current suite.
+     */
+    private $tests_run = [];
+
+    /**
 	 * UnitTestRunner constructor.
-	 * @param TestSuite $test_suite
+     *
+	 * @param TestSuite $test_suite The TestSuite to run
+     * @param callable|null $callback Callback function that gets called after every completed test
 	 */
-	public function __construct( TestSuite $test_suite ) {
+	public function __construct( TestSuite $test_suite, callable $callback = null ) {
 		MWUnit::setRunning();
 
 		$this->test_suite = $test_suite;
+		$this->callback   = $callback;
 
         // Dependency injection
         BaseTestRunner::setTestSuiteRunner( $this );
@@ -77,14 +85,10 @@ class TestSuiteRunner {
 	/**
 	 * Runs all tests in the group specified in the constructor.
 	 *
-	 * @param callable|null $callback Callback function that gets called after every completed test
 	 * @return bool
-	 *
 	 * @throws Exception\MWUnitException
 	 */
-	public function run( callable $callback = null ) {
-        $this->callback = $callback;
-
+	public function run() {
         try {
             if ( !\Hooks::run('MWUnitBeforeFirstTest', [ &$pages ] ) ) {
                 return false;
@@ -137,6 +141,24 @@ class TestSuiteRunner {
      */
 	public function addTestResult( TestResult $result ) {
 	    $this->test_results[] = $result;
+    }
+
+    /**
+     * Adds the given TestCase to the list of completed test cases.
+     *
+     * @param TestCase $test_case
+     */
+    public function addCompleted( TestCase $test_case ) {
+	    $this->tests_run[] = $test_case;
+    }
+
+    /**
+     * Returns an array of TestCase objects of the TestSuite that have run.
+     *
+     * @return array
+     */
+    public function getTestsRun() {
+	    return $this->tests_run;
     }
 
     /**
@@ -218,6 +240,24 @@ class TestSuiteRunner {
     }
 
     /**
+     * Returns true if and only if the given TestCase has been run.
+     *
+     * @param TestCase $test_case
+     * @return bool
+     */
+    public function testCompleted( TestCase $test_case ): bool {
+        foreach ( $this->tests_run as $test_run ) {
+            assert( $test_run instanceof TestCase );
+
+            if ( $test_run->equals( $test_case ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Called after having run the tests on a page.
      *
      * @param $page Title The article ID of the page
@@ -233,7 +273,7 @@ class TestSuiteRunner {
             return false;
         }
 
-        MockRegistry::getInstance()->reset();
+        TemplateMockRegistry::getInstance()->reset();
         ParserMockController::restoreAndReset();
 
         return true;

@@ -70,6 +70,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 		if ( $no_not_passed === 0 ) {
 			print( "OK ($no_tests tests, $no_assertions assertions)\n" );
+			return;
 		}
 
 		$failed_tests = $runner->getFailedTests();

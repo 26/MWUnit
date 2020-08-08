@@ -2,7 +2,10 @@
 
 namespace MWUnit\Controller;
 
+use MediaWiki\MediaWikiServices;
 use MWUnit\Exception\MWUnitException;
+use MWUnit\Mock\Mock;
+use MWUnit\Mock\MockInterface;
 use MWUnit\MWUnit;
 use Parser;
 use PPFrame;
@@ -67,14 +70,24 @@ class ParserMockController {
 		}
 
 		$parser_function = trim( $frame->expand( $args[0] ) );
-		$mock_content = trim(
+		$content = trim(
 			$frame->expand(
 				$args[1],
 				PPFrame::NO_ARGS & PPFrame::NO_IGNORE & PPFrame::NO_TAGS & PPFrame::NO_TEMPLATES
 			)
 		);
+		$mock = new Mock( $content );
 
-		if ( in_array( $parser_function, self::getReservedFunctions() ) ) {
+		$reserved_functions = self::getReservedFunctions();
+
+		if ( $reserved_functions === false ) {
+            return MWUnit::error(
+                "mwunit-create-parser-mock-reserved-function",
+                [ $parser_function ]
+            );
+        }
+
+		if ( in_array( $parser_function, $reserved_functions ) ) {
 			return MWUnit::error(
 				"mwunit-create-parser-mock-reserved-function",
 				[ $parser_function ]
@@ -89,21 +102,24 @@ class ParserMockController {
 		}
 
 		self::backupFunctionHook( $parser_function );
-		self::mockParserFunction( $parser_function, $mock_content );
+		self::mockParserFunction( $parser_function, $mock );
 
 		return '';
 	}
 
 	/**
-	 * Returns the array of reserved parser functions.
+	 * Returns the array of reserved parser functions, or false on failure.
 	 *
-	 * @return array
-	 * @throws \FatalError
-	 * @throws \MWException
+	 * @return array|false
 	 */
 	public static function getReservedFunctions() {
 		$functions = self::$reserved_functions;
-		\Hooks::run( "MWUnitGetReservedFunctions", [ &$functions ] );
+
+		try {
+            \Hooks::run( "MWUnitGetReservedFunctions", [ &$functions ] );
+        } catch( \Exception $e ) {
+		    return false;
+        }
 
 		return $functions;
 	}
@@ -115,7 +131,7 @@ class ParserMockController {
 	 * @return bool
 	 */
 	public static function parserFunctionExists( string $parser_function ) {
-		$parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
+		$parser = MediaWikiServices::getInstance()->getParser();
 		return in_array( $parser_function, $parser->getFunctionHooks() );
 	}
 
@@ -132,9 +148,17 @@ class ParserMockController {
 		self::$function_hook_backups = [];
 	}
 
+    /**
+     * Restores the given parser function to the back up, or throws an MWUnitException is
+     * no backup exists for the parser function callable.
+     *
+     * @param string $parser_function
+     *
+     * @throws MWUnitException
+     */
 	public static function restoreFunctionHook( string $parser_function ) {
 		if ( !isset( self::$function_hook_backups[ $parser_function ] ) ) {
-			\MWUnit\MWUnit::getLogger()->error(
+			MWUnit::getLogger()->error(
 				"Unable to restore function hook for {function}, because it was never backed-up",
 				[ "function" => $parser_function ]
 			);
@@ -142,7 +166,7 @@ class ParserMockController {
 			throw new MWUnitException( 'Could not restore function hook for ' . $parser_function );
 		}
 
-		$parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
+		$parser = MediaWikiServices::getInstance()->getParser();
 		$hook   = self::$function_hook_backups[ $parser_function ];
 
 		$parser->mFunctionHooks[ $parser_function ] = $hook;
@@ -154,53 +178,46 @@ class ParserMockController {
 	 * @param string $parser_function
 	 */
 	private static function backupFunctionHook( string $parser_function ) {
-		$parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
-		$hooks  = $parser->mFunctionHooks;
+		$parser   = MediaWikiServices::getInstance()->getParser();
+		$hooks    = $parser->mFunctionHooks;
+		$callable = $hooks[ $parser_function ];
 
-		self::$function_hook_backups[ $parser_function ] = $hooks[ $parser_function ];
+		self::$function_hook_backups[ $parser_function ] = $callable;
 	}
 
-	/**
-	 * Mocks the given parser function with the given $mock_content.
-	 *
-	 * @param string $parser_function
-	 * @param string $mock_content
-	 */
-	private static function mockParserFunction( string $parser_function, string $mock_content ) {
+    /**
+     * Mocks the given parser function with the given $mock_content.
+     *
+     * @param string $parser_function
+     * @param MockInterface $mock
+     */
+	private static function mockParserFunction( string $parser_function, MockInterface $mock ) {
 		// Assert that the parser function was backed up
 		assert( isset( self::$function_hook_backups[$parser_function] ) );
 
-		$parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
-
-		$callback =& $parser->mFunctionHooks[$parser_function][0];
+		$parser = MediaWikiServices::getInstance()->getParser();
 		$flags = $parser->mFunctionHooks[$parser_function][1];
+        $parser->mFunctionHooks[$parser_function][0] = $flags & Parser::SFH_OBJECT_ARGS ?
+            function ( \Parser $p, \PPFrame $f, array $args ) use ( $mock ) {
+                $args = array_map( function ( $argument ) use ( $f ) {
+                    return trim( $f->expand( $argument ) );
+                }, $args );
 
-		if ( $flags & Parser::SFH_OBJECT_ARGS ) {
-			$callback = function ( \Parser $p, \PPFrame $f, array $args ) use ( $mock_content ) {
-				$args = array_map( function ( $argument ) use ( $f ) {
-					return trim( $f->expand( $argument ) );
-				}, $args );
+                $args = self::argsToTemplateArgs( $args );
+                return [ $p->recursivePreprocess(
+                    $mock->getMock(),
+                    $p->getPreprocessor()->newCustomFrame( $args )
+                ), 'isHTML' => false, 'noparse' => true ];
+            } : function ( \Parser $p ) use ( $mock ) {
+                $args = func_get_args();
+                array_shift( $args );
 
-				$args = self::argsToTemplateArgs( $args );
-
-				return [ $p->recursivePreprocess(
-					$mock_content,
-					$p->getPreprocessor()->newCustomFrame( $args )
-				), 'isHTML' => false, 'noparse' => true ];
-			};
-		} else {
-			$callback = function ( \Parser $p ) use ( $mock_content ) {
-				$args = func_get_args();
-				array_shift( $args );
-
-				$args = self::argsToTemplateArgs( $args );
-
-				return [ $p->recursivePreprocess(
-					$mock_content,
-					$p->getPreprocessor()->newCustomFrame( $args )
-				), 'isHTML' => false, 'noparse' => true ];
-			};
-		}
+                $args = self::argsToTemplateArgs( $args );
+                return [ $p->recursivePreprocess(
+                    $mock->getMock(),
+                    $p->getPreprocessor()->newCustomFrame( $args )
+                ), 'isHTML' => false, 'noparse' => true ];
+            };
 	}
 
 	/**
@@ -219,10 +236,12 @@ class ParserMockController {
 	public static function argsToTemplateArgs( array $arguments ) {
 		$result = [];
 
+		$index = 1;
 		foreach ( $arguments as $v ) {
 			$parts = explode( '=', $v );
 			if ( count( $parts ) < 2 ) {
-				array_push( $result, $v );
+				$result[$index] = $v;
+				$index++;
 			} else {
 				$k = array_shift( $parts );
 				$result[ $k ] = implode( '=', $parts );

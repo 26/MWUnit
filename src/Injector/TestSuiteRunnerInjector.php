@@ -4,7 +4,7 @@ namespace MWUnit\Injector;
 
 use MWUnit\Runner\TestSuiteRunner;
 
-interface TestSuiteRunnerInjector {
+interface TestSuiteRunnerInjector extends InjectorInterface {
     /**
      * Dependency injector for the TestSuiteRunner object.
      *

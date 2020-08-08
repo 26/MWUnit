@@ -2,7 +2,9 @@
 
 namespace MWUnit\Maintenance;
 
+use MWUnit\MWUnit;
 use MWUnit\Runner\Result\TestResult;
+use MWUnit\Runner\TestSuiteRunner;
 
 require_once "CommandLineResultPrinter.php";
 
@@ -36,14 +38,14 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 
 		switch ( $result->getResult() ) {
 			case TestResult::T_SUCCESS:
-				print( "  \033[0;32m✔\033[0m " . \MWUnit\MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
+				print( "  \033[0;32m✔\033[0m " . MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
 				break;
 			case TestResult::T_RISKY:
-				print( "  \e[0;33m✘\e[0m " . \MWUnit\MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
+				print( "  \e[0;33m✘\e[0m " . MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
 				$this->printFailureReason( $result->getMessage() );
 				break;
 			case TestResult::T_FAILED:
-				print( "  \e[0;31m✘\e[0m " . \MWUnit\MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
+				print( "  \e[0;31m✘\e[0m " . MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
 				$this->printFailureReason( $result->getMessage() );
 				break;
 		}
@@ -52,7 +54,7 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 	/**
 	 * @inheritDoc
 	 */
-	public function outputTestResults(\MWUnit\Runner\TestSuiteRunner $runner ) {
+	public function outputTestResults( TestSuiteRunner $runner ) {
 		$no_tests 		= $runner->getTestCount();
 		$no_assertions	= $runner->getTotalAssertionsCount();
 		$no_not_passed 	= $runner->getNotPassedCount();
