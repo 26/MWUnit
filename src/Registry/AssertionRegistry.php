@@ -36,7 +36,7 @@ use PPFrame;
  *
  * @package MWUnit\Registry
  */
-class AssertionRegistry extends AbstractRegistry {
+class AssertionRegistry implements Registry {
     protected static $instance = null;
 
 	/**
@@ -47,7 +47,7 @@ class AssertionRegistry extends AbstractRegistry {
 	private $parser;
 	private $classes;
 
-	protected function __construct() {
+	private function __construct() {
 		$classes = [
 			Equals::class,
 			EqualsIgnoreCase::class,
@@ -76,15 +76,13 @@ class AssertionRegistry extends AbstractRegistry {
 
 		$this->classes = $classes;
 		$this->parser  = MediaWikiServices::getInstance()->getParser();
-
-		parent::__construct();
 	}
 
     /**
      * @inheritDoc
      * @return AssertionRegistry
      */
-    public static function getInstance(): AbstractRegistry {
+    public static function getInstance(): Registry {
         self::setInstance();
         return self::$instance;
     }
@@ -92,7 +90,7 @@ class AssertionRegistry extends AbstractRegistry {
     /**
      * @inheritDoc
      */
-    protected static function setInstance() {
+    public static function setInstance() {
 	    if ( !isset( self::$instance ) ) {
 	        self::$instance = new self();
         }

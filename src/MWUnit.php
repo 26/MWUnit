@@ -45,6 +45,12 @@ class MWUnit {
 			[ Controller\ParserMockController::class, 'handleCreateMock' ],
 			SFH_OBJECT_ARGS
 		);
+
+		$parser->setFunctionHook(
+		    'var_dump',
+            [ Controller\VarDumpController::class, 'handleVarDump' ],
+            SFH_OBJECT_ARGS
+        );
 	}
 
 	/**

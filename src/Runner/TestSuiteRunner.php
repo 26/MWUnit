@@ -9,6 +9,7 @@ use MWUnit\Controller\ParserMockController;
 use MWUnit\Controller\TestCaseController;
 use MWUnit\Exception;
 use MWUnit\MWUnit;
+use MWUnit\Store\TestRunStore;
 use MWUnit\TestCase;
 use MWUnit\TestSuite;
 use MWUnit\Registry\TemplateMockRegistry;
@@ -28,12 +29,10 @@ use WikiPage;
  * @package MWUnit
  */
 class TestSuiteRunner {
-	/**
-	 * The results of this unit test run.
-	 *
-	 * @var array An array of TestResult objects
-	 */
-	private $test_results = [];
+    /**
+     * @var TestCase The TestCase that is currently running.
+     */
+    private $test_case;
 
 	/**
 	 * @var int The total number of assertions for the current run.
@@ -56,14 +55,9 @@ class TestSuiteRunner {
     private $test_suite;
 
     /**
-     * @var TestCase The TestCase that is currently running.
+     * @var TestRunStore
      */
-    private $test_case;
-
-    /**
-     * @var array Array of TestCases that have been from the current suite.
-     */
-    private $tests_run = [];
+    private $test_run_store;
 
     /**
 	 * UnitTestRunner constructor.
@@ -76,6 +70,7 @@ class TestSuiteRunner {
 
 		$this->test_suite = $test_suite;
 		$this->callback   = $callback;
+		$this->test_run_store = new TestRunStore;
 
         // Dependency injection
         BaseTestRunner::setTestSuiteRunner( $this );
@@ -108,7 +103,7 @@ class TestSuiteRunner {
 		}
 
         try {
-            \Hooks::run( 'MWUnitAfterTests', [ &$this->test_results ] );
+            \Hooks::run( 'MWUnitAfterTests', [ &$this->test_run_store ] );
         } catch ( \Exception $e ) {
             return false;
         }
@@ -135,30 +130,12 @@ class TestSuiteRunner {
     }
 
     /**
-     * Adds a test result.
+     * Adds a test run.
      *
-     * @param TestResult $result
+     * @param TestRun $run
      */
-	public function addTestResult( TestResult $result ) {
-	    $this->test_results[] = $result;
-    }
-
-    /**
-     * Adds the given TestCase to the list of completed test cases.
-     *
-     * @param TestCase $test_case
-     */
-    public function addCompleted( TestCase $test_case ) {
-	    $this->tests_run[] = $test_case;
-    }
-
-    /**
-     * Returns an array of TestCase objects of the TestSuite that have run.
-     *
-     * @return array
-     */
-    public function getTestsRun() {
-	    return $this->tests_run;
+	public function addTestRun( TestRun $run ) {
+	    $this->test_run_store->append( $run );
     }
 
     /**
@@ -171,12 +148,12 @@ class TestSuiteRunner {
     }
 
 	/**
-	 * Returns the result of the current run.
+	 * Returns the test cases run in this Test Suite as a TestRunStore object.
 	 *
-	 * @return array An array of TestResult objects
+	 * @return TestRunStore
 	 */
-	public function getResults(): array {
-		return $this->test_results;
+	public function getTestRunStore(): TestRunStore {
+		return $this->test_run_store;
 	}
 
 	/**
@@ -197,37 +174,15 @@ class TestSuiteRunner {
 		return $this->test_count;
 	}
 
-	/**
-	 * Returns the number of failures for the current run.
-	 *
-	 * @return int
-	 */
+    /**
+     * Returns the number of failures for the current run.
+     *
+     * @return int
+     */
 	public function getNotPassedCount(): int {
-		return array_reduce( $this->test_results, function ( int $carry, TestResult $item ) {
+		return array_reduce( $this->test_run_store->getTestResults(), function ( int $carry, TestResult $item ) {
 			return $carry + ( $item->getResult() === TestResult::T_SUCCESS ? 0 : 1 );
 		}, 0 );
-	}
-
-	/**
-	 * Returns an array of failed TestResult objects.
-	 *
-	 * @return array
-	 */
-	public function getFailedTests(): array {
-		return array_filter( $this->getResults(), function ( TestResult $result ) {
-			return $result->getResult() === TestResult::T_FAILED;
-		} );
-	}
-
-	/**
-	 * Returns an array of risky TestResult objects.
-	 *
-	 * @return array
-	 */
-	public function getRiskyTests(): array {
-		return array_filter( $this->getResults(), function ( TestResult $result ) {
-			return $result->getResult() === TestResult::T_RISKY;
-		} );
 	}
 
     /**
@@ -246,7 +201,7 @@ class TestSuiteRunner {
      * @return bool
      */
     public function testCompleted( TestCase $test_case ): bool {
-        foreach ( $this->tests_run as $test_run ) {
+        foreach ( $this->test_run_store->getTestCases() as $test_run ) {
             assert( $test_run instanceof TestCase );
 
             if ( $test_run->equals( $test_case ) ) {

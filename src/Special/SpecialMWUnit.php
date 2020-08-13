@@ -2,13 +2,17 @@
 
 namespace MWUnit\Special;
 
+use MWUnit\Debug\TestOutput;
+use MWUnit\Debug\TestOutputCollector;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\Registry\TestCaseRegistry;
 use MWUnit\Runner\Result\RiskyTestResult;
 use MWUnit\Runner\Result\SuccessTestResult;
 use MWUnit\Runner\Result\TestResult;
+use MWUnit\Runner\TestRun;
 use MWUnit\Runner\TestSuiteRunner;
+use MWUnit\Store\TestRunStore;
 use MWUnit\TestSuite;
 
 /**
@@ -70,7 +74,7 @@ class SpecialMWUnit extends \SpecialPage {
 			$nav = \Xml::tags( 'div', [ 'class' => 'mw-mwunit-special-navigation' ], $nav );
 			$this->getOutput()->setSubtitle( $nav );
 
-			$test_results = $this->runner->getResults();
+			$test_results = $this->runner->getTestRunStore();
 			$this->renderTestResults( $test_results );
 		} else {
 			$this->showForms();
@@ -262,17 +266,17 @@ class SpecialMWUnit extends \SpecialPage {
 	/**
 	 * Renders the given test results for usage on the Special Page in the test result report.
 	 *
-	 * @param array $test_results
+	 * @param TestRunStore $test_run_store
 	 */
-	private function renderTestResults( array $test_results ) {
-		if ( count( $test_results ) === 0 ) {
+	private function renderTestResults( TestRunStore $test_run_store ) {
+		if ( count( $test_run_store->getRuns() ) === 0 ) {
 			$this->getOutput()->showErrorPage( 'mwunit-generic-error-title', 'mwunit-generic-error-description' );
 			return;
 		}
 
-		$test_count = $this->runner->getTestCount();
+		$test_count      = $this->runner->getTestCount();
 		$assertion_count = $this->runner->getTotalAssertionsCount();
-		$failures_count = $this->runner->getNotPassedCount();
+		$failures_count  = $this->runner->getNotPassedCount();
 
 		$this->getOutput()->addHTML(
 			"<p>" . wfMessage( 'mwunit-test-result-intro' )->plain() . "</p>" .
@@ -284,54 +288,117 @@ class SpecialMWUnit extends \SpecialPage {
 			)->plain() . "</b></p>"
 		);
 
-		foreach ( $test_results as $test_result ) {
-			$this->getOutput()->addHTML( $this->renderTestResult( $test_result ) );
+		foreach ( $test_run_store as $test_run ) {
+			$this->getOutput()->addHTML( $this->renderTest( $test_run ) );
 		}
 	}
 
-	/**
-	 * Renders the given TestResult object.
-	 *
-	 * @param TestResult $result
-	 * @return string
-	 */
-	private function renderTestResult( TestResult $result ): string {
+    /**
+     * Renders the given TestResult object.
+     *
+     * @param TestRun $run
+     * @return string
+     * @throws MWUnitException
+     */
+	private function renderTest( TestRun $run ): string {
+        // TODO: Factor this function into multiple function that print a type of test.
+
+        switch ( $run->getResult()->getResult() ) {
+            case TestResult::T_RISKY:
+                return $this->renderRiskyTest( $run );
+            case TestResult::T_FAILED:
+                return $this->renderFailedTest( $run );
+            case TestResult::T_SUCCESS:
+                return $this->renderSucceededTest( $run );
+        }
+
+        // To stop PHP from complaining.
+        return '';
+
 		if ( $result->getResult() === TestResult::T_RISKY ) {
 			$summary = $result->getMessage();
 			$summary_formatted = $summary === null ? $summary : "<hr/><pre>$summary</pre>";
 
+			$test_output = $test_output_formatted ?
+                "<hr/><pre>In addition, the test outputted the following:\n\n$test_output_formatted</pre>" :
+                '';
+
 			return sprintf(
 				'<div class="warningbox" style="display:block;">' .
-							'<p><span style="color:#fc3"><b>%s</b></span> %s</p>%s' .
+							'<p><span style="color:#fc3"><b>%s</b></span> %s</p>%s%s' .
 						'</div>',
 				$this->msg( 'mwunit-test-risky' ),
 				$this->renderTestHeader( $result ),
-				$summary_formatted
+				$summary_formatted,
+                $test_output
 			);
 		}
 
 		if ( $result->getResult() === TestResult::T_SUCCESS ) {
+            $test_output = $test_output_formatted ?
+                "<hr/><pre>The test outputted the following:\n\n$test_output_formatted</pre>" :
+                '';
+
 			return sprintf(
 				'<div class="successbox" style="display:block;">' .
-							'<p><span style="color:#14866d"><b>%s</b></span> %s</p>' .
+							'<p><span style="color:#14866d"><b>%s</b></span> %s</p>%s' .
 						'</div>',
 				$this->msg( 'mwunit-test-success' ),
-				$this->renderTestHeader( $result )
+				$this->renderTestHeader( $result ),
+                $test_output
 			);
 		}
 
 		if ( $result->getResult() === TestResult::T_FAILED ) {
+            $test_output = $test_output_formatted ?
+                "\n\nIn addition, the test outputted the following:\n\n$test_output_formatted" :
+                '';
+
 			return sprintf(
 				'<div class="errorbox" style="display:block;"><p><span style="color:#d33"><b>%s</b></span> %s</p>' .
-						'<hr/><pre>%s</pre></div>',
+						'<hr/><pre>%s%s</pre></div>',
 				$this->msg( 'mwunit-test-failed' ),
 				$this->renderTestHeader( $result ),
-				htmlspecialchars( $result->getMessage() )
+				htmlspecialchars( $result->getMessage() ),
+                $test_output
 			);
 		}
 
 		return '';
 	}
+
+    private function renderRiskyTest( TestRun $run ) {
+        return sprintf(
+            '<div class="warningbox" style="display:block;">' .
+            '<p><span style="color:#fc3"><b>%s</b></span> %s</p>%s' .
+            '</div>',
+            $this->msg( 'mwunit-test-risky' ),
+            $this->renderTestHeader( $run->getResult() ),
+            $this->renderSummary( $run )
+        );
+    }
+
+    private function renderFailedTest( TestRun $run ) {
+        return sprintf(
+            '<div class="errorbox" style="display:block;">' .
+            '<p><span style="color:#d33"><b>%s</b></span> %s</p>%s' .
+            '</div>',
+            $this->msg( 'mwunit-test-failed' ),
+            $this->renderTestHeader( $run->getResult() ),
+            $this->renderSummary( $run )
+        );
+    }
+
+    private function renderSucceededTest( TestRun $run ) {
+        return sprintf(
+            '<div class="successbox" style="display:block;">' .
+            '<p><span style="color:#14866d"><b>%s</b></span> %s</p>%s' .
+            '</div>',
+            $this->msg( 'mwunit-test-success' ),
+            $this->renderTestHeader( $run->getResult() ),
+            $this->renderSummary( $run )
+        );
+    }
 
 	/**
 	 * Renders the header of a test result.
@@ -361,6 +428,36 @@ class SpecialMWUnit extends \SpecialPage {
 			$result->getTestCase()
 		);
 	}
+
+    private function renderSummary( TestRun $run ): string {
+	    $message = $run->getResult()->getMessage();
+	    $collector = $run->getTestOutputCollector();
+	    $test_output = $this->formatTestOutput( $collector );
+
+	    if ( !$message && !$test_output ) {
+	        return '';
+        }
+
+	    if ( !$message && $test_output ) {
+	        return "<hr/><pre>The test outputted the following:\n\n$test_output</pre>";
+        }
+
+	    $output = "<hr/><pre>$message";
+
+	    if ( $test_output ) {
+	        $output .= "\n\nIn addition, the test outputted the following:\n\n$test_output";
+        }
+
+	    $output .= "</pre>";
+
+	    return $output;
+    }
+
+    private function formatTestOutput( TestOutputCollector $collector ) {
+	    return count( $collector->getOutputs() ) === 0 ?
+            '' :
+            implode( "\n", $collector->getOutputs() );
+    }
 
 	/**
 	 * Returns true if and only if tests need to be ran. This is the case if and only if

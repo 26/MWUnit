@@ -2,11 +2,15 @@
 
 namespace MWUnit\Runner;
 
+use ConfigException;
+use FatalError;
 use Hooks;
 use MediaWiki\MediaWikiServices;
+use MWException;
 use MWUnit\Controller\AssertionController;
 use MWUnit\Controller\TemplateMockController;
-use MWUnit\Injector\TestRunInjector;
+use MWUnit\Controller\VarDumpController;
+use MWUnit\Debug\TestOutputCollector;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\Runner\Result\FailureTestResult;
@@ -14,6 +18,7 @@ use MWUnit\Runner\Result\RiskyTestResult;
 use MWUnit\Runner\Result\SuccessTestResult;
 use MWUnit\ConcreteTestCase;
 use MWUnit\Runner\Result\TestResult;
+use MWUnit\TestCase;
 use Parser;
 use ParserOptions;
 use RequestContext;
@@ -54,6 +59,11 @@ class TestRun {
     private $result;
 
     /**
+     * @var TestOutputCollector
+     */
+    private $test_output_collector;
+
+    /**
 	 * @var ConcreteTestCase
 	 */
 	private $test_case;
@@ -80,7 +90,7 @@ class TestRun {
      */
     private static $initial_parser;
 
-	/**
+    /**
 	 * Called when the parser fetches a template. Used for strict coverage checking.
 	 *
 	 * @param Parser|bool $parser
@@ -107,12 +117,14 @@ class TestRun {
 	public function __construct( ConcreteTestCase $test_case ) {
 	    $this->test_case = $test_case;
         $this->covered   = strtolower( $test_case->getOption( 'covers' ) );
+        $this->test_output_collector = new TestOutputCollector;
 
         self::$templates_used = [];
 
         // Dependency injection
         AssertionController::setTestRun( $this );
         TemplateMockController::setTestRun( $this );
+        VarDumpController::setTestRun( $this );
 	}
 
     /**
@@ -155,14 +167,18 @@ class TestRun {
      * Returns the result of this test run.
      *
      * @return TestResult
-     * @throws MWUnitException
      */
     public function getResult(): TestResult {
-        if ( !$this->resultAvailable() ) {
-            throw new MWUnitException( "Test result is only available after a test has finished." );
-        }
-
         return $this->result;
+    }
+
+    /**
+     * Returns the TestOutputCollector object for this TestRun.
+     *
+     * @return TestOutputCollector
+     */
+    public function getTestOutputCollector(): TestOutputCollector {
+        return $this->test_output_collector;
     }
 
     /**
@@ -184,10 +200,19 @@ class TestRun {
     }
 
     /**
-	 * @throws \FatalError
-	 * @throws \MWException
+     * Returns the test case associated with this run.
+     *
+     * @return TestCase
+     */
+    public function getTestCase(): TestCase {
+        return $this->test_case;
+    }
+
+    /**
+	 * @throws FatalError
+	 * @throws MWException
 	 * @throws MWUnitException
-	 * @throws \ConfigException
+	 * @throws ConfigException
 	 */
 	public function runTest() {
 		// Store a clone of the initial parser, so we can properly perform coverage checks, without
@@ -250,7 +275,7 @@ class TestRun {
 	/**
 	 * Restores globals backed up previously. This function should not be called before backupGlobals() is called.
 	 * @throws MWUnitException
-	 * @throws \ConfigException
+	 * @throws ConfigException
 	 */
 	private function restoreGlobals() {
 		$option = MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
@@ -336,7 +361,7 @@ class TestRun {
 			$allow_running_tests_as_other_user = MediaWikiServices::getInstance()
 				->getMainConfig()
 				->get( 'MWUnitAllowRunningTestAsOtherUser' );
-		} catch ( \ConfigException $exception ) {
+		} catch ( ConfigException $exception ) {
 			return false;
 		}
 

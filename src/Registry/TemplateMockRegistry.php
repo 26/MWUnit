@@ -8,7 +8,7 @@ use MWUnit\Mock\MockInterface;
 use MWUnit\MWUnit;
 use Title;
 
-class TemplateMockRegistry extends AbstractRegistry {
+class TemplateMockRegistry implements Registry {
     protected static $instance = null;
 
 	/**
@@ -19,11 +19,13 @@ class TemplateMockRegistry extends AbstractRegistry {
 	 */
 	private $mocks = [];
 
+	private function __construct() {}
+
     /**
      * @inheritDoc
      * @return TemplateMockRegistry
      */
-    public static function getInstance(): AbstractRegistry {
+    public static function getInstance(): Registry {
         self::setInstance();
         return self::$instance;
     }
@@ -31,7 +33,7 @@ class TemplateMockRegistry extends AbstractRegistry {
     /**
      * @inheritDoc
      */
-    protected static function setInstance() {
+    public static function setInstance() {
         if ( !isset( self::$instance ) ) {
             self::$instance = new self();
         }

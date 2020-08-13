@@ -85,7 +85,6 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
             $callback( $run->getResult() );
 		}
 
-        self::$runner->addTestResult( $run->getResult() );
-		self::$runner->addCompleted( $this->test_case );
+        self::$runner->addTestRun( $run );
 	}
 }

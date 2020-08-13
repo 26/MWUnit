@@ -12,7 +12,7 @@ use Title;
 use Wikimedia\Rdbms\IResultWrapper;
 use Wikimedia\Rdbms\ResultWrapper;
 
-class TestCaseRegistry extends AbstractRegistry {
+class TestCaseRegistry implements Registry {
     protected static $instance = null;
 
 	/**
@@ -20,11 +20,13 @@ class TestCaseRegistry extends AbstractRegistry {
 	 */
 	private $init_registered_tests = [];
 
+    private function __construct() {}
+
     /**
      * @inheritDoc
      * @return TestCaseRegistry
      */
-    public static function getInstance(): AbstractRegistry {
+    public static function getInstance(): Registry {
         self::setInstance();
         return self::$instance;
     }
@@ -32,7 +34,7 @@ class TestCaseRegistry extends AbstractRegistry {
     /**
      * @inheritDoc
      */
-    protected static function setInstance() {
+    public static function setInstance() {
         if ( !isset( self::$instance ) ) {
             self::$instance = new self();
         }
