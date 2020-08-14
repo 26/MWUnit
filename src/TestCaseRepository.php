@@ -1,18 +1,15 @@
 <?php
 
-namespace MWUnit\Registry;
+namespace MWUnit;
 
+use MWUnit\Controller\TestCaseController;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseRegistrationException;
-use MWUnit\MWUnit;
-use MWUnit\ConcreteTestCase;
-use MWUnit\TestCase;
-use MWUnit\TestSuite;
-use Title;
 use Wikimedia\Rdbms\IResultWrapper;
 use Wikimedia\Rdbms\ResultWrapper;
+use Title;
 
-class TestCaseRegistry implements Registry {
+class TestCaseRepository {
     protected static $instance = null;
 
 	/**
@@ -20,24 +17,12 @@ class TestCaseRegistry implements Registry {
 	 */
 	private $init_registered_tests = [];
 
-    private function __construct() {}
-
-    /**
-     * @inheritDoc
-     * @return TestCaseRegistry
-     */
-    public static function getInstance(): Registry {
-        self::setInstance();
-        return self::$instance;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function setInstance() {
-        if ( !isset( self::$instance ) ) {
-            self::$instance = new self();
+    public static function getInstance(): TestCaseRepository {
+	    if ( self::$instance === null  ) {
+	        self::$instance = new TestCaseRepository();
         }
+
+	    return self::$instance;
     }
 
 	/**

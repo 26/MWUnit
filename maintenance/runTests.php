@@ -3,7 +3,7 @@
 namespace MWUnit\Maintenance;
 
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\TestCaseRepository;
 use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestSuite;
 
@@ -49,7 +49,7 @@ class RunTests extends \Maintenance {
 
 		$this->addOption( 'group', 'Only run tests from the specified group', false, true, 'g' );
 		$this->addOption( 'test', 'Only run the specified test', false, true, 't' );
-		$this->addOption( 'testsuite', 'Filter which testsuite to run', false, true, 's' );
+		$this->addOption( 'page', 'Filter which test page to run', false, true, 'p' );
 		$this->addOption(
 			'covers',
 			'Only run tests that cover the specified template (without namespace)',
@@ -108,7 +108,11 @@ class RunTests extends \Maintenance {
 			$this->fatalError( "No tests to run." );
 		}
 
-		$tests = $this->getTests();
+		try {
+            $tests = $this->getTests();
+        } catch( MWUnitException $e ) {
+		    $this->fatalError( wfMessage( 'mwunit-rebuild-required' )->plain() );
+        }
 
 		if ( count( $tests ) === 0 ) {
 			$this->fatalError( 'No tests to run.' );
@@ -243,21 +247,16 @@ class RunTests extends \Maintenance {
 		$group = $this->getOption( 'group', false );
 		if ( $group !== false ) {
 			// Run group
-			if ( !TestCaseRegistry::getInstance()->testGroupExists( $group ) ) {
-				$this->fatalError( "The group '$group' does not exist." );
-			}
-
 			return TestSuite::newFromGroup( $group );
 		}
 
-
-        $testsuite = $this->getOption( 'testsuite', false );
-        if ( $testsuite !== false ) {
+        $page = $this->getOption( 'page', false );
+        if ( $page !== false ) {
 			// Run testsuite
-			$title = \Title::newFromText( $testsuite, NS_TEST );
+			$title = \Title::newFromText( $page, NS_TEST );
 
 			if ( $title === null || $title === false || !$title->exists() ) {
-				$this->fatalError( "The given testsuite '$testsuite' does not exist." );
+				$this->fatalError( "The given page '$page' does not exist." );
 			}
 
 			return TestSuite::newFromTitle( $title );

@@ -1,13 +1,13 @@
 <?php
 
-namespace MWUnit\Debug;
+namespace MWUnit\Output;
 
 use MWUnit\Exception\MWUnitException;
 
 /**
  * Class StringOutput
  *
- * @package MWUnit\Debug
+ * @package MWUnit\Output
  */
 class StringOutput implements TestOutput {
     /**

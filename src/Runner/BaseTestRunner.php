@@ -67,9 +67,8 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
 		self::$runner->incrementTotalAssertionCount( $run->getAssertionCount() );
         self::$runner->incrementTestCount();
 
-        if ( !$run->resultAvailable() && $run->getResult()->getResult() === TestResult::T_RISKY ) {
+        if ( $run->resultAvailable() && $run->getResult()->getResult() !== TestResult::T_RISKY ) {
             // If the test is already marked as risky, do not overwrite it.
-
             $does_not_perform_assertions = $this->test_case->getOption( 'doesnotperformassertions' );
             if ( $does_not_perform_assertions === false && $run->getAssertionCount() === 0 ) {
                 $run->setRisky( wfMessage( 'mwunit-no-assertions' )->plain() );

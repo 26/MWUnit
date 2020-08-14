@@ -10,7 +10,7 @@ use MWException;
 use MWUnit\Controller\AssertionController;
 use MWUnit\Controller\TemplateMockController;
 use MWUnit\Controller\VarDumpController;
-use MWUnit\Debug\TestOutputCollector;
+use MWUnit\Store\TestOutputStore;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\Runner\Result\FailureTestResult;
@@ -59,7 +59,7 @@ class TestRun {
     private $result;
 
     /**
-     * @var TestOutputCollector
+     * @var TestOutputStore
      */
     private $test_output_collector;
 
@@ -117,7 +117,7 @@ class TestRun {
 	public function __construct( ConcreteTestCase $test_case ) {
 	    $this->test_case = $test_case;
         $this->covered   = strtolower( $test_case->getOption( 'covers' ) );
-        $this->test_output_collector = new TestOutputCollector;
+        $this->test_output_collector = new TestOutputStore;
 
         self::$templates_used = [];
 
@@ -175,9 +175,9 @@ class TestRun {
     /**
      * Returns the TestOutputCollector object for this TestRun.
      *
-     * @return TestOutputCollector
+     * @return TestOutputStore
      */
-    public function getTestOutputCollector(): TestOutputCollector {
+    public function getTestOutputCollector(): TestOutputStore {
         return $this->test_output_collector;
     }
 

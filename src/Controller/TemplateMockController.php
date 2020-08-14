@@ -80,7 +80,7 @@ class TemplateMockController implements TestRunInjector {
 		}
 
 		$mock_registry = TemplateMockRegistry::getInstance();
-		$mock_registry->registerMock( $title, $mock );
+		$mock_registry->register( $title, $mock );
 
 		return '';
 	}
@@ -109,7 +109,7 @@ class TemplateMockController implements TestRunInjector {
 
 		$registry = TemplateMockRegistry::getInstance();
 
-		if ( !$registry->isMocked( $title ) ) {
+		if ( !$registry->exists( $title ) ) {
 		    return;
 		}
 
@@ -119,6 +119,6 @@ class TemplateMockController implements TestRunInjector {
 			return;
 		}
 
-		$text = $registry->getMock( $title )->getMock();
+		$text = $registry->get( $title )->getMock();
 	}
 }

@@ -5,7 +5,6 @@ namespace MWUnit;
 use Iterator;
 use Title;
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Registry\TestCaseRegistry;
 
 /**
  * Class TestSuite
@@ -25,7 +24,7 @@ class TestSuite implements Iterator {
      * @throws MWUnitException
      */
     public static function newFromGroup( string $group ): TestSuite {
-        $result = TestCaseRegistry::getInstance()->getTestsFromGroup( $group );
+        $result = TestCaseRepository::getInstance()->getTestsFromGroup( $group );
 
         if ( !$result ) {
             return self::newEmpty();
@@ -49,7 +48,7 @@ class TestSuite implements Iterator {
      * @throws MWUnitException
      */
     public static function newFromTitle( \Title $title ): TestSuite {
-        $result = TestCaseRegistry::getInstance()->getTestsFromTitle( $title );
+        $result = TestCaseRepository::getInstance()->getTestsFromTitle( $title );
 
         if ( !$result ) {
             return self::newEmpty();
@@ -76,7 +75,7 @@ class TestSuite implements Iterator {
             throw new MWUnitException( "Invalid test name" );
         }
 
-        $group = TestCaseRegistry::getInstance()->getGroupFromTestName( $test_name );
+        $group = TestCaseRepository::getInstance()->getGroupFromTestName( $test_name );
 
         if ( !$group ) {
             return self::newEmpty();
@@ -104,7 +103,7 @@ class TestSuite implements Iterator {
      * @throws MWUnitException
      */
     public static function newFromCovers( string $covers ): TestSuite {
-        $result = TestCaseRegistry::getInstance()->getTestsCoveringTemplate( $covers );
+        $result = TestCaseRepository::getInstance()->getTestsCoveringTemplate( $covers );
 
         if ( !$result ) {
             return self::newEmpty();

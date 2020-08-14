@@ -77,6 +77,7 @@
   "mwunit-create-parser-mock-missing-argument": "The #create_parser_mock parser function is missing the $1 argument",
   "mwunit-generic-error-title": "Something went wrong",
   "mwunit-generic-error-description": "Something went wrong while trying to run the unit tests and no results could be collected. This could indicate: \n\n* a bug in the software;\n* the tests were deleted or moved;\n* no tests exist on the specified page.",
+  "mwunit-rebuild-required": "Some tests were not deregistered properly and a rebuild is required. Please run the maintenance script `rebuildTestsIndex.php` in the extension's `/maintenance` folder.",
   "specialpages-group-mwunit": "Unit testing",
   "right-mwunit-runtests": "Run unit tests",
   "action-mwunit-runtests": "run unit tests",

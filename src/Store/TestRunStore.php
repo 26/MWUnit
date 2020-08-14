@@ -7,12 +7,11 @@ use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
 use MWUnit\TestCase;
 
-class TestRunStore implements \Iterator {
+class TestRunStore implements StoreInterface {
     /**
      * @var array
      */
     private $runs;
-
     private $index;
 
     /**
@@ -28,20 +27,27 @@ class TestRunStore implements \Iterator {
             }
         }
 
-        $this->runs = $runs;
+        $this->runs  = $runs;
         $this->index = 0;
     }
 
-    public function append( TestRun $run ) {
+    /**
+     * @param TestRun $run
+     * @throws MWUnitException
+     * @inheritDoc
+     */
+    public function append( $run ) {
+        if ( !$run instanceof TestRun ) {
+            throw new MWUnitException( "TestRunStore can only contain TestRun objects" );
+        }
+
         $this->runs[] = $run;
     }
 
     /**
-     * Returns all the TestRun objects in the store.
-     *
-     * @return array
+     * @inheritDoc
      */
-    public function getRuns(): array {
+    public function getAll(): array {
         return $this->runs;
     }
 

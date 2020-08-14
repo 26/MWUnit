@@ -1,6 +1,6 @@
 <?php
 
-namespace MWUnit\Registry;
+namespace MWUnit;
 
 use MediaWiki\MediaWikiServices;
 use MWUnit\Assertion\Assertion;
@@ -26,17 +26,15 @@ use MWUnit\Assertion\StringEndsWith;
 use MWUnit\Assertion\StringStartsWith;
 use MWUnit\Assertion\That;
 use MWUnit\Controller\AssertionController;
-use MWUnit\Exception\MWUnitException;
-use MWUnit\MWUnit;
 use Parser;
 use PPFrame;
 
 /**
- * Class AssertionRegistry
+ * Class AssertionRegistrer
  *
- * @package MWUnit\Registry
+ * @package MWUnit
  */
-class AssertionRegistry implements Registry {
+class AssertionRegistrer {
     protected static $instance = null;
 
 	/**
@@ -79,17 +77,13 @@ class AssertionRegistry implements Registry {
 	}
 
     /**
-     * @inheritDoc
-     * @return AssertionRegistry
+     * @return AssertionRegistrer
      */
-    public static function getInstance(): Registry {
+    public static function getInstance() {
         self::setInstance();
         return self::$instance;
     }
 
-    /**
-     * @inheritDoc
-     */
     public static function setInstance() {
 	    if ( !isset( self::$instance ) ) {
 	        self::$instance = new self();

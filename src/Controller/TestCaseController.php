@@ -5,13 +5,14 @@ namespace MWUnit\Controller;
 use ConfigException;
 use FatalError;
 use MWException;
+use MWUnit\Injector\TestCaseStoreInjector;
 use MWUnit\Injector\TestSuiteRunnerInjector;
 use MWUnit\Runner\BaseTestRunner;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseException;
 use MWUnit\Exception\TestCaseRegistrationException;
 use MWUnit\MWUnit;
-use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\TestCaseRepository;
 use MWUnit\ConcreteTestCase;
 use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestCase;
@@ -26,13 +27,13 @@ class TestCaseController implements TestSuiteRunnerInjector {
     /**
      * @var TestSuiteRunner
      */
-    private static $runner;
+    private static $test_suite_runner;
 
     /**
      * @inheritDoc
      */
     public static function setTestSuiteRunner( TestSuiteRunner $runner ) {
-        self::$runner = $runner;
+        self::$test_suite_runner = $runner;
     }
 
 	/**
@@ -71,7 +72,7 @@ class TestCaseController implements TestSuiteRunnerInjector {
 		}
 
         try {
-            TestCaseRegistry::getInstance()->register( $test_case );
+            TestCaseRepository::getInstance()->register( $test_case );
         } catch ( TestCaseRegistrationException $exception ) {
             return MWUnit::error( $exception->message_name, $exception->arguments );
         }
@@ -123,7 +124,7 @@ class TestCaseController implements TestSuiteRunnerInjector {
      */
     private static function shouldRunTestcase( TestCase $test_case ): bool {
         return MWUnit::isRunning()
-            && self::$runner->getCurrentTestCase()->equals( $test_case )
-            && !self::$runner->testCompleted( $test_case );
+            && self::$test_suite_runner->getCurrentTestCase()->equals( $test_case )
+            && !self::$test_suite_runner->testCompleted( $test_case );
     }
 }

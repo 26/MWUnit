@@ -5,14 +5,20 @@ namespace MWUnit;
 use MediaWiki\Logger\LoggerFactory;
 use MWException;
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Registry\AssertionRegistry;
-use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\AssertionRegistrer;
+use MWUnit\Injector\TestCaseStoreInjector;
+use MWUnit\TestCaseRepository;
 use Parser;
 use Psr\Log\LoggerInterface;
 use Title;
 
 class MWUnit {
 	const LOGGING_CHANNEL = "MWUnit"; // phpcs:ignore
+
+    /**
+     * @var TestCaseRepository
+     */
+    private static $test_case_store;
 
 	/**
 	 * @var bool
@@ -31,7 +37,7 @@ class MWUnit {
 			[ Controller\TestCaseController::class, 'handleTestCase' ]
 		);
 
-		$assertion_registry = AssertionRegistry::getInstance();
+		$assertion_registry = AssertionRegistrer::getInstance();
 		$assertion_registry->registerAssertionClasses();
 
 		$parser->setFunctionHook(
@@ -83,7 +89,7 @@ class MWUnit {
 	 */
 	public static function onSkinBuildSidebar( \Skin $skin, array &$sidebar ) {
 		if ( $skin->getTitle()->getNamespace() === NS_TEMPLATE &&
-			TestCaseRegistry::getInstance()->isTemplateCovered( $skin->getTitle() ) ) {
+            TestCaseRepository::getInstance()->isTemplateCovered( $skin->getTitle() ) ) {
 			$special_title = Title::newFromText( 'Special:MWUnit' );
 			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
 				[

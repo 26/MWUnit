@@ -3,7 +3,6 @@
 namespace MWUnit\Registry;
 
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Mock\Mock;
 use MWUnit\Mock\MockInterface;
 use MWUnit\MWUnit;
 use Title;
@@ -44,8 +43,9 @@ class TemplateMockRegistry implements Registry {
 	 *
 	 * @param Title $title
 	 * @return bool
+     * @inheritDoc
 	 */
-	public function isMocked( Title $title ): bool {
+	public function exists( $title ): bool {
 		return isset( $this->mocks[ $title->getArticleID() ] );
 	}
 
@@ -56,9 +56,10 @@ class TemplateMockRegistry implements Registry {
      * @param Title $title
      * @return MockInterface
      * @throws MWUnitException
+     * @inheritDoc
      */
-	public function getMock( Title $title ): MockInterface {
-		if ( !$this->isMocked( $title ) ) {
+	public function get( $title ) {
+		if ( !$this->exists( $title ) ) {
 		    throw new MWUnitException( "{$title->getFullText()} is not mocked" );
 		}
 
@@ -70,8 +71,9 @@ class TemplateMockRegistry implements Registry {
      *
      * @param Title $title
      * @param MockInterface $content
+     * @inheritDoc
      */
-	public function registerMock( Title $title, MockInterface $content ) {
+	public function register( $title, $content ) {
 		$id = $title->getArticleID();
 		$this->mocks[ $id ] = $content;
 

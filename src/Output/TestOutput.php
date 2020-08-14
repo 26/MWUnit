@@ -1,6 +1,6 @@
 <?php
 
-namespace MWUnit\Debug;
+namespace MWUnit\Output;
 
 /**
  * Interface TestOutput

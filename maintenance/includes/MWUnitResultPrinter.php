@@ -2,7 +2,7 @@
 
 namespace MWUnit\Maintenance;
 
-use MWUnit\Debug\TestOutputCollector;
+use MWUnit\Store\TestOutputStore;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
 use MWUnit\Runner\TestSuiteRunner;
@@ -87,7 +87,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 		$risky_count = $risky_runs->count();
 
 		$this->count = 1;
-		foreach ( $successful_runs->getRuns() as $run ) {
+		foreach ($successful_runs->getAll() as $run ) {
 		    $this->printRun( $run );
         }
 
@@ -157,12 +157,12 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 	}
 
     /**
-     * @param TestOutputCollector $collector
+     * @param TestOutputStore $collector
      * @return string
      */
-	private function formatOutput( TestOutputCollector $collector ): string {
-        return count( $collector->getOutputs() ) === 0 ?
+	private function formatOutput(TestOutputStore $collector ): string {
+        return count( $collector->getAll() ) === 0 ?
             '' :
-            implode( "\n", $collector->getOutputs() );
+            implode( "\n", $collector->getAll() );
     }
 }

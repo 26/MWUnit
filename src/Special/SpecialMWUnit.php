@@ -2,13 +2,10 @@
 
 namespace MWUnit\Special;
 
-use MWUnit\Debug\TestOutput;
-use MWUnit\Debug\TestOutputCollector;
+use MWUnit\Exception\RebuildRequiredException;
+use MWUnit\Store\TestOutputStore;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
-use MWUnit\Registry\TestCaseRegistry;
-use MWUnit\Runner\Result\RiskyTestResult;
-use MWUnit\Runner\Result\SuccessTestResult;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
 use MWUnit\Runner\TestSuiteRunner;
@@ -77,7 +74,11 @@ class SpecialMWUnit extends \SpecialPage {
 			$test_results = $this->runner->getTestRunStore();
 			$this->renderTestResults( $test_results );
 		} else {
-			$this->showForms();
+		    try {
+                $this->showForms();
+            } catch( RebuildRequiredException $e ) {
+		        $this->getOutput()->showFatalError( $e->getMessage() );
+            }
 		}
 
 		$this->setHeaders();
@@ -152,10 +153,11 @@ class SpecialMWUnit extends \SpecialPage {
         return true;
 	}
 
-	/**
-	 * @throws \MWException
-	 * @return void
-	 */
+    /**
+     * @return void
+     * @throws RebuildRequiredException
+     * @throws \MWException
+     */
 	private function showForms() {
 		$this->getOutput()->addHTML( $this->renderRunGroupTestsForm() );
 		$this->getOutput()->addHTML( $this->renderRunIndividualTestForm() );
@@ -188,8 +190,8 @@ class SpecialMWUnit extends \SpecialPage {
 
 	/**
 	 * Renders the form for running an individual test.
-	 * @throws \MWException
 	 * @return string
+	 *@throws \MWException|RebuildRequiredException
 	 */
 	private function renderRunIndividualTestForm() {
 		$group_test_run_form_descriptor = [
@@ -237,9 +239,10 @@ class SpecialMWUnit extends \SpecialPage {
 		return $descriptor;
 	}
 
-	/**
-	 * @return array
-	 */
+    /**
+     * @return array
+     * @throws RebuildRequiredException
+     */
 	private function getIndividualTestDescriptor(): array {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
@@ -255,7 +258,14 @@ class SpecialMWUnit extends \SpecialPage {
 		$descriptor = [];
 		for ( $i = 0; $i < $row_count; $i++ ) {
 			$row = $result->current();
-			$test_identifier = \Title::newFromID( $row->article_id )->getText() . "::" . $row->test_name;
+
+			$title = \Title::newFromID( $row->article_id );
+
+			if ( $title === null ) {
+			    throw new RebuildRequiredException( 'mwunit-rebuild-required' );
+            }
+
+			$test_identifier = $title->getText() . "::" . $row->test_name;
 			$descriptor[ $test_identifier ] = $test_identifier;
 			$result->next();
 		}
@@ -269,7 +279,7 @@ class SpecialMWUnit extends \SpecialPage {
 	 * @param TestRunStore $test_run_store
 	 */
 	private function renderTestResults( TestRunStore $test_run_store ) {
-		if ( count( $test_run_store->getRuns() ) === 0 ) {
+		if ( count( $test_run_store->getAll() ) === 0 ) {
 			$this->getOutput()->showErrorPage( 'mwunit-generic-error-title', 'mwunit-generic-error-description' );
 			return;
 		}
@@ -298,7 +308,6 @@ class SpecialMWUnit extends \SpecialPage {
      *
      * @param TestRun $run
      * @return string
-     * @throws MWUnitException
      */
 	private function renderTest( TestRun $run ): string {
         // TODO: Factor this function into multiple function that print a type of test.
@@ -314,57 +323,6 @@ class SpecialMWUnit extends \SpecialPage {
 
         // To stop PHP from complaining.
         return '';
-
-		if ( $result->getResult() === TestResult::T_RISKY ) {
-			$summary = $result->getMessage();
-			$summary_formatted = $summary === null ? $summary : "<hr/><pre>$summary</pre>";
-
-			$test_output = $test_output_formatted ?
-                "<hr/><pre>In addition, the test outputted the following:\n\n$test_output_formatted</pre>" :
-                '';
-
-			return sprintf(
-				'<div class="warningbox" style="display:block;">' .
-							'<p><span style="color:#fc3"><b>%s</b></span> %s</p>%s%s' .
-						'</div>',
-				$this->msg( 'mwunit-test-risky' ),
-				$this->renderTestHeader( $result ),
-				$summary_formatted,
-                $test_output
-			);
-		}
-
-		if ( $result->getResult() === TestResult::T_SUCCESS ) {
-            $test_output = $test_output_formatted ?
-                "<hr/><pre>The test outputted the following:\n\n$test_output_formatted</pre>" :
-                '';
-
-			return sprintf(
-				'<div class="successbox" style="display:block;">' .
-							'<p><span style="color:#14866d"><b>%s</b></span> %s</p>%s' .
-						'</div>',
-				$this->msg( 'mwunit-test-success' ),
-				$this->renderTestHeader( $result ),
-                $test_output
-			);
-		}
-
-		if ( $result->getResult() === TestResult::T_FAILED ) {
-            $test_output = $test_output_formatted ?
-                "\n\nIn addition, the test outputted the following:\n\n$test_output_formatted" :
-                '';
-
-			return sprintf(
-				'<div class="errorbox" style="display:block;"><p><span style="color:#d33"><b>%s</b></span> %s</p>' .
-						'<hr/><pre>%s%s</pre></div>',
-				$this->msg( 'mwunit-test-failed' ),
-				$this->renderTestHeader( $result ),
-				htmlspecialchars( $result->getMessage() ),
-                $test_output
-			);
-		}
-
-		return '';
 	}
 
     private function renderRiskyTest( TestRun $run ) {
@@ -400,12 +358,13 @@ class SpecialMWUnit extends \SpecialPage {
         );
     }
 
-	/**
-	 * Renders the header of a test result.
-	 *
-	 * @param TestResult $result
-	 * @return string|null
-	 */
+    /**
+     * Renders the header of a test result.
+     *
+     * @param TestResult $result
+     * @return string|null
+     * @throws RebuildRequiredException
+     */
 	private function renderTestHeader( TestResult $result ) {
 		$page_name = $result->getPageName();
 		$test_name = $result->getTestName();
@@ -414,9 +373,9 @@ class SpecialMWUnit extends \SpecialPage {
 
 		$title = \Title::newFromText( $page_name );
 
-		if ( $title === null || $title === false ) {
-			return null;
-		}
+        if ( $title === null ) {
+            throw new RebuildRequiredException( 'mwunit-rebuild-required' );
+        }
 
 		$test_url = $title->getLinkURL();
 
@@ -453,10 +412,10 @@ class SpecialMWUnit extends \SpecialPage {
 	    return $output;
     }
 
-    private function formatTestOutput( TestOutputCollector $collector ) {
-	    return count( $collector->getOutputs() ) === 0 ?
+    private function formatTestOutput(TestOutputStore $collector ) {
+	    return count( $collector->getAll() ) === 0 ?
             '' :
-            implode( "\n", $collector->getOutputs() );
+            implode( "\n", $collector->getAll() );
     }
 
 	/**

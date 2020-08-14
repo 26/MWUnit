@@ -4,7 +4,8 @@ namespace MWUnit;
 
 use Content;
 use LogEntry;
-use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\Injector\TestCaseStoreInjector;
+use MWUnit\TestCaseRepository;
 use Revision;
 use Status;
 use User;
@@ -15,7 +16,7 @@ use WikiPage;
  *
  * @package MWUnit
  */
-class UpdateHandler {
+class UpdateHandler  {
     /**
      * Occurs after the save page request has been processed.
      *
@@ -62,7 +63,7 @@ class UpdateHandler {
 		] );
 
 		// Deregister all tests on the page and let the parser re-register them.
-		TestCaseRegistry::getInstance()->deregisterTests( $article_id );
+		TestCaseRepository::getInstance()->deregisterTests( $article_id );
 		WikitextParser::parseContentFromWikiPage( $wikiPage, $content );
 
 		return true;
@@ -143,7 +144,7 @@ class UpdateHandler {
 			'id' => $deleted_id
 		] );
 
-		TestCaseRegistry::getInstance()->deregisterTests( $deleted_id );
+		TestCaseRepository::getInstance()->deregisterTests( $deleted_id );
 
 		return true;
 	}

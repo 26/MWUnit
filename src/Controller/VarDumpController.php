@@ -2,10 +2,10 @@
 
 namespace MWUnit\Controller;
 
-use MWUnit\Debug\StringOutput;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Injector\TestRunInjector;
 use MWUnit\MWUnit;
+use MWUnit\Output\StringOutput;
 use MWUnit\Runner\TestRun;
 use Parser;
 use PPFrame;
@@ -46,11 +46,10 @@ class VarDumpController implements TestRunInjector {
 
         try {
             $test_output = new StringOutput( $formatted_value );
+            self::$run->getTestOutputCollector()->append( $test_output );
         } catch( MWUnitException $e ) {
             return '';
         }
-
-        self::$run->getTestOutputCollector()->append( $test_output );
 
         return '';
     }

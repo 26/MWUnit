@@ -1,8 +1,11 @@
 <?php
 
-namespace MWUnit\Debug;
+namespace MWUnit\Store;
 
-class TestOutputCollector implements \Iterator {
+use MWUnit\Output\TestOutput;
+use MWUnit\Exception\MWUnitException;
+
+class TestOutputStore implements StoreInterface {
     private $index;
     private $outputs;
 
@@ -18,8 +21,13 @@ class TestOutputCollector implements \Iterator {
      * Append a new TestOutput to the collector.
      *
      * @param TestOutput $output
+     * @throws MWUnitException
      */
-    public function append( TestOutput $output ) {
+    public function append( $output ) {
+        if ( !$output instanceof TestOutput ) {
+            throw new MWUnitException( "TestOutputStore can only contain TestOutput objects" );
+        }
+
         $this->outputs[] = $output;
     }
 
@@ -28,7 +36,7 @@ class TestOutputCollector implements \Iterator {
      *
      * @return array
      */
-    public function getOutputs(): array {
+    public function getAll(): array {
         return $this->outputs;
     }
 

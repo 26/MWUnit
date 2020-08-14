@@ -2,6 +2,11 @@
 
 namespace MWUnit\Registry;
 
+/**
+ * Interface Registry
+ *
+ * @package MWUnit\Registry
+ */
 interface Registry {
     /**
      * Gets an instance of the current class.
@@ -18,5 +23,35 @@ interface Registry {
      */
     static function setInstance();
 
-    // TODO: Make this interface more tailored towards a register, with get and register functions
+    /**
+     * Gets the value specified by $key.
+     *
+     * @param mixed $key
+     * @return mixed
+     */
+    function get( $key );
+
+    /**
+     * Registers $value to the register with the identifier $key.
+     *
+     * @param mixed $key
+     * @param mixed $value
+     * @return void
+     */
+    function register( $key, $value );
+
+    /**
+     * Returns true if and only if $key is registered.
+     *
+     * @param $key
+     * @return bool
+     */
+    function exists( $key ): bool;
+
+    /**
+     * Resets the register.
+     *
+     * @return void
+     */
+    function reset();
 }
