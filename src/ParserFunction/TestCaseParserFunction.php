@@ -1,6 +1,6 @@
 <?php
 
-namespace MWUnit\Controller;
+namespace MWUnit\ParserFunction;
 
 use ConfigException;
 use FatalError;
@@ -23,7 +23,7 @@ use PPFrame;
  * Class TestCaseController
  * @package MWUnit
  */
-class TestCaseController implements TestSuiteRunnerInjector {
+class TestCaseParserFunction implements TestSuiteRunnerInjector {
     /**
      * @var TestSuiteRunner
      */

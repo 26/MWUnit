@@ -7,9 +7,9 @@ use FatalError;
 use Hooks;
 use MediaWiki\MediaWikiServices;
 use MWException;
-use MWUnit\Controller\AssertionController;
-use MWUnit\Controller\TemplateMockController;
-use MWUnit\Controller\VarDumpController;
+use MWUnit\ParserFunction\AssertionParserFunction;
+use MWUnit\ParserFunction\TemplateMockParserFunction;
+use MWUnit\ParserFunction\VarDumpParserFunction;
 use MWUnit\Store\TestOutputStore;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
@@ -122,9 +122,9 @@ class TestRun {
         self::$templates_used = [];
 
         // Dependency injection
-        AssertionController::setTestRun( $this );
-        TemplateMockController::setTestRun( $this );
-        VarDumpController::setTestRun( $this );
+        AssertionParserFunction::setTestRun( $this );
+        TemplateMockParserFunction::setTestRun( $this );
+        VarDumpParserFunction::setTestRun( $this );
 	}
 
     /**

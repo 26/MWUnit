@@ -2,7 +2,7 @@
 
 namespace MWUnit;
 
-use MWUnit\Controller\TestCaseController;
+use MWUnit\ParserFunction\TestCaseParserFunction;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseRegistrationException;
 use Wikimedia\Rdbms\IResultWrapper;

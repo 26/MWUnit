@@ -1,16 +1,17 @@
 <?php
 
-namespace MWUnit\Controller;
+namespace MWUnit\ParserFunction;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Injector\TestRunInjector;
 use MWUnit\MWUnit;
 use MWUnit\Output\StringOutput;
+use MWUnit\ParserData;
 use MWUnit\Runner\TestRun;
 use Parser;
 use PPFrame;
 
-class VarDumpController implements TestRunInjector {
+class VarDumpParserFunction implements ParserFunction, TestRunInjector {
     /**
      * @var TestRun
      */
@@ -23,13 +24,11 @@ class VarDumpController implements TestRunInjector {
     /**
      * Hooked to the #var_dump parser function.
      *
-     * @param Parser $parser
-     * @param PPFrame $frame
-     * @param array $args
+     * @param ParserData $data
      * @return string
      */
-    public static function handleVarDump( Parser $parser, PPFrame $frame, array $args ) {
-        if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
+    public function execute( ParserData $data ) {
+        if ( $data->getParser()->getTitle()->getNamespace() !== NS_TEST ) {
             return MWUnit::error( "mwunit-outside-test-namespace" );
         }
 
@@ -41,8 +40,13 @@ class VarDumpController implements TestRunInjector {
             return '';
         }
 
-        $variable = trim( $frame->expand( $args[0] ) );
-        $formatted_value = self::formatDump( $variable );
+        try {
+            $value = $data->getArgument( 0 );
+        } catch( \OutOfBoundsException $e ) {
+            $value = '';
+        }
+
+        $formatted_value = $this->formatDump( $value );
 
         try {
             $test_output = new StringOutput( $formatted_value );
@@ -54,7 +58,7 @@ class VarDumpController implements TestRunInjector {
         return '';
     }
 
-    public static function formatDump( string $variable ): string {
+    public function formatDump( string $variable ): string {
         $length = strlen( $variable );
         $value  = htmlentities( $variable );
 

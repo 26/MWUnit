@@ -28,14 +28,9 @@ class RunTests extends \Maintenance {
 		"testsuite",
 		"version",
 		"list-groups",
-		"list-suites",
+		"list-pages",
 		"list-tests"
 	];
-
-	/**
-	 * @var bool
-	 */
-	private $rebuild_required;
 
 	/**
 	 * RunTests constructor.
@@ -58,7 +53,7 @@ class RunTests extends \Maintenance {
 			'c'
 		);
 		$this->addOption( 'list-groups', 'List available test groups' );
-		$this->addOption( 'list-suites', 'List available test suites' );
+		$this->addOption( 'list-pages', 'List available test pages' );
 		$this->addOption( 'list-tests', 'List available tests' );
 		$this->addOption( 'version', 'Prints the version' );
 		$this->addOption( 'no-progress', 'Do not display progress' );
@@ -89,8 +84,8 @@ class RunTests extends \Maintenance {
 			return true;
 		}
 
-		if ( $this->getOption( 'list-suites' ) === 1 ) {
-			$this->listSuites();
+		if ( $this->getOption( 'list-pages' ) === 1 ) {
+			$this->listPages();
 			return true;
 		}
 
@@ -209,7 +204,7 @@ class RunTests extends \Maintenance {
 		$this->output( "\n" );
 	}
 
-	private function listSuites() {
+	private function listPages() {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
 			'mwunit_tests',
@@ -228,7 +223,7 @@ class RunTests extends \Maintenance {
 			$result->next();
 		}
 
-		$this->output( "The following testsuites are available:\n" );
+		$this->output( "The following pages are available:\n" );
 
 		foreach ( $descriptor as $suite ) {
 			$this->output( "* $suite\n" );

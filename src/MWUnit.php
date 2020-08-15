@@ -5,7 +5,7 @@ namespace MWUnit;
 use MediaWiki\Logger\LoggerFactory;
 use MWException;
 use MWUnit\Exception\MWUnitException;
-use MWUnit\AssertionRegistrer;
+use MWUnit\AssertionFactory;
 use MWUnit\Injector\TestCaseStoreInjector;
 use MWUnit\TestCaseRepository;
 use Parser;
@@ -34,29 +34,11 @@ class MWUnit {
 	public static function onParserFirstCallInit( Parser $parser ) {
 		$parser->setHook(
 			'testcase',
-			[ Controller\TestCaseController::class, 'handleTestCase' ]
+			[ ParserFunction\TestCaseParserFunction::class, 'handleTestCase' ]
 		);
 
-		$assertion_registry = AssertionRegistrer::getInstance();
-		$assertion_registry->registerAssertionClasses();
-
-		$parser->setFunctionHook(
-			'create_mock',
-			[ Controller\TemplateMockController::class, 'handleCreateMock' ],
-			SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-			'create_parser_mock',
-			[ Controller\ParserMockController::class, 'handleCreateMock' ],
-			SFH_OBJECT_ARGS
-		);
-
-		$parser->setFunctionHook(
-		    'var_dump',
-            [ Controller\VarDumpController::class, 'handleVarDump' ],
-            SFH_OBJECT_ARGS
-        );
+		$parser_function_factory = ParserFunctionFactory::newFromParser( $parser );
+		$parser_function_factory->registerFunctionHandlers();
 	}
 
 	/**

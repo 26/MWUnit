@@ -34,7 +34,7 @@
     "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
     "ParserFetchTemplate": [
       "MWUnit\\Runner\\TestRun::onParserFetchTemplate",
-      "MWUnit\\Controller\\TemplateMockController::onParserFetchTemplate"
+      "MWUnit\\ParserFunction\\TemplateMockParserFunction::onParserFetchTemplate"
     ]
   },
   "SpecialPages": {
@@ -79,7 +79,8 @@
     }
   ],
   "AvailableRights": [
-    "mwunit-runtests"
+    "mwunit-runtests",
+    "mwunit-mock-user"
   ],
   "GroupPermissions": {
     "sysop": {

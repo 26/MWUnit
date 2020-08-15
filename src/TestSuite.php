@@ -2,6 +2,7 @@
 
 namespace MWUnit;
 
+use Countable;
 use Iterator;
 use Title;
 use MWUnit\Exception\MWUnitException;
@@ -11,7 +12,7 @@ use MWUnit\Exception\MWUnitException;
  *
  * @package MWUnit
  */
-class TestSuite implements Iterator {
+class TestSuite implements Iterator, Countable {
     /**
      * @var array
      */
@@ -177,5 +178,9 @@ class TestSuite implements Iterator {
      */
     public function rewind() {
         $this->index = 0;
+    }
+
+    public function count() {
+        return count( $this->test_cases );
     }
 }

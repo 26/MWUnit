@@ -5,8 +5,8 @@ namespace MWUnit\Runner;
 use ContentHandler;
 use MediaWiki\MediaWikiServices;
 use MWException;
-use MWUnit\Controller\ParserMockController;
-use MWUnit\Controller\TestCaseController;
+use MWUnit\ParserFunction\ParserMockParserFunction;
+use MWUnit\ParserFunction\TestCaseParserFunction;
 use MWUnit\Exception;
 use MWUnit\MWUnit;
 use MWUnit\Store\TestRunStore;
@@ -74,7 +74,7 @@ class TestSuiteRunner {
 
         // Dependency injection
         BaseTestRunner::setTestSuiteRunner( $this );
-        TestCaseController::setTestSuiteRunner( $this );
+        TestCaseParserFunction::setTestSuiteRunner( $this );
 	}
 
 	/**
@@ -229,7 +229,7 @@ class TestSuiteRunner {
         }
 
         TemplateMockRegistry::getInstance()->reset();
-        ParserMockController::restoreAndReset();
+        ParserMockParserFunction::restoreAndReset();
 
         return true;
     }
