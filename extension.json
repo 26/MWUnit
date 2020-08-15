@@ -30,6 +30,7 @@
     "LoadExtensionSchemaUpdates": "MWUnit\\MWUnit::onLoadExtensionSchemaUpdates",
     "PageContentSaveComplete": "MWUnit\\UpdateHandler::onPageContentSaveComplete",
     "PageContentInsertComplete": "MWUnit\\UpdateHandler::onPageContentInsertComplete",
+    "ArticleDeleteComplete": "MWUnit\\UpdateHandler::onArticleDeleteComplete",
     "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
     "ParserFetchTemplate": [
       "MWUnit\\Runner\\TestRun::onParserFetchTemplate",

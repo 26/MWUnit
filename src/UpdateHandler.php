@@ -121,8 +121,7 @@ class UpdateHandler  {
 	 * @param int $archivedRevisionCount
 	 *
 	 * @return bool
-	 * @throws \MWException
-	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/ArticleDeleteComplete
+     * @see https://www.mediawiki.org/wiki/Manual:Hooks/ArticleDeleteComplete
 	 */
 	public static function onArticleDeleteComplete(
 		WikiPage &$article,
