@@ -10,16 +10,16 @@ interface CommandLineResultPrinter {
 	/**
 	 * Gets called for each completed test.
 	 *
-	 * @param \MWUnit\TestResult $result The associated TestResult object
+	 * @param \MWUnit\Runner\Result\TestResult $result The associated TestResult object
 	 * @return void
 	 */
-	public function testCompletionCallback( \MWUnit\TestResult $result );
+	public function testCompletionCallback(\MWUnit\Runner\Result\TestResult $result );
 
 	/**
 	 * Outputs the given test to the console.
 	 *
-	 * @param \MWUnit\TestSuiteRunner $runner The associated UnitTestRunner object
+	 * @param \MWUnit\Runner\TestSuiteRunner $runner The associated UnitTestRunner object
 	 * @return void
 	 */
-	public function outputTestResults( \MWUnit\TestSuiteRunner $runner );
+	public function outputTestResults(\MWUnit\Runner\TestSuiteRunner $runner );
 }

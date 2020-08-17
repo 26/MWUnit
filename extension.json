@@ -6,7 +6,7 @@
   "author": [
     "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
   ],
-  "version": "0.10",
+  "version": "0.11",
   "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
   "description": "A unit testing framework for MediaWiki",
   "descriptionmsg": "mwunit-description",
@@ -30,10 +30,11 @@
     "LoadExtensionSchemaUpdates": "MWUnit\\MWUnit::onLoadExtensionSchemaUpdates",
     "PageContentSaveComplete": "MWUnit\\UpdateHandler::onPageContentSaveComplete",
     "PageContentInsertComplete": "MWUnit\\UpdateHandler::onPageContentInsertComplete",
+    "ArticleDeleteComplete": "MWUnit\\UpdateHandler::onArticleDeleteComplete",
     "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
     "ParserFetchTemplate": [
-      "MWUnit\\TestRun::onParserFetchTemplate",
-      "MWUnit\\Controller\\MockController::onParserFetchTemplate"
+      "MWUnit\\Runner\\TestRun::onParserFetchTemplate",
+      "MWUnit\\ParserFunction\\TemplateMockParserFunction::onParserFetchTemplate"
     ]
   },
   "SpecialPages": {
@@ -69,7 +70,8 @@
     {
       "id": 5750,
       "constant": "NS_TEST",
-      "name": "Test"
+      "name": "Test",
+      "protection": "mwunit-createtests"
     },
     {
       "id": 5751,
@@ -78,12 +80,19 @@
     }
   ],
   "AvailableRights": [
-    "mwunit-runtests"
+    "mwunit-runtests",
+    "mwunit-mock-user"
   ],
   "GroupPermissions": {
     "sysop": {
       "mwunit-runtests": true,
-      "mwunit-mock-user": true
+      "mwunit-mock-user": true,
+      "mwunit-createtests": true
+    },
+    "tester": {
+      "mwunit-runtests": true,
+      "mwunit-mock-user": true,
+      "mwunit-createtests": true
     }
   }
 }

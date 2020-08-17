@@ -2,7 +2,10 @@
 
 namespace MWUnit\Maintenance;
 
-use MWUnit\TestResult;
+use MWUnit\Store\TestOutputStore;
+use MWUnit\Runner\Result\TestResult;
+use MWUnit\Runner\TestRun;
+use MWUnit\Runner\TestSuiteRunner;
 
 require_once "CommandLineResultPrinter.php";
 
@@ -58,11 +61,12 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 		}
 	}
 
-	/**
-	 * @inheritDoc
-	 */
-	public function outputTestResults( \MWUnit\TestSuiteRunner $runner ) {
-		$no_tests 		= $runner->getTotalTestCount();
+    /**
+     * @inheritDoc
+     * @throws \MWUnit\Exception\MWUnitException
+     */
+	public function outputTestResults( TestSuiteRunner $runner ) {
+		$no_tests 		= $runner->getTestCount();
 		$no_assertions	= $runner->getTotalAssertionsCount();
 		$no_not_passed 	= $runner->getNotPassedCount();
 
@@ -70,17 +74,26 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 		if ( $no_not_passed === 0 ) {
 			print( "OK ($no_tests tests, $no_assertions assertions)\n" );
-			exit( 0 );
+			return;
 		}
 
-		$failed_tests = $runner->getFailedTests();
-		$risky_tests = $runner->getRiskyTests();
+		$test_run_store = $runner->getTestRunStore();
 
-		$failed_count = count( $failed_tests );
-		$risky_count = count( $risky_tests );
+		$failed_runs     = $test_run_store->getFailedRuns();
+		$risky_runs      = $test_run_store->getRiskyRuns();
+		$successful_runs = $test_run_store->getRunsWithResult( TestResult::T_SUCCESS );
+
+		$failed_count = $failed_runs->count();
+		$risky_count = $risky_runs->count();
 
 		$this->count = 1;
+		foreach ($successful_runs->getAll() as $run ) {
+		    $this->printRun( $run );
+        }
 
+		print( "------\n\n" );
+
+		$this->count = 1;
 		if ( $failed_count > 0 ) {
 			$failed_count === 1 ?
 				print( "There was 1 failure:" ) :
@@ -88,12 +101,12 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 			print( "\n\n" );
 
-			foreach ( $failed_tests as $test ) { $this->printTest( $test );
+			foreach ( $failed_runs as $run ) {
+			    $this->printRun( $run );
 			}
 		}
 
 		$this->count = 1;
-
 		if ( $risky_count > 0 ) {
 			$risky_count === 1 ?
 				print( "There was 1 test considered risky:" ) :
@@ -101,33 +114,55 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 			print( "\n\n" );
 
-			foreach ( $risky_tests as $test ) { $this->printTest( $test );
+			foreach ( $risky_runs as $run ) {
+				$this->printRun( $run );
 			}
 		}
 
 		print( "\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
 			"Assertions: $no_assertions, " .
 			"Failures: $no_not_passed.\033[0m\n" );
-
-		exit( 1 );
 	}
 
 	/**
-	 * Prints the given test result object to the console.
+	 * Prints the given test run object to the console.
 	 *
-	 * @param TestResult $test
+	 * @param TestRun $run
 	 */
-	private function printTest( TestResult $test ) {
-		print( $this->count . ") " );
-		print( $test->getCanonicalTestName() . "\n" );
+	private function printRun( TestRun $run ) {
+	    $test = $run->getResult();
 
-		if ( $test->getResult() === TestResult::T_FAILED ) {
-			print( $test->getFailureMessage() );
-		} elseif ( $test->getResult() === TestResult::T_RISKY ) {
-			print( $test->getRiskyMessage() );
-		}
+	    $message = $test->getMessage();
+	    $output  = $this->formatOutput(
+	        $run->getTestOutputCollector()
+        );
 
-		print( "\n\n" );
-		$this->count++;
+	    if ( $message || $output ) {
+            print( $this->count . ") " );
+            print( $test->getTestCase() . "\n" );
+
+            if ( $message ) {
+                print( $message );
+            }
+
+            if ( !$message && $output ) {
+                print( "\nThis test outputted the following:\n$output" );
+            } else if ( $output ) {
+                print( "\n\nIn addition, the test outputted the following:\n$output" );
+            }
+
+            print( "\n\n" );
+            $this->count++;
+        }
 	}
+
+    /**
+     * @param TestOutputStore $collector
+     * @return string
+     */
+	private function formatOutput(TestOutputStore $collector ): string {
+        return count( $collector->getAll() ) === 0 ?
+            '' :
+            implode( "\n", $collector->getAll() );
+    }
 }

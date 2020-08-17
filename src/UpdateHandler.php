@@ -4,42 +4,43 @@ namespace MWUnit;
 
 use Content;
 use LogEntry;
+use MWUnit\Injector\TestCaseStoreInjector;
+use MWUnit\TestCaseRepository;
 use Revision;
 use Status;
 use User;
 use WikiPage;
-use MWUnit\Registry\TestCaseRegistry;
 
 /**
  * Class UpdateHandler
  *
  * @package MWUnit
  */
-class UpdateHandler {
+class UpdateHandler  {
     /**
-	 * Occurs after the save page request has been processed.
-	 *
-	 * @param WikiPage $wikiPage
-	 * @param User $user
-	 * @param Content $mainContent
-	 * @param string $summaryText
-	 * @param bool $isMinor
-	 * @param null $isWatch Unused
-	 * @param null $section Unused
-	 * @param int $flags
-	 * @param Revision|null $revision
-	 * @param Status $status
-	 * @param int|false $originalRevId
-	 * @param int $undidRevId
-	 *
-	 * @return bool
-	 * @throws \MWException
-	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/PageContentSaveComplete
-	 */
+     * Occurs after the save page request has been processed.
+     *
+     * @param WikiPage $wikiPage
+     * @param User $user
+     * @param Content $content
+     * @param string $summaryText
+     * @param bool $isMinor
+     * @param null $isWatch Unused
+     * @param null $section Unused
+     * @param int $flags
+     * @param Revision|null $revision
+     * @param Status $status
+     * @param int|false $originalRevId
+     * @param int $undidRevId
+     *
+     * @return bool
+     * @throws \MWException
+     * @see https://www.mediawiki.org/wiki/Manual:Hooks/PageContentSaveComplete
+     */
 	public static function onPageContentSaveComplete(
 		WikiPage $wikiPage,
 		User $user,
-		Content $mainContent,
+		Content $content,
 		string $summaryText,
 		bool $isMinor,
 		$isWatch,
@@ -52,19 +53,18 @@ class UpdateHandler {
 	) {
 		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
 			// Do not run hook outside of "Test" namespace
-			return;
+			return true;
 		}
 
-        $article_id = $wikiPage->getTitle()->getArticleID();
+		$article_id = $wikiPage->getTitle()->getArticleID();
 
-        MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
-            'id' => $article_id
-        ] );
+		MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
+			'id' => $article_id
+		] );
 
-        // Deregister all tests on the page and let the parser re-register them.
-        TestCaseRegistry::deregisterTests( $article_id );
-
-		self::parseWikitext( $wikiPage, $mainContent );
+		// Deregister all tests on the page and let the parser re-register them.
+		TestCaseRepository::getInstance()->deregisterTests( $article_id );
+		WikitextParser::parseContentFromWikiPage( $wikiPage, $content );
 
 		return true;
 	}
@@ -100,10 +100,10 @@ class UpdateHandler {
 	) {
 		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
 			// Do not run hook outside of "Test" namespace
-			return;
+			return true;
 		}
 
-		self::parseWikitext( $wikiPage, $content );
+        WikitextParser::parseContentFromWikiPage( $wikiPage, $content );
 
 		return true;
 	}
@@ -121,8 +121,7 @@ class UpdateHandler {
 	 * @param int $archivedRevisionCount
 	 *
 	 * @return bool
-	 * @throws \MWException
-	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/ArticleDeleteComplete
+     * @see https://www.mediawiki.org/wiki/Manual:Hooks/ArticleDeleteComplete
 	 */
 	public static function onArticleDeleteComplete(
 		WikiPage &$article,
@@ -133,46 +132,19 @@ class UpdateHandler {
 		LogEntry $logEntry,
 		$archivedRevisionCount
 	) {
+        if ( $article->getTitle()->getNamespace() !== NS_TEST ) {
+            // Do not run hook outside of "Test" namespace
+            return true;
+        }
+
 		$deleted_id = $article->getId();
-
-		if ( $deleted_id === null ) {
-			throw new \MWException( "Deleted article ID mustn't be `null`." );
-		}
-
-		if ( $article->getTitle()->getNamespace() !== NS_TEST ) {
-			// Do not run hook outside of "Test" namespace
-			return true;
-		}
 
 		MWUnit::getLogger()->debug( 'Deregistering tests for article {id} because the page got deleted', [
 			'id' => $deleted_id
 		] );
 
-		TestCaseRegistry::deregisterTests( $deleted_id );
+		TestCaseRepository::getInstance()->deregisterTests( $deleted_id );
 
 		return true;
-	}
-
-	/**
-	 * Parses the given content in the given page's context.
-	 *
-	 * @param WikiPage $wikiPage
-	 * @param Content $content
-	 * @throws \MWException
-	 */
-	private static function parseWikitext( WikiPage $wikiPage, Content $content ) {
-		MWUnit::getLogger()->debug( 'Reparsing wikitext for article {id} because the page got updated', [
-			'id' => $wikiPage->getTitle()->getFullText()
-		] );
-
-		global $wgVersion;
-		$context = version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
-
-		$parser = \MediaWiki\MediaWikiServices::getInstance()->getParser();
-		$parser->parse(
-			\ContentHandler::getContentText( $content ),
-			$wikiPage->getTitle(),
-			\ParserOptions::newCanonical( $context )
-		);
 	}
 }

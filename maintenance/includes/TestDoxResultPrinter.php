@@ -2,7 +2,9 @@
 
 namespace MWUnit\Maintenance;
 
-use MWUnit\TestResult;
+use MWUnit\MWUnit;
+use MWUnit\Runner\Result\TestResult;
+use MWUnit\Runner\TestSuiteRunner;
 
 require_once "CommandLineResultPrinter.php";
 
@@ -36,15 +38,15 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 
 		switch ( $result->getResult() ) {
 			case TestResult::T_SUCCESS:
-				print( "  \033[0;32m✔\033[0m " . $this->toSentence( $result->getTestName() ) . "\n" );
+				print( "  \033[0;32m✔\033[0m " . MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
 				break;
 			case TestResult::T_RISKY:
-				print( "  \e[0;33m✘\e[0m " . $this->toSentence( $result->getTestName() ) . "\n" );
-				$this->printFailureReason( $result->getRiskyMessage() );
+				print( "  \e[0;33m✘\e[0m " . MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
+				$this->printFailureReason( $result->getMessage() );
 				break;
 			case TestResult::T_FAILED:
-				print( "  \e[0;31m✘\e[0m " . $this->toSentence( $result->getTestName() ) . "\n" );
-				$this->printFailureReason( $result->getFailureMessage() );
+				print( "  \e[0;31m✘\e[0m " . MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
+				$this->printFailureReason( $result->getMessage() );
 				break;
 		}
 	}
@@ -52,8 +54,8 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 	/**
 	 * @inheritDoc
 	 */
-	public function outputTestResults( \MWUnit\TestSuiteRunner $runner ) {
-		$no_tests 		= $runner->getTotalTestCount();
+	public function outputTestResults( TestSuiteRunner $runner ) {
+		$no_tests 		= $runner->getTestCount();
 		$no_assertions	= $runner->getTotalAssertionsCount();
 		$no_not_passed 	= $runner->getNotPassedCount();
 
@@ -61,32 +63,9 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 			print( "\n\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
 				"Assertions: $no_assertions, " .
 				"Failures: $no_not_passed.\033[0m\n" );
-			exit( 1 );
 		} else {
 			print( "\nOK ($no_tests tests, $no_assertions assertions)\n" );
-			exit( 0 );
 		}
-	}
-
-	/**
-	 * Converts the given test name in camel case or snake case to a sentence.
-	 *
-	 * @param string $test_name
-	 * @return string
-	 */
-	private function toSentence( string $test_name ): string {
-		$parts = preg_split( '/(?=[A-Z_\-])/', $test_name, -1, PREG_SPLIT_NO_EMPTY );
-		$parts = array_map( function ( $part ): string {
-			return ucfirst( trim( $part, '_- ' ) );
-		}, $parts );
-
-		$first_element = array_shift( $parts );
-
-		if ( $first_element !== "Test" ) {
-			array_unshift( $parts, $first_element );
-		}
-
-		return implode( " ", $parts );
 	}
 
 	/**
