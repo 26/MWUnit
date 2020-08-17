@@ -4,21 +4,12 @@ namespace MWUnit;
 
 use MediaWiki\Logger\LoggerFactory;
 use MWException;
-use MWUnit\Exception\MWUnitException;
-use MWUnit\AssertionFactory;
-use MWUnit\Injector\TestCaseStoreInjector;
-use MWUnit\TestCaseRepository;
 use Parser;
 use Psr\Log\LoggerInterface;
 use Title;
 
-class MWUnit {
+abstract class MWUnit {
 	const LOGGING_CHANNEL = "MWUnit"; // phpcs:ignore
-
-    /**
-     * @var TestCaseRepository
-     */
-    private static $test_case_store;
 
 	/**
 	 * @var bool

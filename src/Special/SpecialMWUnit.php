@@ -310,8 +310,6 @@ class SpecialMWUnit extends \SpecialPage {
      * @return string
      */
 	private function renderTest( TestRun $run ): string {
-        // TODO: Factor this function into multiple function that print a type of test.
-
         switch ( $run->getResult()->getResult() ) {
             case TestResult::T_RISKY:
                 return $this->renderRiskyTest( $run );
@@ -412,7 +410,7 @@ class SpecialMWUnit extends \SpecialPage {
 	    return $output;
     }
 
-    private function formatTestOutput(TestOutputStore $collector ) {
+    private function formatTestOutput( TestOutputStore $collector ) {
 	    return count( $collector->getAll() ) === 0 ?
             '' :
             implode( "\n", $collector->getAll() );
@@ -425,6 +423,7 @@ class SpecialMWUnit extends \SpecialPage {
 	 * @return bool
 	 */
 	private function shouldRunTests(): bool {
+	    // TODO: Probably refactor this a bit...
 		return $this->getRequest()->getVal( 'unitTestGroup' ) !== null &&
 				!empty( $this->getRequest()->getVal( 'unitTestGroup' ) )
 			|| $this->getRequest()->getVal( 'unitTestIndividual' ) !== null &&

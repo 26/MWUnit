@@ -70,7 +70,8 @@
     {
       "id": 5750,
       "constant": "NS_TEST",
-      "name": "Test"
+      "name": "Test",
+      "protection": "mwunit-createtests"
     },
     {
       "id": 5751,
@@ -85,7 +86,13 @@
   "GroupPermissions": {
     "sysop": {
       "mwunit-runtests": true,
-      "mwunit-mock-user": true
+      "mwunit-mock-user": true,
+      "mwunit-createtests": true
+    },
+    "tester": {
+      "mwunit-runtests": true,
+      "mwunit-mock-user": true,
+      "mwunit-createtests": true
     }
   }
 }

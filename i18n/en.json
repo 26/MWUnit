@@ -82,5 +82,7 @@
   "right-mwunit-runtests": "Run unit tests",
   "action-mwunit-runtests": "run unit tests",
   "right-mwunit-mock-user": "Mock other users during testing",
-  "action-mwunit-mock-user": "mock other users during testing"
+  "action-mwunit-mock-user": "mock other users during testing",
+  "right-mwunit-createtests": "Create unit tests",
+  "action-mwunit-createtests": "create unit tests"
 }
