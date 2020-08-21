@@ -51,7 +51,7 @@ class AssertionFactory extends ParserFunctionFactory {
      *
      * @return string[] Array of Assertion class names
      */
-    public function getAssertionClasses(): array {
+    public static function getAssertionClasses(): array {
         $classes = [
             Equals::class,
             EqualsIgnoreCase::class,
@@ -91,7 +91,7 @@ class AssertionFactory extends ParserFunctionFactory {
      * Registers the function handlers.
      */
     public function registerFunctionHandlers() {
-        $classes = $this->getAssertionClasses();
+        $classes = AssertionFactory::getAssertionClasses();
         $register_assertions = array_filter( $classes, function ( $class ): bool {
             return $class::shouldRegister();
         } );

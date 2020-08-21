@@ -77,26 +77,25 @@ class TestSuiteRunner {
         TestCaseParserFunction::setTestSuiteRunner( $this );
 	}
 
-	/**
-	 * Runs all tests in the group specified in the constructor.
-	 *
-	 * @return bool
-	 * @throws Exception\MWUnitException
-	 */
+    /**
+     * Runs all tests in the group specified in the constructor.
+     *
+     * @throws Exception\MWUnitException
+     */
 	public function run() {
         try {
             if ( !\Hooks::run('MWUnitBeforeFirstTest', [ &$pages ] ) ) {
-                return false;
+                return;
             }
         } catch ( \Exception $e ) {
-            return false;
+            throw new Exception\MWUnitException( 'mwunit-generic-error-description' );
         }
 
         foreach ( $this->test_suite as $test_case ) {
 			$result = $this->runTestCase( $test_case );
 
 			if ( $result === false ) {
-			    return false;
+			    throw new Exception\MWUnitException( 'mwunit-failure-running-test', [$test_case->getName()] );
             }
 
 			$this->cleanupAfterFixture( $test_case->getTitle() );
@@ -105,10 +104,8 @@ class TestSuiteRunner {
         try {
             \Hooks::run( 'MWUnitAfterTests', [ &$this->test_run_store ] );
         } catch ( \Exception $e ) {
-            return false;
+            throw new Exception\MWUnitException( 'mwunit-generic-error-description' );
         }
-
-        return true;
 	}
 
     /**
@@ -222,9 +219,7 @@ class TestSuiteRunner {
     private function cleanupAfterFixture( Title $page ) {
         try {
             \Hooks::run('MWUnitCleanupAfterPage', [$page]);
-        } catch (\FatalError $e) {
-            return false;
-        } catch (MWException $e) {
+        } catch ( \Exception $e ) {
             return false;
         }
 

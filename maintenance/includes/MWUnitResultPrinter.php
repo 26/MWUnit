@@ -2,6 +2,7 @@
 
 namespace MWUnit\Maintenance;
 
+use MWUnit\Exception\MWUnitException;
 use MWUnit\Store\TestOutputStore;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
@@ -63,7 +64,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
     /**
      * @inheritDoc
-     * @throws \MWUnit\Exception\MWUnitException
+     * @throws MWUnitException
      */
 	public function outputTestResults( TestSuiteRunner $runner ) {
 		$no_tests 		= $runner->getTestCount();
@@ -87,7 +88,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 		$risky_count = $risky_runs->count();
 
 		$this->count = 1;
-		foreach ($successful_runs->getAll() as $run ) {
+		foreach ( $successful_runs->getAll() as $run ) {
 		    $this->printRun( $run );
         }
 
@@ -101,7 +102,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 			print( "\n\n" );
 
-			foreach ( $failed_runs as $run ) {
+			foreach ( $failed_runs->getAll() as $run ) {
 			    $this->printRun( $run );
 			}
 		}
@@ -114,7 +115,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 			print( "\n\n" );
 
-			foreach ( $risky_runs as $run ) {
+			foreach ( $risky_runs->getAll() as $run ) {
 				$this->printRun( $run );
 			}
 		}

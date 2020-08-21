@@ -22,7 +22,6 @@ class TestSuite implements Iterator, Countable {
     /**
      * @param string $group
      * @return TestSuite
-     * @throws MWUnitException
      */
     public static function newFromGroup( string $group ): TestSuite {
         $result = TestCaseRepository::getInstance()->getTestsFromGroup( $group );
@@ -132,15 +131,8 @@ class TestSuite implements Iterator, Countable {
      * TestSuite constructor.
      *
      * @param array $test_cases
-     * @throws MWUnitException
      */
     public function __construct( array $test_cases ) {
-        foreach ( $test_cases as $test_case ) {
-            if ( !$test_case instanceof TestCase ) {
-                throw new MWUnitException("TestSuite must consist of only TestCase objects");
-            }
-        }
-
         $this->test_cases = $test_cases;
     }
 

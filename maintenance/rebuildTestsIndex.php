@@ -2,6 +2,8 @@
 
 namespace MWUnit\Maintenance;
 
+use MediaWiki\MediaWikiServices;
+
 error_reporting( 0 );
 
 /**
@@ -82,7 +84,7 @@ class RebuildTestsIndex extends \Maintenance {
 			$title = \Title::newFromText( $row->page_title, (int)$row->page_namespace );
 			$page = \WikiPage::newFromID( $title->getArticleID() );
 
-			$parser = ( \MediaWiki\MediaWikiServices::getInstance() )->getParser();
+			$parser = ( MediaWikiServices::getInstance() )->getParser();
 			$parser->parse(
 				\ContentHandler::getContentText( $page->getContent() ),
 				$title,

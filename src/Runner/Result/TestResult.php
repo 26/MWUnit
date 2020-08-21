@@ -10,9 +10,9 @@ use MWUnit\TestCase;
  * @package MWUnit\Runner\Result
  */
 abstract class TestResult {
-	const T_SUCCESS = 0; /* phpcs:ignore */
-	const T_FAILED  = 1; /* phpcs:ignore */
-	const T_RISKY   = 2; /* phpcs:ignore */
+    const T_FAILED  = 0; /* phpcs:ignore */
+    const T_RISKY   = 1; /* phpcs:ignore */
+	const T_SUCCESS = 2; /* phpcs:ignore */
 
 	/**
 	 * @var TestCase
