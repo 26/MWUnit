@@ -51,9 +51,34 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
     }
 
     public function formatDump( string $variable ): string {
-        $length = strlen( $variable );
         $value  = htmlentities( $variable );
+        $type   = $this->determineVariableType( $variable );
 
-        return sprintf( 'string(%d) "%s"', $length, $value );
+        switch ( $type ) {
+            case "empty":
+                return "NULL";
+            case "int":
+            case "float":
+                return sprintf( '%s(%d)', $type, $value );
+            default:
+                $length = strlen( $variable );
+                return sprintf( '%s(%d) %s', $type, $length, $value );
+        }
+    }
+
+    public function determineVariableType( string $variable ): string {
+        if ( empty( $variable ) ) {
+            return "empty";
+        }
+
+        if ( ctype_digit( $variable ) ) {
+            return "int";
+        }
+
+        if ( is_numeric( $variable ) ) {
+            return "float";
+        }
+
+        return "string";
     }
 }
