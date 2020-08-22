@@ -24,12 +24,22 @@ class MWUnitFormUI extends MWUnitUI {
      */
     private $request;
 
+    /**
+     * MWUnitFormUI constructor.
+     *
+     * @param WebRequest $request
+     * @param OutputPage $output
+     * @param LinkRenderer $link_renderer
+     */
     public function __construct( WebRequest $request, OutputPage $output, LinkRenderer $link_renderer ) {
         $this->request = $request;
 
         parent::__construct( $output, $link_renderer );
     }
 
+    /**
+     * @inheritDoc
+     */
     public function render() {
         $submit_callback = new GroupFormSubmitCallback( $this->getOutput(), $this->getLinkRenderer() );
         $validation_callback = new GroupFormValidationCallback();
@@ -50,6 +60,9 @@ class MWUnitFormUI extends MWUnitUI {
         $form->show();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getHeader(): string {
         return wfMessage( 'mwunit-special-title' )->plain();
     }

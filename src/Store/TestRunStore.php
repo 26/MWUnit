@@ -55,6 +55,7 @@ class TestRunStore implements StoreInterface {
 
     /**
      * @inheritDoc
+     * @return TestRun[]
      */
     public function getAll(): array {
         return $this->runs;

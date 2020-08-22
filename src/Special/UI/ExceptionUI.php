@@ -14,6 +14,7 @@ class ExceptionUI extends MWUnitUI {
 
     /**
      * ExceptionUI constructor.
+     *
      * @param MWUnitException $e
      * @param OutputPage $output_page
      * @param LinkRenderer $link_renderer

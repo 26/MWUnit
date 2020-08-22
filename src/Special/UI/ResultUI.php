@@ -4,7 +4,6 @@ namespace MWUnit\Special\UI;
 
 use HtmlArmor;
 use MediaWiki\Linker\LinkRenderer;
-use MWUnit\Exception\RebuildRequiredException;
 use MWUnit\MWUnit;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
