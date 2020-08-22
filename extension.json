@@ -95,8 +95,10 @@
       "mwunit-createtests": true
     }
   },
-  "ContentHandlers": {
-    "test": "MWUnit\\ContentHandler\\TestContentHandler"
+  "APIModules": {
+    "rununittests": "MWUnit\\API\\ApiRunUnitTests"
   },
-  "callback": "MWUnit\\MWUnit::onAfterExtensionJsonProcess"
+  "APIListModules": {
+    "unittests": "MWUnit\\API\\ApiQueryUnitTests"
+  }
 }

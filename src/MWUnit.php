@@ -97,14 +97,6 @@ abstract class MWUnit {
 		return true;
 	}
 
-    /**
-     * Called after MWUnit's extension.json file is processed.
-     */
-	public static function onAfterExtensionJsonProcess() {
-	    // Define a constant for the 'test' content model.
-        define( 'CONTENT_MODEL_TEST', 'test' );
-    }
-
 	/**
 	 * Returns a formatted error message.
 	 *

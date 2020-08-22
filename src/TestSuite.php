@@ -45,7 +45,6 @@ class TestSuite implements Iterator, Countable {
      *
      * @param Title $title
      * @return TestSuite
-     * @throws MWUnitException
      */
     public static function newFromTitle( \Title $title ): TestSuite {
         $result = TestCaseRepository::getInstance()->getTestsFromTitle( $title );
@@ -100,7 +99,6 @@ class TestSuite implements Iterator, Countable {
      *
      * @param string $covers
      * @return TestSuite
-     * @throws MWUnitException
      */
     public static function newFromCovers( string $covers ): TestSuite {
         $result = TestCaseRepository::getInstance()->getTestsCoveringTemplate( $covers );
@@ -121,7 +119,6 @@ class TestSuite implements Iterator, Countable {
      * Returns a new empty TestSuite.
      *
      * @return TestSuite
-     * @throws MWUnitException
      */
     public static function newEmpty(): TestSuite {
         return new TestSuite( [] );
@@ -134,6 +131,27 @@ class TestSuite implements Iterator, Countable {
      */
     public function __construct( array $test_cases ) {
         $this->test_cases = $test_cases;
+    }
+
+    /**
+     * Merges the given test suite(s) with a new test suite and returns the result.
+     *
+     * @param TestSuite ...$test_suites
+     * @return TestSuite
+     */
+    public function merge( TestSuite ...$test_suites ): TestSuite {
+        $a = $this->test_cases;
+        $b = array_map( function ( TestSuite $suite ): array {
+            return $suite->getTestCases();
+        }, $test_suites );
+
+        $result = array_merge( $a, ...$b );
+
+        return new TestSuite( $result );
+    }
+
+    public function getTestCases(): array {
+        return $this->test_cases;
     }
 
     /**
