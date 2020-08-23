@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\NotEmpty;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\NotEmpty;
  * @group Assertion
  * @covers \MWUnit\Assertion\NotEmpty
  */
-class NotEmptyTest extends MediaWikiIntegrationTestCase {
+class NotEmptyTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

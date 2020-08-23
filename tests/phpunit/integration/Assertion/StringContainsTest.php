@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\StringContains;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\StringContains;
  * @group Assertion
  * @covers \MWUnit\Assertion\StringContains
  */
-class StringContainsTest extends MediaWikiIntegrationTestCase {
+class StringContainsTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

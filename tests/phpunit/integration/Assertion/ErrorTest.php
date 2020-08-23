@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\Error;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\Error;
  * @group Assertion
  * @covers \MWUnit\Assertion\Error
  */
-class ErrorTest extends MediaWikiIntegrationTestCase {
+class ErrorTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**
