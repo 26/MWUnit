@@ -19,33 +19,30 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 	 * @inheritDoc
 	 */
 	public function testCompletionCallback( TestResult $result ) {
-		$testsuite = $result->getPageName();
+	    $title = $result->getTestCase()->getTitle();
+		$page = $title->getFullText();
 
-		if ( $testsuite === false ) {
-			return;
-		}
-
-		if ( !isset( $this->current_testsuite ) || $this->current_testsuite !== $testsuite ) {
-			$this->current_testsuite = $testsuite;
-			$title = \Title::newFromText( $testsuite );
-
-			if ( $title === null || $title === false ) {
-				return;
-			}
+		if ( !isset( $this->current_testsuite ) || $this->current_testsuite !== $page ) {
+			$this->current_testsuite = $page;
 
 			print ( $title->getText() . "\n" );
 		}
 
+		$test_case = $result->getTestCase();
+		$test_name = $test_case->getName();
+
+		$sentence = MWUnit::testNameToSentence( $test_name );
+
 		switch ( $result->getResult() ) {
 			case TestResult::T_SUCCESS:
-				print( "  \033[0;32m✔\033[0m " . MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
+				print( "  \033[0;32m✔\033[0m " . $sentence . "\n" );
 				break;
 			case TestResult::T_RISKY:
-				print( "  \e[0;33m✘\e[0m " . MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
+				print( "  \e[0;33m✘\e[0m " . $sentence . "\n" );
 				$this->printFailureReason( $result->getMessage() );
 				break;
 			case TestResult::T_FAILED:
-				print( "  \e[0;31m✘\e[0m " . MWUnit::testNameToSentence( $result->getTestName() ) . "\n" );
+				print( "  \e[0;31m✘\e[0m " . $sentence . "\n" );
 				$this->printFailureReason( $result->getMessage() );
 				break;
 		}

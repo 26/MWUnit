@@ -167,8 +167,8 @@ class ResultUI extends MWUnitUI {
      * @return string|null
      */
     private function formatTestHeader( TestResult $result ) {
-        $page_name = $result->getPageName();
-        $test_name = $result->getTestName();
+        $test_name = $result->getTestCase()->getName();
+        $page_name = $result->getTestCase()->getTitle()->getFullText();
 
         $test_title = MWUnit::testNameToSentence( $test_name );
 

@@ -37,24 +37,6 @@ abstract class TestResult {
 		return $this->test_case;
 	}
 
-    /**
-     * Returns the page name this test is on or false on failure.
-     *
-     * @return string|bool
-     */
-    public function getPageName(): string {
-        return $this->getTestCase()->getTitle()->getFullText();
-    }
-
-    /**
-     * Returns the name of this test.
-     *
-     * @return string
-     */
-    public function getTestName(): string {
-        return $this->test_case->getName();
-    }
-
 	/**
 	 * Returns the string variant of this test result.
 	 *
