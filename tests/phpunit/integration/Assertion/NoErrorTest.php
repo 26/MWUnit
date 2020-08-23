@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\NoError;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\NoError;
  * @group Assertion
  * @covers \MWUnit\Assertion\NoError
  */
-class NoErrorTest extends MediaWikiIntegrationTestCase {
+class NoErrorTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

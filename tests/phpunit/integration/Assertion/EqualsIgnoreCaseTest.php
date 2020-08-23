@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\EqualsIgnoreCase;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\EqualsIgnoreCase;
  * @group Assertion
  * @covers \MWUnit\Assertion\EqualsIgnoreCase
  */
-class EqualsIgnoreCaseTest extends MediaWikiIntegrationTestCase {
+class EqualsIgnoreCaseTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

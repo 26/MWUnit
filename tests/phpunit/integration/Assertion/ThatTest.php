@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\That;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\That;
  * @group Assertion
  * @covers \MWUnit\Assertion\That
  */
-class ThatTest extends MediaWikiIntegrationTestCase {
+class ThatTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

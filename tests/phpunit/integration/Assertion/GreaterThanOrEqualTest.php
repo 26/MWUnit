@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\GreaterThanOrEqual;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\GreaterThanOrEqual;
  * @group Assertion
  * @covers \MWUnit\Assertion\GreaterThanOrEqual
  */
-class GreaterThanOrEqualTest extends MediaWikiIntegrationTestCase {
+class GreaterThanOrEqualTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

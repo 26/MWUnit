@@ -27,5 +27,6 @@ $magicWords['en'] = [
 	'assert_property_has_value' 			=> [ 0, 'assert_property_has_value' ],
 
 	'create_mock' 							=> [ 0, 'create_mock' ],
-    'create_parser_mock'                    => [ 0, 'create_parser_mock' ]
+	'create_parser_mock'                    => [ 0, 'create_parser_mock' ],
+    'var_dump'                              => [ 0, 'var_dump' ]
 ];

@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\StringStartsWith;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\StringStartsWith;
  * @group Assertion
  * @covers \MWUnit\Assertion\StringStartsWith
  */
-class StringStartsWithTest extends MediaWikiIntegrationTestCase {
+class StringStartsWithTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

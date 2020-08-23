@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\HasLength;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\HasLength;
  * @group Assertion
  * @covers \MWUnit\Assertion\HasLength
  */
-class HasLengthTest extends MediaWikiIntegrationTestCase {
+class HasLengthTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

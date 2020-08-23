@@ -2,7 +2,12 @@
 
 namespace MWUnit\Maintenance;
 
-use MWUnit\Registry\TestCaseRegistry;
+use MWUnit\Exception\MWUnitException;
+use MWUnit\TestCaseRepository;
+use MWUnit\Runner\TestSuiteRunner;
+use MWUnit\TestSuite;
+
+error_reporting( 0 );
 
 /**
  * Load the required class
@@ -23,7 +28,7 @@ class RunTests extends \Maintenance {
 		"testsuite",
 		"version",
 		"list-groups",
-		"list-suites",
+		"list-pages",
 		"list-tests"
 	];
 
@@ -39,7 +44,7 @@ class RunTests extends \Maintenance {
 
 		$this->addOption( 'group', 'Only run tests from the specified group', false, true, 'g' );
 		$this->addOption( 'test', 'Only run the specified test', false, true, 't' );
-		$this->addOption( 'testsuite', 'Filter which testsuite to run', false, true, 's' );
+		$this->addOption( 'page', 'Filter which test page to run', false, true, 'p' );
 		$this->addOption(
 			'covers',
 			'Only run tests that cover the specified template (without namespace)',
@@ -48,7 +53,7 @@ class RunTests extends \Maintenance {
 			'c'
 		);
 		$this->addOption( 'list-groups', 'List available test groups' );
-		$this->addOption( 'list-suites', 'List available test suites' );
+		$this->addOption( 'list-pages', 'List available test pages' );
 		$this->addOption( 'list-tests', 'List available tests' );
 		$this->addOption( 'version', 'Prints the version' );
 		$this->addOption( 'no-progress', 'Do not display progress' );
@@ -61,8 +66,8 @@ class RunTests extends \Maintenance {
 	/**
 	 * @inheritDoc
 	 *
-	 * @throws \MWUnit\Exception\MWUnitException
-	 */
+	 * @throws MWUnitException|\ConfigException
+     */
 	public function execute() {
 		$version = \ExtensionRegistry::getInstance()->getAllThings()['MWUnit']['version'] ?? null;
 		$this->output( "MWUnit $version by Marijn van Wezel and contributors.\n" );
@@ -79,8 +84,8 @@ class RunTests extends \Maintenance {
 			return true;
 		}
 
-		if ( $this->getOption( 'list-suites' ) === 1 ) {
-			$this->listSuites();
+		if ( $this->getOption( 'list-pages' ) === 1 ) {
+			$this->listPages();
 			return true;
 		}
 
@@ -98,7 +103,11 @@ class RunTests extends \Maintenance {
 			$this->fatalError( "No tests to run." );
 		}
 
-		$tests = $this->getTests();
+		try {
+            $tests = $this->getTests();
+        } catch( MWUnitException $e ) {
+		    $this->fatalError( wfMessage( 'mwunit-rebuild-required' )->plain() );
+        }
 
 		if ( count( $tests ) === 0 ) {
 			$this->fatalError( 'No tests to run.' );
@@ -112,8 +121,8 @@ class RunTests extends \Maintenance {
 				(bool)$this->getOption( 'no-progress', false )
 			);
 
-		$unit_test_runner = new \MWUnit\TestSuiteRunner( $tests );
-		$unit_test_runner->run( [ $interface, "testCompletionCallback" ] );
+		$unit_test_runner = new TestSuiteRunner( $tests, [ $interface, "testCompletionCallback" ] );
+		$unit_test_runner->run();
 
 		$interface->outputTestResults( $unit_test_runner );
 
@@ -140,7 +149,7 @@ class RunTests extends \Maintenance {
 	private function listGroups() {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
-			'tests',
+			'mwunit_tests',
 			'test_group',
 			[],
 			'Database::select',
@@ -169,7 +178,7 @@ class RunTests extends \Maintenance {
 	private function listTests() {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
-			'tests',
+			'mwunit_tests',
 			[ 'article_id', 'test_name' ],
 			[],
 			'Database::select',
@@ -195,10 +204,10 @@ class RunTests extends \Maintenance {
 		$this->output( "\n" );
 	}
 
-	private function listSuites() {
+	private function listPages() {
 		$database = wfGetDb( DB_REPLICA );
 		$result = $database->select(
-			'tests',
+			'mwunit_tests',
 			[ 'article_id' ],
 			[],
 			'Database::select',
@@ -214,7 +223,7 @@ class RunTests extends \Maintenance {
 			$result->next();
 		}
 
-		$this->output( "The following testsuites are available:\n" );
+		$this->output( "The following pages are available:\n" );
 
 		foreach ( $descriptor as $suite ) {
 			$this->output( "* $suite\n" );
@@ -224,37 +233,31 @@ class RunTests extends \Maintenance {
 	}
 
 	/**
-	 * Returns the list of tests to run for the given CLI arguments.
+	 * Returns the TestSuite object to run for the given CLI arguments.
 	 *
-	 * @return array
-	 * @throws \MWUnit\Exception\MWUnitException
+	 * @return TestSuite
+	 * @throws MWUnitException
 	 */
-	private function getTests(): array {
+	private function getTests(): TestSuite {
 		$group = $this->getOption( 'group', false );
-		$test = $this->getOption( 'test', false );
-		$testsuite = $this->getOption( 'testsuite', false );
-		$covers = $this->getOption( 'covers', false );
-
 		if ( $group !== false ) {
 			// Run group
-			if ( !TestCaseRegistry::testGroupExists( $group ) ) {
-				$this->fatalError( "The group '$group' does not exist." );
-			}
-
-			return TestCaseRegistry::getTestsForGroup( $group );
+			return TestSuite::newFromGroup( $group );
 		}
 
-		if ( $testsuite !== false ) {
+        $page = $this->getOption( 'page', false );
+        if ( $page !== false ) {
 			// Run testsuite
-			$title = \Title::newFromText( $testsuite, NS_TEST );
+			$title = \Title::newFromText( $page, NS_TEST );
 
 			if ( $title === null || $title === false || !$title->exists() ) {
-				$this->fatalError( "The given testsuite '$testsuite' does not exist." );
+				$this->fatalError( "The given page '$page' does not exist." );
 			}
 
-			return TestCaseRegistry::getTestsFromTitle( $title );
+			return TestSuite::newFromTitle( $title );
 		}
 
+        $covers = $this->getOption( 'covers', false );
 		if ( $covers !== false ) {
 			// Run tests covering template
 			$title = \Title::newFromText( $covers, NS_TEMPLATE );
@@ -263,28 +266,17 @@ class RunTests extends \Maintenance {
 				$this->fatalError( "The given template '$covers' does not exist." );
 			}
 
-			return TestCaseRegistry::getTestsCoveringTemplate( $title );
+			return TestSuite::newFromCovers( $covers );
 		}
+
+        $test = $this->getOption( 'test', false );
 
 		// Run test
 		if ( strpos( $test, '::' ) === false ) {
 			$this->fatalError( "The test name '$test' is invalid." );
 		}
 
-		list( $page_title, $name ) = explode( '::', $test );
-
-		$title = \Title::newFromText( $page_title, NS_TEST );
-
-		if ( $title === null ||
-			$title === false ||
-			!$title->exists() ||
-			!TestCaseRegistry::testExists( $title->getFullText(), $name ) ) {
-			$this->fatalError( "The test '$test' does not exist." );
-		}
-
-		$tests[ $test ] = $title->getArticleID();
-
-		return $tests;
+		return TestSuite::newFromText( $test );
 	}
 }
 
