@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\IsNumeric;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\IsNumeric;
  * @group Assertion
  * @covers \MWUnit\Assertion\IsNumeric
  */
-class IsNumericTest extends MediaWikiIntegrationTestCase {
+class IsNumericTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\StringEndsWith;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\StringEndsWith;
  * @group Assertion
  * @covers \MWUnit\Assertion\StringEndsWith
  */
-class StringEndsWithTest extends MediaWikiIntegrationTestCase {
+class StringEndsWithTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

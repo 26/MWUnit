@@ -42,6 +42,11 @@ class TestCaseRepository {
 			return;
 		}
 
+		if ( $test_case->getTitle()->getArticleID() === 0 ) {
+            // This page has not yet been created.
+		    return;
+        }
+
 		$hook = \Hooks::run( 'MWUnitBeforeRegisterTestCase', [ &$test_case ] );
 		if ( $hook === false ) {
 			return;

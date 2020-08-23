@@ -26,6 +26,7 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
      *
      * @param ParserData $data
      * @return string
+     * @throws MWUnitException
      */
     public function execute( ParserData $data ) {
         if ( $data->getParser()->getTitle()->getNamespace() !== NS_TEST ) {
@@ -40,28 +41,44 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
             return '';
         }
 
-        try {
-            $value = $data->getArgument( 0 );
-        } catch( \OutOfBoundsException $e ) {
-            $value = '';
-        }
-
+        $value = $data->getArgument( 0 );
         $formatted_value = $this->formatDump( $value );
 
-        try {
-            $test_output = new StringOutput( $formatted_value );
-            self::$run->getTestOutputCollector()->append( $test_output );
-        } catch( MWUnitException $e ) {
-            return '';
-        }
+        $test_output = new StringOutput( $formatted_value );
+        self::$run->getTestOutputCollector()->append( $test_output );
 
         return '';
     }
 
     public function formatDump( string $variable ): string {
-        $length = strlen( $variable );
         $value  = htmlentities( $variable );
+        $type   = $this->determineVariableType( $variable );
 
-        return sprintf( 'string(%d) "%s"', $length, $value );
+        switch ( $type ) {
+            case "empty":
+                return "NULL";
+            case "int":
+            case "float":
+                return sprintf( '%s(%d)', $type, $value );
+            default:
+                $length = strlen( $variable );
+                return sprintf( '%s(%d) "%s"', $type, $length, $value );
+        }
+    }
+
+    public function determineVariableType( string $variable ): string {
+        if ( empty( $variable ) ) {
+            return "empty";
+        }
+
+        if ( ctype_digit( $variable ) ) {
+            return "int";
+        }
+
+        if ( is_numeric( $variable ) ) {
+            return "float";
+        }
+
+        return "string";
     }
 }

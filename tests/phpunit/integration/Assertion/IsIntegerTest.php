@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\IsInteger;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\IsInteger;
  * @group Assertion
  * @covers \MWUnit\Assertion\IsInteger
  */
-class IsIntegerTest extends MediaWikiIntegrationTestCase {
+class IsIntegerTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

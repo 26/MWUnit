@@ -6,7 +6,7 @@
   "author": [
     "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
   ],
-  "version": "0.11",
+  "version": "0.12",
   "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
   "description": "A unit testing framework for MediaWiki",
   "descriptionmsg": "mwunit-description",
@@ -94,5 +94,11 @@
       "mwunit-mock-user": true,
       "mwunit-createtests": true
     }
+  },
+  "APIModules": {
+    "rununittests": "MWUnit\\API\\ApiRunUnitTests"
+  },
+  "APIListModules": {
+    "unittests": "MWUnit\\API\\ApiQueryUnitTests"
   }
 }

@@ -2,7 +2,7 @@
 
 namespace MWUnit\Tests\Integration\Assertion;
 
-use MediaWikiIntegrationTestCase;
+use MediaWikiTestCase;
 use MWUnit\Assertion\LessThan;
 
 /**
@@ -12,7 +12,7 @@ use MWUnit\Assertion\LessThan;
  * @group Assertion
  * @covers \MWUnit\Assertion\LessThan
  */
-class LessThanTest extends MediaWikiIntegrationTestCase {
+class LessThanTest extends MediaWikiTestCase {
 	const NO_BOOKKEEPING_PARAMS = 2;
 
 	/**

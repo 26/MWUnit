@@ -32,6 +32,15 @@ class TestRunStore implements StoreInterface {
     }
 
     /**
+     * Orders the tests from Failed to Risky to Success in this store.
+     */
+    public function sort() {
+        usort( $this->runs, function( TestRun $a ) {
+            return $a->getResult()->getResult() <=> TestResult::T_RISKY;
+        } );
+    }
+
+    /**
      * @param TestRun $run
      * @throws MWUnitException
      * @inheritDoc
@@ -46,6 +55,7 @@ class TestRunStore implements StoreInterface {
 
     /**
      * @inheritDoc
+     * @return TestRun[]
      */
     public function getAll(): array {
         return $this->runs;
@@ -55,6 +65,7 @@ class TestRunStore implements StoreInterface {
      * Returns the failed TestRun objects in the store as a TestRunStore object.
      *
      * @return TestRunStore
+     * @throws MWUnitException
      */
     public function getFailedRuns(): TestRunStore {
         return $this->getRunsWithResult( TestResult::T_FAILED );
@@ -64,6 +75,7 @@ class TestRunStore implements StoreInterface {
      * Returns the risky TestRun objects in the store as a TestRunStore object.
      *
      * @return TestRunStore
+     * @throws MWUnitException
      */
     public function getRiskyRuns(): TestRunStore {
         return $this->getRunsWithResult( TestResult::T_RISKY );
@@ -74,15 +86,12 @@ class TestRunStore implements StoreInterface {
      *
      * @param int $result Either T_RISKY, T_FAILED or T_SUCCESS
      * @return TestRunStore
+     * @throws MWUnitException
      */
     public function getRunsWithResult( int $result ): TestRunStore {
-        try {
-            return new TestRunStore( array_filter( $this->runs, function( TestRun $run ) use ( $result ): bool {
-                return $run->getResult()->getResult() === $result;
-            } ) );
-        } catch( MWUnitException $e ) {
-            return new TestRunStore;
-        }
+        return new TestRunStore( array_filter( $this->runs, function( TestRun $run ) use ( $result ): bool {
+            return $run->getResult()->getResult() === $result;
+        } ) );
     }
 
     /**
@@ -132,7 +141,7 @@ class TestRunStore implements StoreInterface {
      * @inheritDoc
      */
     public function valid(): bool {
-        return isset( $this->runs[$this->index ] );
+        return isset( $this->runs[$this->index] );
     }
 
     /**

@@ -10,9 +10,9 @@ use MWUnit\TestCase;
  * @package MWUnit\Runner\Result
  */
 abstract class TestResult {
-	const T_SUCCESS = 0; /* phpcs:ignore */
-	const T_FAILED  = 1; /* phpcs:ignore */
-	const T_RISKY   = 2; /* phpcs:ignore */
+    const T_FAILED  = 0; /* phpcs:ignore */
+    const T_RISKY   = 1; /* phpcs:ignore */
+	const T_SUCCESS = 2; /* phpcs:ignore */
 
 	/**
 	 * @var TestCase
@@ -36,24 +36,6 @@ abstract class TestResult {
 	public function getTestCase(): TestCase {
 		return $this->test_case;
 	}
-
-    /**
-     * Returns the page name this test is on or false on failure.
-     *
-     * @return string|bool
-     */
-    public function getPageName(): string {
-        return $this->getTestCase()->getTitle()->getFullText();
-    }
-
-    /**
-     * Returns the name of this test.
-     *
-     * @return string
-     */
-    public function getTestName(): string {
-        return $this->test_case->getName();
-    }
 
 	/**
 	 * Returns the string variant of this test result.
