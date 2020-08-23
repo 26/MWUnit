@@ -34,7 +34,8 @@
     "ParserFetchTemplate": [
       "MWUnit\\TestRun::onParserFetchTemplate",
       "MWUnit\\Controller\\MockController::onParserFetchTemplate"
-    ]
+    ],
+    "UnitTestsList": "MWUnit\\MWUnit::onUnitTestsList"
   },
   "SpecialPages": {
     "MWUnit": "MWUnit\\Special\\SpecialMWUnit"

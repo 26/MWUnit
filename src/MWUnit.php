@@ -110,6 +110,17 @@ class MWUnit {
 		return true;
 	}
 
+    /**
+     * Allows extensions to extend core's PHPUnit test suite.
+     *
+     * @param array $paths
+     * @return bool
+     */
+	public static function onUnitTestsList( array &$paths ) {
+        $paths[] = __DIR__ . '/../tests/phpunit/';
+        return true;
+    }
+
 	/**
 	 * Returns a formatted error message.
 	 *
