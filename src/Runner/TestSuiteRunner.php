@@ -130,6 +130,7 @@ class TestSuiteRunner {
      * Adds a test run.
      *
      * @param TestRun $run
+     * @throws Exception\MWUnitException
      */
 	public function addTestRun( TestRun $run ) {
 	    $this->test_run_store->append( $run );
