@@ -38,7 +38,6 @@ class ApiRunUnitTests extends ApiBase {
             } catch ( MWUnitException $e ) {
                 $this->dieWithError( 'mwunit-api-fatal-invalid-test-name' );
             }
-
         }
 
         if ( $page = $this->getParameter( 'page' ) ) {

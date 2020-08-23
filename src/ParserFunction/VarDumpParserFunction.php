@@ -62,7 +62,7 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
                 return sprintf( '%s(%d)', $type, $value );
             default:
                 $length = strlen( $variable );
-                return sprintf( '%s(%d) %s', $type, $length, $value );
+                return sprintf( '%s(%d) "%s"', $type, $length, $value );
         }
     }
 
