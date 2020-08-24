@@ -2,7 +2,7 @@
 
 namespace MWUnit;
 
-use MWUnit\ParserFunction\TestCaseParserFunction;
+use MWUnit\ParserFunction\TestCaseParserTag;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseRegistrationException;
 use Wikimedia\Rdbms\IResultWrapper;

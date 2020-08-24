@@ -1,7 +1,9 @@
 <?php
 
-namespace MWUnit;
+namespace MWUnit\Factory;
 
+use MWUnit\MWUnit;
+use MWUnit\ParserData;
 use MWUnit\ParserFunction\ParserFunction;
 use MWUnit\ParserFunction\ParserMockParserFunction;
 use MWUnit\ParserFunction\TemplateMockParserFunction;

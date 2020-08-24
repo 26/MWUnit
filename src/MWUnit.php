@@ -4,6 +4,8 @@ namespace MWUnit;
 
 use MediaWiki\Logger\LoggerFactory;
 use MWException;
+use MWUnit\Factory\ParserFunctionFactory;
+use MWUnit\Factory\TagFactory;
 use Parser;
 use Psr\Log\LoggerInterface;
 use Title;
@@ -20,13 +22,10 @@ abstract class MWUnit {
 	 * Called when the parser initializes for the first time.
 	 *
 	 * @param Parser $parser
-	 * @throws MWException
 	 */
 	public static function onParserFirstCallInit( Parser $parser ) {
-		$parser->setHook(
-			'testcase',
-			[ ParserFunction\TestCaseParserFunction::class, 'handleTestCase' ]
-		);
+		$tag_factory = TagFactory::newFromParser( $parser );
+		$tag_factory->registerFunctionHandlers();
 
 		$parser_function_factory = ParserFunctionFactory::newFromParser( $parser );
 		$parser_function_factory->registerFunctionHandlers();

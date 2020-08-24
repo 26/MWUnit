@@ -1,14 +1,11 @@
 <?php
 
-namespace MWUnit\ParserFunction;
+namespace MWUnit\ParserTag;
 
-use ConfigException;
-use FatalError;
-use MWException;
-use MWUnit\Injector\TestCaseStoreInjector;
+use Exception;
 use MWUnit\Injector\TestSuiteRunnerInjector;
+use MWUnit\ParserData;
 use MWUnit\Runner\BaseTestRunner;
-use MWUnit\Exception\MWUnitException;
 use MWUnit\Exception\TestCaseException;
 use MWUnit\Exception\TestCaseRegistrationException;
 use MWUnit\MWUnit;
@@ -16,14 +13,12 @@ use MWUnit\TestCaseRepository;
 use MWUnit\ConcreteTestCase;
 use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestCase;
-use Parser;
-use PPFrame;
 
 /**
  * Class TestCaseController
  * @package MWUnit
  */
-class TestCaseParserFunction implements TestSuiteRunnerInjector {
+class TestCaseParserTag implements ParserTag, TestSuiteRunnerInjector {
     /**
      * @var TestSuiteRunner
      */
@@ -36,18 +31,18 @@ class TestCaseParserFunction implements TestSuiteRunnerInjector {
         self::$test_suite_runner = $runner;
     }
 
-	/**
-	 * The callback function for the "testcase" tag.
-	 *
-	 * @param string $input Input between the "<testcase>" and "</testcase>" tags; null if the tag is "closed"
-	 * @param array $args Tag arguments entered like HTML tag attributes; a key,value pair indexed by attribute name
-	 * @param Parser $parser The parent parser (Parser object)
-	 * @param PPFrame $frame The parent frame (PPFrame object)
-	 * @return string The output of the tag
-	 * @throws MWUnitException|FatalError|MWException|ConfigException
-     * @internal
-	 */
-	public static function handleTestCase( $input, array $args, Parser $parser, PPFrame $frame ) {
+    /**
+     * Hooked to the <testcase> parser tag.
+     *
+     * @param ParserData $data
+     * @return string
+     * @throws Exception
+     */
+	public function execute( ParserData $data ) {
+	    $parser = $data->getParser();
+	    $input  = $data->getInput();
+	    $args   = $data->getArguments();
+
 		if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
 			// "testcase" is outside of Test namespace
 			return MWUnit::error( "mwunit-outside-test-namespace" );
@@ -106,12 +101,9 @@ class TestCaseParserFunction implements TestSuiteRunnerInjector {
 	 * @return string
 	 */
 	private static function renderOptions( array $options ): string {
-		$buffer = [];
-		foreach ( $options as $name => $value ) {
-			$buffer[] = "@$name $value";
-		}
-
-		return implode( "\n", $buffer );
+        return implode( "\n", array_map( function ( $key, $value ): string {
+            return sprintf( "@%s %s", htmlspecialchars( $key ), htmlspecialchars( $value ) );
+        }, array_keys( $options ), $options ) );
 	}
 
     /**

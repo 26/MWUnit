@@ -1,9 +1,7 @@
 <?php
 
-namespace MWUnit;
+namespace MWUnit\Factory;
 
-use MediaWiki\MediaWikiServices;
-use MWUnit\Assertion\Assertion;
 use MWUnit\Assertion\Equals;
 use MWUnit\Assertion\EqualsIgnoreCase;
 use MWUnit\Assertion\Error;
@@ -25,6 +23,8 @@ use MWUnit\Assertion\StringContainsIgnoreCase;
 use MWUnit\Assertion\StringEndsWith;
 use MWUnit\Assertion\StringStartsWith;
 use MWUnit\Assertion\That;
+use MWUnit\MWUnit;
+use MWUnit\ParserData;
 use MWUnit\ParserFunction\AssertionParserFunction;
 use MWUnit\ParserFunction\ParserFunction;
 use Parser;
@@ -40,7 +40,7 @@ class AssertionFactory extends ParserFunctionFactory {
      * Convenience instantiation of the ParserFunctionFactory class.
      *
      * @param Parser $parser
-     * @return ParserFunctionFactory
+     * @return AssertionFactory
      */
     public static function newFromParser( Parser $parser ): ParserFunctionFactory {
         return new self( $parser );

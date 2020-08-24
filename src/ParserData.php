@@ -46,6 +46,11 @@ class ParserData implements Iterator {
     private $count;
 
     /**
+     * @var string
+     */
+    private $input = '';
+
+    /**
      * ParserData constructor.
      *
      * @param Parser $parser
@@ -60,12 +65,30 @@ class ParserData implements Iterator {
     }
 
     /**
+     * Set optional input given to the parser hook.
+     *
+     * @param string $input
+     */
+    public function setInput( string $input ) {
+        $this->input = $input;
+    }
+
+    /**
      * Sets the flags to use for the expansion of the PPNode.
      *
      * @param int $flags
      */
     public function setFlags( int $flags ) {
         $this->flags = $flags;
+    }
+
+    /**
+     * Returns the input given to this parser hook.
+     *
+     * @return string
+     */
+    public function getInput(): string {
+        return $this->input;
     }
 
     /**

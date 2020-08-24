@@ -2,13 +2,11 @@
 
 namespace MWUnit\Runner;
 
-use ContentHandler;
-use MediaWiki\MediaWikiServices;
 use MWException;
 use MWUnit\ParserFunction\ParserMockParserFunction;
-use MWUnit\ParserFunction\TestCaseParserFunction;
 use MWUnit\Exception;
 use MWUnit\MWUnit;
+use MWUnit\ParserTag\TestCaseParserTag;
 use MWUnit\Store\TestRunStore;
 use MWUnit\TestCase;
 use MWUnit\TestSuite;
@@ -74,7 +72,7 @@ class TestSuiteRunner {
 
         // Dependency injection
         BaseTestRunner::setTestSuiteRunner( $this );
-        TestCaseParserFunction::setTestSuiteRunner( $this );
+        TestCaseParserTag::setTestSuiteRunner( $this );
 	}
 
     /**
