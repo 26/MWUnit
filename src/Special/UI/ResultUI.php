@@ -4,7 +4,9 @@ namespace MWUnit\Special\UI;
 
 use HtmlArmor;
 use MediaWiki\Linker\LinkRenderer;
+use MediaWiki\MediaWikiServices;
 use MWUnit\MWUnit;
+use MWUnit\Profiler;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
 use MWUnit\Runner\TestSuiteRunner;
@@ -45,17 +47,35 @@ class ResultUI extends MWUnitUI {
         $assertion_count = $this->runner->getTotalAssertionsCount();
         $failures_count  = $this->runner->getNotPassedCount();
 
+        $profiler = Profiler::getInstance();
+
+        // In milliseconds
+        $execution_time = floor( $profiler->getExecutionTime() * 1000 );
+
+        // In megabytes
+        $memory_usage = floor( $profiler->getPeakMemoryUse() / 1024 / 1024 );
+
         $this->getOutput()->addHTML(
             \Xml::tags( 'p', [], wfMessage( 'mwunit-test-result-intro' )->plain() )
         );
 
+        $summary = wfMessage(
+            'mwunit-test-result-summary',
+            $test_count,
+            $assertion_count,
+            $failures_count
+        )->plain();
+
+        if ( MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitShowProfilingInfo" ) ) {
+            $summary .= " " . wfMessage(
+                'mwunit-test-result-summary-profiling-info',
+                $execution_time,
+                $memory_usage
+            );
+        }
+
         $this->getOutput()->addHTML(
-            \Xml::tags( 'p', [], \Xml::tags( 'b', [], wfMessage(
-                'mwunit-test-result-summary',
-                $test_count,
-                $assertion_count,
-                $failures_count
-            )->plain() ) )
+            \Xml::tags( 'p', [], \Xml::tags( 'b', [], $summary ) )
         );
 
         $store = $this->runner->getTestRunStore();
@@ -121,7 +141,7 @@ class ResultUI extends MWUnitUI {
             '<p><span style="color:#fc3"><b>%s</b></span> %s</p>%s' .
             '</div>',
             wfMessage( 'mwunit-test-risky' )->plain(),
-            $this->formatTestHeader( $run->getResult() ),
+            $this->formatTestHeader( $run ),
             $this->formatSummary( $run )
         );
     }
@@ -138,7 +158,7 @@ class ResultUI extends MWUnitUI {
             '<p><span style="color:#d33"><b>%s</b></span> %s</p>%s' .
             '</div>',
             wfMessage( 'mwunit-test-failed' )->plain(),
-            $this->formatTestHeader( $run->getResult() ),
+            $this->formatTestHeader( $run ),
             $this->formatSummary( $run )
         );
     }
@@ -155,7 +175,7 @@ class ResultUI extends MWUnitUI {
             '<p><span style="color:#14866d"><b>%s</b></span> %s</p>%s' .
             '</div>',
             wfMessage( 'mwunit-test-success' )->plain(),
-            $this->formatTestHeader( $run->getResult() ),
+            $this->formatTestHeader( $run ),
             $this->formatSummary( $run )
         );
     }
@@ -163,10 +183,12 @@ class ResultUI extends MWUnitUI {
     /**
      * Formats the header for the given TestResult object.
      *
-     * @param TestResult $result
+     * @param TestRun $test_run
      * @return string|null
      */
-    private function formatTestHeader( TestResult $result ) {
+    private function formatTestHeader( TestRun $test_run ) {
+        $result = $test_run->getResult();
+
         $test_name = $result->getTestCase()->getName();
         $page_name = $result->getTestCase()->getTitle()->getFullText();
 
@@ -175,11 +197,20 @@ class ResultUI extends MWUnitUI {
         $title = \Title::newFromText( $page_name );
         $link = $this->getLinkRenderer()->makeLink( $title, new HtmlArmor( $result->getTestCase() ) );
 
-        return sprintf(
+        $header = sprintf(
             "%s (<code>%s</code>)",
             $test_title,
             $link
         );
+
+        if ( MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitShowProfilingInfo" ) ) {
+            $header .= sprintf(
+                " (<code>%sms</code>)",
+                floor( $test_run->getExecutionTime() * 1000 )
+            );
+        }
+
+        return $header;
     }
 
     /**
@@ -191,6 +222,7 @@ class ResultUI extends MWUnitUI {
     private function formatSummary( TestRun $run ): string {
         $message = $run->getResult()->getMessage();
         $collector = $run->getTestOutputCollector();
+
         $test_output = $this->formatTestOutput( $collector );
 
         if ( !$message && !$test_output ) {

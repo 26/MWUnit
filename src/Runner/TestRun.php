@@ -10,6 +10,7 @@ use MWException;
 use MWUnit\ParserFunction\AssertionParserFunction;
 use MWUnit\ParserFunction\TemplateMockParserFunction;
 use MWUnit\ParserFunction\VarDumpParserFunction;
+use MWUnit\Profiler;
 use MWUnit\Store\TestOutputStore;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
@@ -57,6 +58,11 @@ class TestRun {
      * @var TestResult The result of this test run.
      */
     private $result;
+
+    /**
+     * @var float
+     */
+    private $execution_time;
 
     /**
      * @var TestOutputStore
@@ -209,6 +215,15 @@ class TestRun {
     }
 
     /**
+     * Returns the execution time of this test.
+     *
+     * @return float
+     */
+    public function getExecutionTime(): float {
+        return $this->execution_time;
+    }
+
+    /**
 	 * @throws FatalError
 	 * @throws MWException
 	 * @throws MWUnitException
@@ -224,6 +239,8 @@ class TestRun {
 		$this->backupUser();
         $this->backupGlobals();
 
+        $profiler = Profiler::getInstance();
+
 		try {
             $context = $this->getContext();
 
@@ -233,6 +250,8 @@ class TestRun {
 
             Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case ] );
 
+            $profiler->flag( md5( rand() ) );
+
             // Run test case
             MediaWikiServices::getInstance()->getParser()->parse(
                 $this->test_case->getInput(),
@@ -241,6 +260,11 @@ class TestRun {
                 true,
                 false
             );
+
+            $profiler_flag = md5( rand() );
+
+            $profiler->flag( $profiler_flag );
+            $this->setExecutionTime( $profiler->getFlagExecutionTime( $profiler_flag ) );
 
             $this->checkTemplateCoverage();
 		} finally {
@@ -348,6 +372,15 @@ class TestRun {
         $this->result = new SuccessTestResult(
             $this->test_case
         );
+    }
+
+    /**
+     * Sets the execution time of this test.
+     *
+     * @param float $execution_time
+     */
+    private function setExecutionTime( float $execution_time ) {
+        $this->execution_time = $execution_time;
     }
 
 	/**

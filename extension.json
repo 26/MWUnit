@@ -6,7 +6,7 @@
   "author": [
     "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
   ],
-  "version": "0.12.1",
+  "version": "0.13",
   "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
   "description": "A unit testing framework for MediaWiki",
   "descriptionmsg": "mwunit-description",
@@ -65,6 +65,10 @@
     "MWUnitAllowRunningTestAsOtherUser": {
       "value": false,
       "descriptionmsg": "mwunit-config-allow-running-test-as-other-user"
+    },
+    "MWUnitShowProfilingInfo": {
+      "value": true,
+      "descriptionmsg": "mwunit-config-show-profiling-info"
     }
   },
   "namespaces": [

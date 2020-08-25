@@ -263,7 +263,7 @@ class TestSuiteRunner {
         ] );
 
         try {
-            WikitextParser::parseContentFromWikiPage($wiki_page, $content, true);
+            WikitextParser::parseContentFromWikiPage( $wiki_page, $content, true );
         } catch (MWException $e) {
             return false;
         }
