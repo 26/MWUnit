@@ -87,7 +87,16 @@ class TestCaseRepository {
 		] );
 
 		$database = wfGetDb( DB_MASTER );
-		$database->insert( 'mwunit_tests', $fields );
+
+		try {
+            $database->insert( 'mwunit_tests', $fields );
+        } catch( \Exception $e ) {
+            MWUnit::getLogger()->debug( "Unable to register testcase {testcase}", [
+                "testcase" => $test_case->__toString()
+            ] );
+
+            return;
+        }
 
 		MWUnit::getLogger()->debug( "Registered testcase {testcase}", [
 			"testcase" => $test_case->__toString()
