@@ -60,8 +60,8 @@ class PropertyHasValue implements Assertion {
 				)->plain()
 			);
 
-		return count( array_filter( $values, function ( \SMW\DIWikiPage $value ) use ( $expected_value ) {
-			return $value->getDBkey() === $expected_value;
+		return count( array_filter( $values, function ( $value ) use ( $expected_value ) {
+			return $value->getSortKey() === $expected_value;
 		} ) ) > 0;
 	}
 }

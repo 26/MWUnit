@@ -27,7 +27,7 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
     /**
      * @inheritDoc
      */
-    public static function setTestRun(TestRun $run) {
+    public static function setTestRun( TestRun $run ) {
         self::$run = $run;
     }
 
@@ -56,6 +56,10 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
         $registry = TemplateMockRegistry::getInstance();
 
         if ( !$registry->exists( $title ) ) {
+            return;
+        }
+
+        if ( !self::$run ) {
             return;
         }
 

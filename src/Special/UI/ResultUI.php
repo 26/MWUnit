@@ -195,7 +195,7 @@ class ResultUI extends MWUnitUI {
         $test_title = MWUnit::testNameToSentence( $test_name );
 
         $title = \Title::newFromText( $page_name );
-        $link = $this->getLinkRenderer()->makeLink( $title, new HtmlArmor( $result->getTestCase() ) );
+        $link = $this->getLinkRenderer()->makeLink( $title, new HtmlArmor( $result->getTestCase()->__toString() ) );
 
         $header = sprintf(
             "%s (<code>%s</code>)",
