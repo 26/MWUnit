@@ -61,6 +61,10 @@ class AssertionParserFunction implements ParserFunction, TestRunInjector {
 		    return '';
 		}
 
+		if ( !self::$run ) {
+		    return '';
+        }
+
 		if ( self::$run->resultAvailable() ) {
 		    return '';
 		}

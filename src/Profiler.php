@@ -65,7 +65,7 @@ class Profiler {
     /**
      * Calculates the total execution between the first and last flag.
      *
-     * @return int
+     * @return float
      */
     public function getExecutionTime() {
         $a = $this->flags[0];
