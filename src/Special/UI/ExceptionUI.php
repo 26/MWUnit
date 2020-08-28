@@ -66,4 +66,11 @@ class ExceptionUI extends MWUnitUI {
     public function getHeader(): string {
         return wfMessage( 'mwunit-exception-header' )->plain();
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getClass(): string {
+        return self::class;
+    }
 }

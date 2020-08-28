@@ -38,8 +38,8 @@ abstract class AbstractForm {
      */
     public function __construct(
         OutputPage $page,
-        SubmitCallback $submit_callback,
-        ValidationCallback $validation_callback
+        SubmitCallback $submit_callback = null,
+        ValidationCallback $validation_callback = null
     ) {
         $this->page = $page;
         $this->submit_callback = $submit_callback;
@@ -69,7 +69,7 @@ abstract class AbstractForm {
      *
      * @return SubmitCallback
      */
-    public function getSubmitCallback(): SubmitCallback {
+    public function getSubmitCallback() {
         return $this->submit_callback;
     }
 
@@ -78,7 +78,7 @@ abstract class AbstractForm {
      *
      * @return ValidationCallback
      */
-    public function getValidationCallback(): ValidationCallback {
+    public function getValidationCallback() {
         return $this->validation_callback;
     }
 
@@ -95,6 +95,7 @@ abstract class AbstractForm {
         $form->setSubmitCallback( [ $this->getSubmitCallback(), 'onSubmit' ] );
         $form->setMessagePrefix( $this->getFormIdentifier() );
         $form->setFormIdentifier( $this->getFormIdentifier() );
+        $form->setMethod( $this->getMethod() );
 
         if ( $this->isDestructive() ) {
             $form->setSubmitDestructive();

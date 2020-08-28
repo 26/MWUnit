@@ -2,8 +2,6 @@
 
 namespace MWUnit\Special\Form;
 
-use MWUnit\Special\Callback\IndividualFormValidationCallback;
-
 /**
  * Class IndividualForm
  *
@@ -19,10 +17,7 @@ class IndividualForm extends AbstractForm {
                 'name' => 'unitTestIndividual',
                 'type' => 'select',
                 'label-message' => 'mwunit-special-individual-label',
-                'options' => IndividualFormValidationCallback::getValidTests(),
-                'validation-callback' => function ( $value, array $data ) {
-                    return $this->getValidationCallback()->validateField( 'test_individual', $value, $data );
-                }
+                'options' => $this->getOptions()
             ]
         ];
     }
@@ -46,5 +41,29 @@ class IndividualForm extends AbstractForm {
      */
     public function getFormIdentifier(): string {
         return 'individual-test-run-form';
+    }
+
+    /**
+     * Gets the options for the selector.
+     */
+    private function getOptions() {
+        $dbr = wfGetDB( DB_REPLICA );
+        $result = $dbr->select(
+            'mwunit_tests',
+            [ 'article_id', 'test_name' ]
+        );
+
+        $buffer = [];
+
+        foreach ( $result as $item ) {
+            $name = $item->test_name;
+            $article_id = $item->article_id;
+
+            $name = \Title::newFromID( $article_id )->getText() . "::" . $name;
+
+            $buffer[$name] = $name;
+        }
+
+        return $buffer;
     }
 }

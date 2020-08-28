@@ -95,6 +95,7 @@ abstract class MWUnitUI {
     private function preRender() {
         $this->output->enableOOUI();
         $this->output->preventClickjacking();
+        $this->output->clearHTML();
     }
 
     /**
@@ -123,7 +124,7 @@ abstract class MWUnitUI {
         $this->getOutput()->setPageTitle(
             \Xml::element("div",
                 ["class" => "pdp title"],
-                $this->getHeaderPrefix() . " " . $this->getHeader()
+                $this->getHeader()
             )
         );
     }
@@ -189,16 +190,6 @@ abstract class MWUnitUI {
     }
 
     /**
-     * Returns the text that will be prepended to the title. Usually used for title icons.
-     *
-     * @return string
-     * @stable to override
-     */
-    public function getHeaderPrefix(): string {
-        return '';
-    }
-
-    /**
      * Renders the UI.
      *
      * @return void
@@ -213,4 +204,9 @@ abstract class MWUnitUI {
      * @stable to override
      */
     public abstract function getHeader(): string;
+
+    /**
+     * @return string
+     */
+    public abstract function getClass(): string;
 }

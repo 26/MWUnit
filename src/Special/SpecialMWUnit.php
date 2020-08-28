@@ -27,15 +27,6 @@ class SpecialMWUnit extends \SpecialPage {
 	}
 
 	/**
-	 * @return string
-	 */
-	public function getDescription() {
-		return MWUnit::isRunning() ?
-			$this->msg( 'mwunit-special-result-title' )->plain() :
-			$this->msg( 'mwunit-special-title' )->plain();
-	}
-
-	/**
 	 * Returns part of the message key for the category to which this special page belongs.
 	 *
 	 * @return string
@@ -62,8 +53,8 @@ class SpecialMWUnit extends \SpecialPage {
 		    return;
         }
 
-        $ui = new MWUnitFormUI( $this->getRequest(), $this->getOutput(), $this->getLinkRenderer() );
-        $ui->execute();
+        $ui = new UI\FormUI( $this->getOutput(), $this->getLinkRenderer() );
+		$ui->execute();
 	}
 
     /**
@@ -71,10 +62,18 @@ class SpecialMWUnit extends \SpecialPage {
      * @throws MWUnitException
      */
 	private function runTests(): bool {
-		if ( $this->getRequest()->getVal( 'unitTestCoverTemplate' ) ) {
-            $covers = $this->getRequest()->getVal( 'unitTestCoverTemplate' );
+	    $request = $this->getRequest();
+
+		if ( $request->getVal( 'unitTestCoverTemplate' ) ) {
+            $covers = $request->getVal( 'unitTestCoverTemplate' );
             $test_suite = TestSuite::newFromCovers( $covers );
-		} else {
+		} elseif ( $request->getVal( 'unitTestIndividual' ) ) {
+		    $test_case = $request->getVal( 'unitTestIndividual' );
+		    $test_suite = TestSuite::newFromText( $test_case );
+        } elseif ( $request->getVal( 'unitTestGroup' ) ) {
+		    $test_case = $request->getVal( 'unitTestGroup' );
+		    $test_suite = TestSuite::newFromGroup( $test_case );
+        } else {
 			// Run the specified page
 			$title = \Title::newFromText( $this->getRequest()->getVal( 'unitTestPage' ) );
 
@@ -103,6 +102,8 @@ class SpecialMWUnit extends \SpecialPage {
 	    $request = $this->getRequest();
 
 	    return $request->getVal( "unitTestPage", false ) ||
-            $request->getVal( "unitTestCoverTemplate", false );
+            $request->getVal( "unitTestCoverTemplate", false ) ||
+            $request->getVal( "unitTestIndividual", false) ||
+            $request->getVal( "unitTestGroup", false);
     }
 }

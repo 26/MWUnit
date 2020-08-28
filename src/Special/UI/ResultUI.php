@@ -30,7 +30,6 @@ class ResultUI extends MWUnitUI {
      */
     public function __construct( TestSuiteRunner $runner, OutputPage $output, LinkRenderer $link_renderer ) {
         $this->runner = $runner;
-
         parent::__construct( $output, $link_renderer );
     }
 
@@ -38,11 +37,6 @@ class ResultUI extends MWUnitUI {
      * @inheritDoc
      */
     public function render() {
-        if ( count( $this->runner->getTestRunStore()->getAll() ) === 0 ) {
-            $this->getOutput()->showErrorPage( 'mwunit-generic-error-title', 'mwunit-generic-error-description' );
-            return;
-        }
-
         $test_count      = $this->runner->getTestCount();
         $assertion_count = $this->runner->getTotalAssertionsCount();
         $failures_count  = $this->runner->getNotPassedCount();
@@ -254,5 +248,12 @@ class ResultUI extends MWUnitUI {
         return count( $store->getAll() ) === 0 ?
             '' :
             implode( "\n", $store->getAll() );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getClass(): string {
+        return self::class;
     }
 }

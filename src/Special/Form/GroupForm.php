@@ -2,8 +2,6 @@
 
 namespace MWUnit\Special\Form;
 
-use MWUnit\Special\Callback\GroupFormValidationCallback;
-
 /**
  * Class GroupForm
  *
@@ -19,10 +17,7 @@ class GroupForm extends AbstractForm {
                 'name' => 'unitTestGroup',
                 'type' => 'select',
                 'label-message' => 'mwunit-special-group-label',
-                'options' => GroupFormValidationCallback::getValidGroups(),
-                'validation-callback' => function ( $value, array $data ) {
-                    return $this->getValidationCallback()->validateField( 'test_group', $value, $data );
-                }
+                'options' => $this->getOptions()
             ]
         ];
     }
@@ -46,5 +41,25 @@ class GroupForm extends AbstractForm {
      */
     public function getFormIdentifier(): string {
         return 'group-test-run-form';
+    }
+
+    /**
+     * Gets the options for the selector.
+     */
+    private function getOptions() {
+        $dbr = wfGetDB( DB_REPLICA );
+        $result = $dbr->select(
+            'mwunit_tests',
+            [ 'test_group' ]
+        );
+
+        $buffer = [];
+
+        foreach ( $result as $item ) {
+            $group = $item->test_group;
+            $buffer[$group] = $group;
+        }
+
+        return $buffer;
     }
 }
