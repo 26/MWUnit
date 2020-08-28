@@ -166,4 +166,21 @@ abstract class MWUnit {
 
         return implode( " ", $parts );
     }
+
+    /**
+     * Called right after MediaWiki processes MWUnit's extension.json file.
+     */
+    public static function registrationCallback() {
+        define( "CONTENT_MODEL_TEST", "test" );
+        define( "CONTENT_FORMAT_TEST", "text/x-wiki-test" );
+    }
+
+    public static function onContentHandlerDefaultModelFor( Title $title, &$model ) {
+        if ( $title->getNamespace() === NS_TEST ) {
+            $model = CONTENT_MODEL_TEST;
+            return false;
+        }
+
+        return true;
+    }
 }

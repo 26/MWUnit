@@ -6,7 +6,7 @@
   "author": [
     "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
   ],
-  "version": "0.13.1",
+  "version": "0.14",
   "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
   "description": "A unit testing framework for MediaWiki",
   "descriptionmsg": "mwunit-description",
@@ -36,7 +36,8 @@
       "MWUnit\\Runner\\TestRun::onParserFetchTemplate",
       "MWUnit\\ParserFunction\\TemplateMockParserFunction::onParserFetchTemplate"
     ],
-    "UnitTestsList": "MWUnit\\MWUnit::onUnitTestsList"
+    "UnitTestsList": "MWUnit\\MWUnit::onUnitTestsList",
+    "ContentHandlerDefaultModelFor": "MWUnit\\MWUnit::onContentHandlerDefaultModelFor"
   },
   "SpecialPages": {
     "MWUnit": "MWUnit\\Special\\SpecialMWUnit"
@@ -76,12 +77,14 @@
       "id": 5750,
       "constant": "NS_TEST",
       "name": "Test",
-      "protection": "mwunit-createtests"
+      "protection": "mwunit-createtests",
+      "defaultcontentmodel": "test"
     },
     {
       "id": 5751,
       "constant": "NS_TEST_TALK",
-      "name": "Test_talk"
+      "name": "Test_talk",
+      "defaultcontentmodel": "wikitext"
     }
   ],
   "AvailableRights": [
@@ -105,5 +108,9 @@
   },
   "APIListModules": {
     "unittests": "MWUnit\\API\\ApiQueryUnitTests"
-  }
+  },
+  "ContentHandlers": {
+    "test": "MWUnit\\ContentHandler\\TestContentHandler"
+  },
+  "callback": "MWUnit\\MWUnit::registrationCallback"
 }
