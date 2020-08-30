@@ -3,6 +3,8 @@
 namespace MWUnit;
 
 use Content;
+use DOMDocument;
+use DOMNode;
 use LogEntry;
 use MWUnit\Injector\TestCaseStoreInjector;
 use MWUnit\TestCaseRepository;
@@ -64,46 +66,10 @@ class UpdateHandler  {
 
 		// Deregister all tests on the page and let the parser re-register them.
 		TestCaseRepository::getInstance()->deregisterTests( $article_id );
-		WikitextParser::parseContentFromWikiPage( $wikiPage, $content );
 
-		return true;
-	}
+		$tags = WikitextParser::getTestCasesFromWikitext( $content->getNativeData() );
 
-	/**
-	 * Occurs after a new article is created.
-	 *
-	 * @param WikiPage $wikiPage
-	 * @param User $user
-	 * @param $content
-	 * @param $summary
-	 * @param $isMinor
-	 * @param $isWatch
-	 * @param $section
-	 * @param $flags
-	 * @param Revision $revision
-	 *
-	 * @return bool
-	 * @throws \MWException
-	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/PageContentInsertComplete
-	 * @deprecated
-	 */
-	public static function onPageContentInsertComplete(
-		&$wikiPage,
-		User &$user,
-		$content,
-		$summary,
-		$isMinor,
-		$isWatch,
-		$section,
-		&$flags,
-		Revision $revision
-	) {
-		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
-			// Do not run hook outside of "Test" namespace
-			return true;
-		}
-
-        WikitextParser::parseContentFromWikiPage( $wikiPage, $content );
+		TestCaseRepository::getInstance()->registerTests( $wikiPage->getTitle(), $tags );
 
 		return true;
 	}

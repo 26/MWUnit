@@ -2,54 +2,90 @@
 
 namespace MWUnit\ContentHandler;
 
-use ParserOptions;
-use ParserOutput;
-use Title;
+use MediaWiki\MediaWikiServices;
+use MWUnit\MWUnit;
+use Xml;
 
-class TestContent extends \AbstractContent {
-    private $text;
+/**
+ * Class TestContent
+ * @package MWUnit\ContentHandler
+ */
+class TestContent extends AbstractTestContent {
+    private $mTests = [];
 
-    public function __construct($text, $model_id = CONTENT_MODEL_TEST ) {
-        parent::__construct( $model_id );
-
-        $this->text = $text;
+    /**
+     * Creates a new TestContent object from the given $text.
+     *
+     * @param string $text
+     * @return TestContent
+     */
+    public static function newFromText( string $text ) {
+        return new self( $text );
     }
 
-    public function fillParserOutput(
-        Title $title,
-        $revId,
-        ParserOptions $options,
-        $generateHtml,
-        ParserOutput &$output
-    ) {
-        // TODO
+    /**
+     * @inheritDoc
+     */
+    public function getSummaryText(): string {
+        return "[tests]";
     }
 
-    public function getTextForSearchIndex() {
-        return $this->text;
+    /**
+     * @inheritDoc
+     * @throws \ConfigException
+     */
+    public function fillHtmlFromTag( &$html, string $content, array $attributes ) {
+        $errors = [];
+
+        MWUnit::areAttributesValid( $attributes, $errors );
+
+        $name   = $attributes['name'] ?? '[invalid]';
+        $title  = MWUnit::testNameToSentence( $name );
+        $header = $title . Xml::tags( 'hr', [], '' );
+
+        if ( isset( $attributes['name'] ) && isset( $attributes['group'] ) ) {
+            $mTest = $attributes['name'] . $attributes['group'];
+
+            if ( in_array( $mTest, $this->mTests ) ) {
+                $errors[] = wfMessage( "mwunit-duplicate-test", $attributes['name'] );
+            }
+
+            $this->mTests[] = $mTest;
+        }
+
+        $class = $errors === [] ?
+            'mwunit-test-case mwunit-valid successbox' :
+            'mwunit-test-case mwunit-invalid errorbox';
+        $body = $errors === [] ?
+            $this->bodyFromAttributes( $content, $attributes ) :
+            $this->bodyFromErrors( $errors );
+
+        $html = Xml::tags(
+            'div',
+            [ 'class' => $class ],
+            $header .
+            Xml::tags( 'pre', [ 'class' => 'mwunit-body' ], $body )
+        );
     }
 
-    public function getWikitextForTransclusion() {
-        return 'A test cannot be transcluded';
+    /**
+     * @param string $content
+     * @param array $attributes
+     * @return string
+     */
+    private function bodyFromAttributes( string $content, array $attributes ) {
+        $attributes = array_map( function ( $key, $value ): string {
+            return sprintf( "@%s %s", htmlspecialchars( $key ), htmlspecialchars( $value ) );
+        }, array_keys( $attributes ), $attributes );
+
+        return implode( "\n", $attributes ) . "\n------\n" . htmlspecialchars( $content );
     }
 
-    public function getTextForSummary( $maxLength = 250 ) {
-        return $this->text;
-    }
-
-    public function getNativeData() {
-        return $this->text;
-    }
-
-    public function getSize() {
-        return strlen( $this->getNativeData() );
-    }
-
-    public function copy() {
-        return clone $this;
-    }
-
-    public function isCountable( $hasLinks = null ) {
-        return true;
+    /**
+     * @param array $errors
+     * @return string
+     */
+    private function bodyFromErrors( array $errors ) {
+        return wfMessage( 'mwunit-test-not-registered' ) . "\n------\n" . implode( "\n", $errors );
     }
 }

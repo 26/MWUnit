@@ -24,6 +24,13 @@ class TestContentHandler extends TextContentHandler {
     /**
      * @inheritDoc
      */
+    public function getDiffEngineClass() {
+        return TestContentDiffEngine::class;
+    }
+
+    /**
+     * @inheritDoc
+     */
     protected function getContentClass() {
         return TestContent::class;
     }
@@ -60,6 +67,18 @@ class TestContentHandler extends TextContentHandler {
      * @inheritDoc
      */
     public function makeEmptyContent() {
-        return new TestContent( '' );
+        return $this->newTestContent();
+    }
+
+    /**
+     * Creates a new TestContent object from the given $text.
+     *
+     * @param string|null $text
+     * @return AbstractTestContent
+     */
+    public function newTestContent( $text = null ) {
+        $text = $text ?? '';
+
+        return TestContent::newFromText( $text );
     }
 }

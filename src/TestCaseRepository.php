@@ -25,82 +25,74 @@ class TestCaseRepository {
 	    return self::$instance;
     }
 
-	/**
-	 * Registers a test case to the database. This is used to index test cases via the MWUnit special page and
-	 * the maintenance script. It registers the name of the test case, the group it is in and the page on which
-	 * the test is located.
-	 *
-	 * @param ConcreteTestCase $test_case
-	 * @throws MWUnitException
-	 * @throws TestCaseRegistrationException
-	 * @throws \FatalError
-	 * @throws \MWException
-	 */
-	public function register( ConcreteTestCase $test_case ) {
-		if ( !$test_case->getTitle()->exists() ) {
-			// This page has not yet been created.
-			return;
-		}
+    /**
+     * Registers the given test cases to the database. This is used to index test cases via the MWUnit special page and
+     * the maintenance script. It registers the name of the test case, the group it is in and the page on which
+     * the test is located.
+     *
+     * @param Title $title
+     * @param array $tests
+     * @throws \FatalError
+     * @throws \MWException
+     */
+	public function registerTests( \Title $title, array $tests ) {
+        $article_id = $title->getArticleID();
 
-		if ( $test_case->getTitle()->getArticleID() === 0 ) {
+		if ( !$title->exists() || $article_id === 0 ) {
             // This page has not yet been created.
-		    return;
+            return;
         }
 
-		$hook = \Hooks::run( 'MWUnitBeforeRegisterTestCase', [ &$test_case ] );
+		$hook = \Hooks::run( 'MWUnitBeforeRegisterTestCases', [ &$title, &$tests ] );
 		if ( $hook === false ) {
 			return;
 		}
 
-		$this->init_registered_tests[] = $test_case->__toString();
+        $registered = [];
+        $database = wfGetDb( DB_MASTER );
 
-		$registered = $this->isTestRegistered( $test_case );
+		foreach ( $tests as $test ) {
+		    $attributes = $test['attributes'];
 
-		if ( $registered === true ) {
-			MWUnit::getLogger()->notice( "Did not register testcase {testcase} because it was already registered", [
-				"testcase" => $test_case->__toString()
-			] );
+		    if ( !isset( $attributes['name'] ) || !isset( $attributes['group'] ) ) {
+		        continue;
+            }
 
-			// This test has already been registered on this page
-			throw new TestCaseRegistrationException(
-				'mwunit-duplicate-test',
-				[ htmlspecialchars( $test_case->getName() ) ]
-			);
-		}
+		    $name = $attributes['name'];
+		    $group = $attributes['group'];
+		    $covers = $attributes['covers'] ?? '';
 
-		if ( $registered === null ) {
-			return;
-		}
+		    $tracking_name = $name . $group;
 
-		$fields = [
-			'article_id' => $test_case->getTitle()->getArticleID(),
-			'test_group' => $test_case->getGroup(),
-			'test_name'  => $test_case->getName()
-		];
+		    if ( in_array( $tracking_name, $registered ) ) {
+		        continue;
+            }
 
-		if ( $test_case->getOption( 'covers' ) ) {
-			$fields[ 'covers' ] = $test_case->getOption( 'covers' );
-		}
+		    $registered[] = $tracking_name;
 
-		MWUnit::getLogger()->notice( "Registering testcase {testcase}", [
-			"testcase" => $test_case->__toString()
-		] );
+            $fields = [
+                'article_id' => $article_id,
+                'test_group' => $group,
+                'test_name'  => $name,
+                'covers'     => $covers
+            ];
 
-		$database = wfGetDb( DB_MASTER );
-
-		try {
-            $database->insert( 'mwunit_tests', $fields );
-        } catch( \Exception $e ) {
-            MWUnit::getLogger()->debug( "Unable to register testcase {testcase}", [
-                "testcase" => $test_case->__toString()
+            MWUnit::getLogger()->notice( "Registering testcase {testcase}", [
+                "testcase" => $name
             ] );
 
-            return;
-        }
+            try {
+                $database->insert( 'mwunit_tests', $fields );
 
-		MWUnit::getLogger()->debug( "Registered testcase {testcase}", [
-			"testcase" => $test_case->__toString()
-		] );
+                MWUnit::getLogger()->debug( "Registered testcase {testcase}", [
+                    "testcase" => $name
+                ] );
+            } catch( \Exception $e ) {
+                MWUnit::getLogger()->debug( "Unable to register testcase {testcase}", [
+                    "testcase" => $name
+                ] );
+            }
+        }
 	}
 
 	/**
@@ -140,7 +132,7 @@ class TestCaseRepository {
 	public function getTestsFromGroup( string $test_group ) {
 		return wfGetDb( DB_REPLICA )->select(
 			'mwunit_tests',
-			[ 'article_id', 'test_name', 'test_group' ],
+			[ 'article_id', 'test_name', 'test_group', 'covers' ],
 			[ 'test_group' => $test_group ],
             __METHOD__,
 			'DISTINCT'
@@ -157,7 +149,7 @@ class TestCaseRepository {
 		$article_id = $title->getArticleID();
 		return wfGetDb( DB_REPLICA )->select(
 			'mwunit_tests',
-			[ 'article_id', 'test_name', 'test_group' ],
+			[ 'article_id', 'test_name', 'test_group', 'covers' ],
 			[ 'article_id' => (int)$article_id ],
             __METHOD__,
 			'DISTINCT'
@@ -185,17 +177,17 @@ class TestCaseRepository {
 		$template_name = $title->getText();
 		return wfGetDb( DB_REPLICA )->select(
 			'mwunit_tests',
-			[ 'article_id', 'test_name', 'test_group' ],
+			[ 'article_id', 'test_name', 'test_group', 'covers' ],
 			[ 'covers' => $template_name ],
             __METHOD__
 		);
 	}
 
     /**
-     * @param string $test_name
-     * @return false|IResultWrapper|ResultWrapper
+     * @param string|false $test_name
+     * @return false|TestCase
      */
-	public function getGroupFromTestName( string $test_name ) {
+	public function getTestCaseFromTestName( string $test_name ) {
         list ( $page_name, $name ) = explode( "::", $test_name );
 
         $title = \Title::newFromText( $page_name, NS_TEST );
@@ -206,7 +198,7 @@ class TestCaseRepository {
 
         $result = wfGetDb( DB_REPLICA )->select(
             'mwunit_tests',
-            [ 'test_group' ],
+            [ 'article_id', 'test_name', 'test_group', 'covers' ],
             [ 'article_id' => $title->getArticleID(), 'test_name' => $name ],
             __METHOD__,
             'DISTINCT'
@@ -216,7 +208,7 @@ class TestCaseRepository {
             return false;
         }
 
-        return $result->current()->test_group;
+        return TestCase::newFromRow( $result->current()->test_group );
     }
 
 	/**
@@ -242,42 +234,5 @@ class TestCaseRepository {
 			[ 'covers' => $template_name ],
             __METHOD__
 		)->numRows() > 0;
-	}
-
-	/**
-	 * Returns true if and only if the given $test_case has already been registered.
-	 *
-	 * @param TestCase $test_case
-	 * @return bool|null True when it has already been registered, false when it has not been registered or
-	 * null when we have already registered the given test, but it was not a duplicate.
-	 */
-	private function isTestRegistered( TestCase $test_case ) {
-		$database = wfGetDb( DB_MASTER );
-		$result = $database->select(
-			'mwunit_tests',
-			[ 'article_id' ],
-			[
-				'test_name' => $test_case->getName(),
-				'article_id' => $test_case->getTitle()->getArticleID()
-			],
-			__METHOD__
-		);
-
-		if ( $result->numRows() < 1 ) {
-			return false;
-		}
-
-		if ( (int)$result->current()->article_id !== $test_case->getTitle()->getArticleID() ) {
-			return false;
-		}
-
-		$init_registered_test_count = array_count_values( $this->init_registered_tests );
-		$test_name = $test_case->__toString();
-
-		if ( $init_registered_test_count[ $test_name ] < 2 ) {
-			return null;
-		}
-
-		return true;
 	}
 }

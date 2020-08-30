@@ -69,26 +69,19 @@ class TestSuite implements Iterator, Countable {
      * @return TestSuite
      * @throws MWUnitException When an invalid test name is given
      */
-    public static function newFromText(string $test_name ): TestSuite {
+    public static function newFromText( string $test_name ): TestSuite {
         if ( !strpos( $test_name, '::' ) ) {
             throw new MWUnitException( "Invalid test name" );
         }
 
-        $group = TestCaseRepository::getInstance()->getGroupFromTestName( $test_name );
+        $test_case = TestCaseRepository::getInstance()->getTestCaseFromTestName( $test_name );
 
-        if ( !$group ) {
+        if ( $test_case === false ) {
             return self::newEmpty();
         }
 
-        if ( $group === false ) {
-            throw new MWUnitException( "Invalid test name" );
-        }
-
-        list ( $page_name, $name ) = explode( "::", $test_name );
-        $title = \Title::newFromText( $page_name, NS_TEST );
-
         return new TestSuite( [
-            new TestCase( $name, $group, $title )
+            $test_case
         ] );
     }
 

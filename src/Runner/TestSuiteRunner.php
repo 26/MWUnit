@@ -64,8 +64,6 @@ class TestSuiteRunner {
      * @param callable|null $callback Callback function that gets called after every completed test
 	 */
 	public function __construct( TestSuite $test_suite, callable $callback = null ) {
-		MWUnit::setRunning();
-
 		$this->test_suite = $test_suite;
 		$this->callback   = $callback;
 		$this->test_run_store = new TestRunStore;

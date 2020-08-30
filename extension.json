@@ -29,7 +29,6 @@
     "ParserFirstCallInit": "MWUnit\\MWUnit::onParserFirstCallInit",
     "LoadExtensionSchemaUpdates": "MWUnit\\MWUnit::onLoadExtensionSchemaUpdates",
     "PageContentSaveComplete": "MWUnit\\UpdateHandler::onPageContentSaveComplete",
-    "PageContentInsertComplete": "MWUnit\\UpdateHandler::onPageContentInsertComplete",
     "ArticleDeleteComplete": "MWUnit\\UpdateHandler::onArticleDeleteComplete",
     "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
     "ParserFetchTemplate": [
@@ -37,7 +36,8 @@
       "MWUnit\\ParserFunction\\TemplateMockParserFunction::onParserFetchTemplate"
     ],
     "UnitTestsList": "MWUnit\\MWUnit::onUnitTestsList",
-    "ContentHandlerDefaultModelFor": "MWUnit\\MWUnit::onContentHandlerDefaultModelFor"
+    "ContentHandlerDefaultModelFor": "MWUnit\\MWUnit::onContentHandlerDefaultModelFor",
+    "BeforePageDisplay": "MWUnit\\MWUnit::onBeforePageDisplay"
   },
   "SpecialPages": {
     "MWUnit": "MWUnit\\Special\\SpecialMWUnit"
@@ -70,6 +70,10 @@
     "MWUnitShowProfilingInfo": {
       "value": true,
       "descriptionmsg": "mwunit-config-show-profiling-info"
+    },
+    "MWUnitAllowTransclusion": {
+      "value": false,
+      "descriptionmsg": "mwunit-config-allow-transclusion"
     }
   },
   "namespaces": [
@@ -111,6 +115,11 @@
   },
   "ContentHandlers": {
     "test": "MWUnit\\ContentHandler\\TestContentHandler"
+  },
+  "ResourceModules": {
+    "ext.mwunit.TestContent.css": {
+      "styles": "extensions/MWUnit/resources/styles/TestContent.css"
+    }
   },
   "callback": "MWUnit\\MWUnit::registrationCallback"
 }

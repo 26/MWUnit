@@ -31,7 +31,9 @@ class ConcreteTestCase extends TestCase {
 		string $group,
 		array $options,
 		Title $title ) {
-	    parent::__construct( $name, $group, $title );
+	    $covers = $options['covers'] ?? null;
+
+	    parent::__construct( $name, $group, $covers, $title );
         $this->input = $input;
         $this->options = $options;
 	}
@@ -42,42 +44,19 @@ class ConcreteTestCase extends TestCase {
 	 * @param string $tag_input The input given directly to the tag
 	 * @param array $tag_arguments The arguments given to the tag, entered like HTML tag attributes
 	 * @param Parser $parser The parent parser
-	 * @return ConcreteTestCase The newly created TestCase object
-	 * @throws Exception\TestCaseException Thrown whenever some required argument is missing from $arguments.
+	 * @return ConcreteTestCase|false The newly created TestCase object or false upon failure
      * @throws ConfigException
 	 */
 	public static function newFromTag( string $tag_input, array $tag_arguments, Parser $parser ) {
-		if ( !isset( $tag_arguments[ 'name' ] ) ) {
-            // The "name" argument is required.
-            throw new Exception\TestCaseException( 'mwunit-missing-test-name' );
-		}
+	    $result = MWUnit::areAttributesValid( $tag_arguments );
 
-        $name = self::array_shift_key( 'name', $tag_arguments );
-
-		if ( strlen( $name ) > 255 || preg_match( '/^[A-Za-z0-9_\-]+$/', $name ) !== 1 ) {
-			throw new Exception\TestCaseException( 'mwunit-invalid-test-name', [ $name ] );
-		}
-
-		if ( !isset( $tag_arguments[ 'group' ] ) ) {
-            // The "group" argument is required.
-            throw new Exception\TestCaseException( 'mwunit-missing-group' );
-		}
-
-        $group = self::array_shift_key( 'group', $tag_arguments );
-
-		if ( strlen( $group ) > 255 || preg_match( '/^[A-Za-z0-9_\- ]+$/', $group ) !== 1 ) {
-			throw new Exception\TestCaseException( 'mwunit-invalid-group-name', [ $group ] );
-		}
-
-		$force_covers = MediaWikiServices::getInstance()
-			->getMainConfig()
-			->get( 'MWUnitForceCoversAnnotation' );
-
-		if ( $force_covers && !isset( $tag_arguments[ 'covers' ] ) ) {
-			throw new Exception\TestCaseException( 'mwunit-missing-covers-annotation', [ $name ] );
-		}
+	    if ( $result === false ) {
+	        return false;
+        }
 
 		$title = $parser->getTitle();
+		$name  = self::array_shift_key( 'name', $tag_arguments );
+		$group = self::array_shift_key( 'group', $tag_arguments );
 
 		return new ConcreteTestCase( $tag_input, $name, $group, $tag_arguments, $title );
 	}

@@ -29,14 +29,6 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
      * @throws MWUnitException
      */
     public function execute( ParserData $data ) {
-        if ( $data->getParser()->getTitle()->getNamespace() !== NS_TEST ) {
-            return MWUnit::error( "mwunit-outside-test-namespace" );
-        }
-
-        if ( !MWUnit::isRunning() ) {
-            return '';
-        }
-
         if ( !self::$run ) {
             return '';
         }
