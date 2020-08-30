@@ -54,7 +54,7 @@ abstract class MWUnit {
      * @param \Skin $skin
      */
 	public static function onBeforePageDisplay( \OutputPage $out, \Skin $skin ) {
-	    if ( $out->getTitle()->getNamespace() !== NS_TEST ) {
+	    if ( $out->getWikiPage()->getContentModel() !== CONTENT_MODEL_TEST ) {
 	        return;
         }
 
