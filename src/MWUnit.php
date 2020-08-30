@@ -216,7 +216,7 @@ abstract class MWUnit {
             ->get( 'MWUnitForceCoversAnnotation' );
 
         if ( $force_covers && !isset( $tag_arguments[ 'covers' ] ) ) {
-            $errors[] = wfMessage( 'mwunit-missing-covers-annotation', $name )->plain();
+            $errors[] = wfMessage( 'mwunit-missing-covers-annotation', $tag_arguments[ 'name' ] )->plain();
         }
 
         return count( $errors ) === 0;
