@@ -42,7 +42,7 @@ class HasProperty implements Assertion {
 	public static function assert( &$failure_message, $page_title, $property_name, $message = null ) {
 		$title = \Title::newFromText( $page_title );
 		if ( $title === null || $title === false || !$title->exists() ) {
-			$failure_message = wfMessage( "mwunit-invalid-page-name" )->plain();
+			$failure_message = wfMessage( "mwunit-invalid-assertion" )->plain();
 			return null;
 		}
 
