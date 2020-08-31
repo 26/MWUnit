@@ -3,3 +3,14 @@
     width: 100%;
     box-sizing: border-box;
 }
+
+#contentSub {
+    display: none;
+}
+
+.mwunit-subtitle {
+    line-height: 1.2em;
+    margin: -3px 0 1em 3px;
+    color: #54595d;
+    font-size: 0.9em;
+}

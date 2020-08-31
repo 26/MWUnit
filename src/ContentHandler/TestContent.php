@@ -43,8 +43,8 @@ class TestContent extends AbstractTestContent {
         $title  = MWUnit::testNameToSentence( $name );
         $header = $title . Xml::tags( 'hr', [], '' );
 
-        if ( isset( $attributes['name'] ) && isset( $attributes['group'] ) ) {
-            $mTest = $attributes['name'] . $attributes['group'];
+        if ( isset( $attributes['name'] ) ) {
+            $mTest = $attributes['name'];
 
             if ( in_array( $mTest, $this->mTests ) ) {
                 $errors[] = wfMessage( "mwunit-duplicate-test", $attributes['name'] );

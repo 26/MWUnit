@@ -4,7 +4,8 @@ namespace MWUnit\ContentHandler;
 
 use DifferenceEngine;
 use DOMDocument;
-use DOMNode;
+use HtmlArmor;
+use MediaWiki\Linker\LinkTarget;
 use MediaWiki\MediaWikiServices;
 use MWUnit\MWUnit;
 use MWUnit\WikitextParser;
@@ -80,6 +81,19 @@ abstract class AbstractTestContent extends \AbstractContent {
     }
 
     /**
+     * @return bool
+     */
+    public function isValid() {
+        $title = \RequestContext::getMain()->getTitle();
+
+        if ( $title instanceof Title ) {
+            return \RequestContext::getMain()->getTitle()->getNamespace() === NS_TEST;
+        }
+
+        return false;
+    }
+
+    /**
      * @inheritDoc
      */
     public function fillParserOutput(
@@ -94,6 +108,23 @@ abstract class AbstractTestContent extends \AbstractContent {
         }
 
         $tags = WikitextParser::getTestCasesFromWikitext( $this->text );
+        $href = \Title::newFromText( "Special:MWUnit" )->getFullURL( [ 'unitTestPage' => $title->getFullText() ] );
+
+        $number_of_tests = count( $tags );
+
+        $nav = $number_of_tests > 0 ? wfMessage( 'parentheses' )
+            ->rawParams( \RequestContext::getMain()->getLanguage()->pipeList( [
+                \Xml::tags( 'a', [ 'href' => $href ], wfMessage( "mwunit-nav-run-tests" ) )
+            ] ) )->text() : '';
+        $nav = wfMessage( "mwunit-no-tests", $number_of_tests )->plain() . " $nav";
+        $nav = \Xml::tags('div', ['class' => 'mwunit-subtitle'], $nav );
+
+        $page = \Xml::tags(
+            "div",
+            [ "class" => "mwunit-subtitle" ],
+            $nav
+        );
+
         $divs = [];
 
         foreach ( $tags as $tag ) {
@@ -105,8 +136,7 @@ abstract class AbstractTestContent extends \AbstractContent {
             $divs[] = $html;
         }
 
-        $page = implode( "\n", $divs );
-        $page = \Xml::tags( 'div', [ 'class' => 'mwunit-test-page' ], $page );
+        $page .= \Xml::tags( 'div', [ 'class' => 'mwunit-test-page' ], implode( "\n", $divs ) );
 
         $output->setText( $page );
     }
