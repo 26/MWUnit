@@ -49,10 +49,6 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
         &$text,
         array &$deps
     ) {
-        if ( !MWUnit::isRunning() ) {
-            return;
-        }
-
         $registry = TemplateMockRegistry::getInstance();
 
         if ( !$registry->exists( $title ) ) {
@@ -88,6 +84,15 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
             );
         }
 
+        // Interpret page title without namespace prefix as a template.
+        $title = strpos( $page, ":" ) === false ?
+            Title::newFromText( $page, NS_TEMPLATE ) :
+            Title::newFromText( $page );
+
+        if ( !$title instanceof Title || !$title->exists() ) {
+            return MWUnit::error( "mwunit-create-mock-bad-title" );
+        }
+
 		try {
             $data->setFlags( PPFrame::NO_ARGS | PPFrame::NO_IGNORE | PPFrame::NO_TAGS | PPFrame::NO_TEMPLATES );
 		    $content = $data->getArgument( 1 );
@@ -99,23 +104,6 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
         }
 
 		$mock = new Mock( $content );
-
-		// Interpret page title without namespace prefix as a template.
-		$title = strpos( $page, ":" ) === false ?
-			Title::newFromText( $page, NS_TEMPLATE ) :
-			Title::newFromText( $page );
-
-		if ( !$title instanceof Title || !$title->exists() ) {
-			return MWUnit::error( "mwunit-create-mock-bad-title" );
-		}
-
-		if ( $data->getParser()->getTitle()->getNamespace() !== NS_TEST ) {
-			return MWUnit::error( "mwunit-outside-test-namespace" );
-		}
-
-		if ( !MWUnit::isRunning() ) {
-		    return '';
-		}
 
 		$mock_registry = TemplateMockRegistry::getInstance();
 		$mock_registry->register( $title, $mock );

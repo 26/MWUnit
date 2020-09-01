@@ -128,6 +128,10 @@ class AssertionFactory extends ParserFunctionFactory {
      */
 	private function getAssertionFunctionDefinition( string $assertion ) {
 	    $definition = function( Parser $parser, PPFrame $frame, $args ) use ( $assertion ) {
+            if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
+                return MWUnit::error( "mwunit-outside-test-namespace" );
+            }
+
 	        $assertion_parser_function = $this->newAssertionParserFunction( $assertion );
             $parser_data = new ParserData( $parser, $frame, $args );
 

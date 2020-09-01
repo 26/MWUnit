@@ -2,12 +2,14 @@
 
 namespace MWUnit;
 
+use MediaWiki\MediaWikiServices;
 use Title;
 
 class TestCase {
     private $name;
     private $group;
     private $title;
+    private $covers;
 
     /**
      * @param $row
@@ -31,20 +33,23 @@ class TestCase {
         }
 
         $group = $row->test_group;
+        $covers = $row->covers;
 
-        return new TestCase( $name, $group, $title );
+        return new TestCase( $name, $group, $covers, $title );
     }
 
     /**
      * TestCase constructor.
      * @param string $name
      * @param string $group
+     * @param string|null $covers
      * @param Title $title
      */
-    public function __construct( string $name, string $group, Title $title ) {
+    public function __construct( string $name, string $group, $covers, Title $title ) {
         $this->name = $name;
         $this->group = $group;
         $this->title = $title;
+        $this->covers = $covers;
     }
 
     /**
@@ -72,6 +77,15 @@ class TestCase {
      */
     public function getTitle(): Title {
         return $this->title;
+    }
+
+    /**
+     * Returns the covers annotation for this test case, or null when not available.
+     *
+     * @return string|null
+     */
+    public function getCovers() {
+        return $this->covers;
     }
 
     /**

@@ -53,21 +53,17 @@ class AssertionParserFunction implements ParserFunction, TestRunInjector {
      * @return string
      */
 	public function execute( ParserData $data ) {
-		if ( $data->getParser()->getTitle()->getNamespace() !== NS_TEST ) {
-			return MWUnit::error( "mwunit-outside-test-namespace" );
-		}
-
-		if ( !MWUnit::isRunning() ) {
-		    return '';
-		}
-
-		if ( !self::$run ) {
+	    if ( !self::$run ) {
 		    return '';
         }
 
+	    // Short-circuit if the result is already available
 		if ( self::$run->resultAvailable() ) {
 		    return '';
 		}
+
+		// Wow, much assertion
+		assert( $this->assertion instanceof Assertion );
 
 		$required_arg_count = $this->assertion::getRequiredArgumentCount();
 		$actual_arg_count 	= $data->count();

@@ -79,6 +79,10 @@ class ParserFunctionFactory {
 
     private function getParserMockFunctionDefinition(): array {
         $definition = function( Parser $parser, PPFrame $frame, $args ) {
+            if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
+                return MWUnit::error( "mwunit-outside-test-namespace" );
+            }
+
             $parser_function = $this->newParserMockParserFunction();
             $parser_data = new ParserData( $parser, $frame, $args );
 
@@ -90,6 +94,10 @@ class ParserFunctionFactory {
 
     private function getTemplateMockFunctionDefinition(): array {
         $definition = function( Parser $parser, PPFrame $frame, $args ) {
+            if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
+                return MWUnit::error( "mwunit-outside-test-namespace" );
+            }
+
             $parser_function = $this->newTemplateMockParserFunction();
             $parser_data = new ParserData( $parser, $frame, $args );
 
@@ -101,6 +109,10 @@ class ParserFunctionFactory {
 
     private function getVarDumpFunctionDefinition(): array {
         $definition = function( Parser $parser, PPFrame $frame, $args ) {
+            if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
+                return MWUnit::error( "mwunit-outside-test-namespace" );
+            }
+
             $parser_function = $this->newVarDumpParserFunction();
             $parser_data = new ParserData( $parser, $frame, $args );
 

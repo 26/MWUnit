@@ -2,7 +2,11 @@
 
 namespace MWUnit\ParserTag;
 
+use ConfigException;
 use Exception;
+use FatalError;
+use MWException;
+use MWUnit\Exception\MWUnitException;
 use MWUnit\Injector\TestSuiteRunnerInjector;
 use MWUnit\ParserData;
 use MWUnit\Runner\BaseTestRunner;
@@ -13,6 +17,7 @@ use MWUnit\TestCaseRepository;
 use MWUnit\ConcreteTestCase;
 use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestCase;
+use Parser;
 
 /**
  * Class TestCaseController
@@ -43,80 +48,55 @@ class TestCaseParserTag implements ParserTag, TestSuiteRunnerInjector {
 	    $input  = $data->getInput();
 	    $args   = $data->getArguments();
 
-		if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
-			// "testcase" is outside of Test namespace
-			return MWUnit::error( "mwunit-outside-test-namespace" );
-		}
+        $result = $this->doExecute( $parser, $input, $args );
 
-		if ( $input === null ) {
-			// Tag is self-closing (i.e. <testcase />)
-			return MWUnit::error( "mwunit-empty-testcase" );
-		}
-
-		try {
-			$test_case = ConcreteTestCase::newFromTag( $input, $args, $parser );
-		} catch ( TestCaseException $exception ) {
-			return MWUnit::error( $exception->message_name, $exception->arguments );
-		}
-
-        if ( self::shouldRunTestcase( $test_case ) ) {
-			$runner = new BaseTestRunner( $test_case );
-			$runner->run();
-
-			return '';
-		}
-
-        try {
-            TestCaseRepository::getInstance()->register( $test_case );
-        } catch ( TestCaseRegistrationException $exception ) {
-            return MWUnit::error( $exception->message_name, $exception->arguments );
-        }
-
-		return self::renderTestCaseDebugInformation( $test_case );
-	}
-
-	/**
-	 * Renders a dialog window for the given TestCase object.
-	 *
-	 * @param ConcreteTestCase $test_case
-	 * @return string The dialog object's HTML (safe)
-	 * @internal
-	 */
-	private static function renderTestCaseDebugInformation(ConcreteTestCase $test_case ): string {
-		return sprintf(
-			"<div class='messagebox'>" .
-						"<pre>MWUnit test\n@name %s\n@group %s\n%s\n--------------------------------\n%s</pre>" .
-					"</div>",
-			htmlspecialchars( $test_case->getName() ),
-			htmlspecialchars( $test_case->getGroup() ),
-			htmlspecialchars( self::renderOptions( $test_case->getOptions() ) ),
-			htmlspecialchars( $test_case->getInput() )
-		);
-	}
-
-	/**
-	 * Renders the list of optional options for this test case.
-	 *
-	 * @param array $options
-	 * @return string
-	 */
-	private static function renderOptions( array $options ): string {
-        return implode( "\n", array_map( function ( $key, $value ): string {
-            return sprintf( "@%s %s", htmlspecialchars( $key ), htmlspecialchars( $value ) );
-        }, array_keys( $options ), $options ) );
+        return $result ? $result : '';
 	}
 
     /**
+     * @param Parser $parser
+     * @param string $input
+     * @param array $args
+     * @return string
+     *
+     * @throws ConfigException
+     * @throws FatalError
+     * @throws MWException
+     * @throws MWUnitException
+     */
+	public function doExecute( Parser $parser, string $input, array $args ) {
+        if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
+            // "testcase" is outside of Test namespace
+            return MWUnit::error( "mwunit-outside-test-namespace" );
+        }
+
+        $test_case = ConcreteTestCase::newFromTag( $input, $args, $parser );
+
+        if ( $test_case === false ) {
+            return false;
+        }
+
+        if ( !self::shouldRunTestcase( $test_case ) ) {
+            return false;
+        }
+
+        $runner = new BaseTestRunner( $test_case );
+        $runner->run();
+
+        return true;
+    }
+
+    /**
      * Returns true if and only if the given TestCase object should be run now. A test should
-     * only be run if and only if MWUnit is in "running" mode, the TestSuiteRunner requested the
+     * only be run if the TestSuiteRunner requested the
      * current test case to be run and this test case has not run before.
      *
      * @param TestCase $test_case
      * @return bool
      */
     private static function shouldRunTestcase( TestCase $test_case ): bool {
-        return MWUnit::isRunning()
-            && self::$test_suite_runner->getCurrentTestCase()->equals( $test_case )
-            && !self::$test_suite_runner->testCompleted( $test_case );
+        return self::$test_suite_runner &&
+            self::$test_suite_runner->getCurrentTestCase()->equals( $test_case ) &&
+            !self::$test_suite_runner->testCompleted( $test_case );
     }
 }

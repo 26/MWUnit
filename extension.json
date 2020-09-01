@@ -6,7 +6,7 @@
   "author": [
     "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
   ],
-  "version": "0.13.1",
+  "version": "0.14",
   "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
   "description": "A unit testing framework for MediaWiki",
   "descriptionmsg": "mwunit-description",
@@ -29,14 +29,16 @@
     "ParserFirstCallInit": "MWUnit\\MWUnit::onParserFirstCallInit",
     "LoadExtensionSchemaUpdates": "MWUnit\\MWUnit::onLoadExtensionSchemaUpdates",
     "PageContentSaveComplete": "MWUnit\\UpdateHandler::onPageContentSaveComplete",
-    "PageContentInsertComplete": "MWUnit\\UpdateHandler::onPageContentInsertComplete",
     "ArticleDeleteComplete": "MWUnit\\UpdateHandler::onArticleDeleteComplete",
     "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
     "ParserFetchTemplate": [
       "MWUnit\\Runner\\TestRun::onParserFetchTemplate",
       "MWUnit\\ParserFunction\\TemplateMockParserFunction::onParserFetchTemplate"
     ],
-    "UnitTestsList": "MWUnit\\MWUnit::onUnitTestsList"
+    "UnitTestsList": "MWUnit\\MWUnit::onUnitTestsList",
+    "ContentHandlerDefaultModelFor": "MWUnit\\MWUnit::onContentHandlerDefaultModelFor",
+    "BeforePageDisplay": "MWUnit\\MWUnit::onBeforePageDisplay",
+    "MovePageIsValidMove": "MWUnit\\MWUnit::onMovePageIsValidMove"
   },
   "SpecialPages": {
     "MWUnit": "MWUnit\\Special\\SpecialMWUnit"
@@ -69,6 +71,10 @@
     "MWUnitShowProfilingInfo": {
       "value": true,
       "descriptionmsg": "mwunit-config-show-profiling-info"
+    },
+    "MWUnitAllowTransclusion": {
+      "value": false,
+      "descriptionmsg": "mwunit-config-allow-transclusion"
     }
   },
   "namespaces": [
@@ -76,12 +82,14 @@
       "id": 5750,
       "constant": "NS_TEST",
       "name": "Test",
-      "protection": "mwunit-createtests"
+      "protection": "mwunit-createtests",
+      "defaultcontentmodel": "test"
     },
     {
       "id": 5751,
       "constant": "NS_TEST_TALK",
-      "name": "Test_talk"
+      "name": "Test_talk",
+      "defaultcontentmodel": "wikitext"
     }
   ],
   "AvailableRights": [
@@ -105,5 +113,14 @@
   },
   "APIListModules": {
     "unittests": "MWUnit\\API\\ApiQueryUnitTests"
-  }
+  },
+  "ContentHandlers": {
+    "test": "MWUnit\\ContentHandler\\TestContentHandler"
+  },
+  "ResourceModules": {
+    "ext.mwunit.TestContent.css": {
+      "styles": "extensions/MWUnit/resources/styles/TestContent.css"
+    }
+  },
+  "callback": "MWUnit\\MWUnit::registrationCallback"
 }

@@ -3,6 +3,7 @@
 namespace MWUnit;
 
 use MediaWiki\Logger\LoggerFactory;
+use MediaWiki\MediaWikiServices;
 use MWException;
 use MWUnit\Factory\ParserFunctionFactory;
 use MWUnit\Factory\TagFactory;
@@ -14,20 +15,15 @@ abstract class MWUnit {
 	const LOGGING_CHANNEL = "MWUnit"; // phpcs:ignore
 
 	/**
-	 * @var bool
-	 */
-	private static $test_running = false;
-
-	/**
 	 * Called when the parser initializes for the first time.
 	 *
 	 * @param Parser $parser
 	 */
 	public static function onParserFirstCallInit( Parser $parser ) {
-		$tag_factory = TagFactory::newFromParser( $parser );
-		$tag_factory->registerFunctionHandlers();
+		$tag_factory                = TagFactory::newFromParser( $parser );
+		$parser_function_factory    = ParserFunctionFactory::newFromParser( $parser );
 
-		$parser_function_factory = ParserFunctionFactory::newFromParser( $parser );
+        $tag_factory->registerFunctionHandlers();
 		$parser_function_factory->registerFunctionHandlers();
 	}
 
@@ -48,6 +44,26 @@ abstract class MWUnit {
 
 		$updater->addExtensionTable( 'mwunit_tests', $mwunit_tests_sql );
 	}
+
+    /**
+     * Allows last minute changes to the output page, e.g. adding of CSS or JavaScript by extensions.
+     *
+     * @see https://www.mediawiki.org/wiki/Manual:Hooks/BeforePageDisplay
+     *
+     * @param \OutputPage $out
+     * @param \Skin $skin
+     */
+	public static function onBeforePageDisplay( \OutputPage $out, \Skin $skin ) {
+	    if ( $out->getTitle()->getNamespace() < 0 ) {
+	        return;
+        }
+
+	    if ( $out->getWikiPage()->getContentModel() !== CONTENT_MODEL_TEST ) {
+	        return;
+        }
+
+	    $out->addModuleStyles( [ "ext.mwunit.TestContent.css" ] );
+    }
 
 	/**
 	 * Called at the end of Skin::buildSidebar(). Adds applicable links to the
@@ -107,6 +123,33 @@ abstract class MWUnit {
         return true;
     }
 
+    /**
+     * Specify whether a page can be moved for technical reasons.
+     *
+     * @param Title $old
+     * @param Title $new
+     * @param \Status $status
+     */
+    public static function onMovePageIsValidMove( Title $old, Title $new, \Status &$status ) {
+        if ( $old->getContentModel() !== CONTENT_MODEL_TEST ) {
+            return;
+        }
+
+        if ( $old->getNamespace() !== NS_TEST ) {
+            return;
+        }
+
+        if ( $new->getContentModel() === CONTENT_MODEL_TEST ) {
+            return;
+        }
+
+        if ( $new->getNamespace() === NS_TEST ) {
+            return;
+        }
+
+        $status->fatal( "mwunit-cannot-move" );
+    }
+
 	/**
 	 * Returns a formatted error message.
 	 *
@@ -118,22 +161,6 @@ abstract class MWUnit {
 		return \Html::rawElement(
 			'span', [ 'class' => 'error' ], wfMessage( $message, $params )->toString()
 		);
-	}
-
-	/**
-	 * Sets a flag to tell other parts of the extension MWUnit is currently executing tests.
-	 */
-	public static function setRunning() {
-		self::$test_running = true;
-	}
-
-	/**
-	 * Returns true if and only if a test is currently running.
-	 *
-	 * @return bool True if running, false otherwise
-	 */
-	public static function isRunning(): bool {
-		return self::$test_running === true;
 	}
 
 	/**
@@ -165,5 +192,64 @@ abstract class MWUnit {
         }
 
         return implode( " ", $parts );
+    }
+
+    /**
+     * Called right after MediaWiki processes MWUnit's extension.json file.
+     */
+    public static function registrationCallback() {
+        define( "CONTENT_MODEL_TEST", "test" );
+        define( "CONTENT_FORMAT_TEST", "text/x-wiki-test" );
+    }
+
+    /**
+     * @param Title $title
+     * @param $model
+     * @return bool
+     */
+    public static function onContentHandlerDefaultModelFor( Title $title, &$model ) {
+        if ( $title->getNamespace() === NS_TEST ) {
+            $model = CONTENT_MODEL_TEST;
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks if the given attributes are valid, and return true if and only if all given
+     * attributes are valid. It fills the second parameter with an array of errors.
+     *
+     * @param array $tag_arguments
+     * @param array &$errors
+     * @return bool
+     * @throws \ConfigException
+     */
+    public static function areAttributesValid( array $tag_arguments, array &$errors = [] ): bool {
+        $errors = [];
+
+        if ( !isset( $tag_arguments[ 'name' ] ) ) {
+            // The "name" argument is required.
+            $errors[] = wfMessage( 'mwunit-missing-test-name' )->plain();
+        } else if ( strlen( $tag_arguments['name'] ) > 255 || preg_match( '/^[A-Za-z0-9_\-]+$/', $tag_arguments['name'] ) !== 1 ) {
+            $errors[] = wfMessage( 'mwunit-invalid-test-name', $tag_arguments['name'] )->plain();
+        }
+
+        if ( !isset( $tag_arguments[ 'group' ] ) ) {
+            // The "group" argument is required.
+            $errors[] = wfMessage( 'mwunit-missing-group' )->plain();
+        } else if ( strlen( $tag_arguments['group'] ) > 255 || preg_match( '/^[A-Za-z0-9_\- ]+$/', $tag_arguments['group'] ) !== 1 ) {
+            $errors[] = wfMessage( 'mwunit-invalid-group-name', $tag_arguments['group'] )->plain();
+        }
+
+        $force_covers = MediaWikiServices::getInstance()
+            ->getMainConfig()
+            ->get( 'MWUnitForceCoversAnnotation' );
+
+        if ( $force_covers && !isset( $tag_arguments[ 'covers' ] ) ) {
+            $errors[] = wfMessage( 'mwunit-missing-covers-annotation', $tag_arguments[ 'name' ] )->plain();
+        }
+
+        return count( $errors ) === 0;
     }
 }

@@ -61,6 +61,10 @@ class TagFactory {
 
     private function getTestCaseFunctionDefinition() {
         $definition = function( $input, array $args, Parser $parser, PPFrame $frame ) {
+            if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
+                return MWUnit::error( "mwunit-outside-test-namespace" );
+            }
+
             $parser_function = $this->newTestCaseParserTag();
 
             $parser_data = new ParserData( $parser, $frame, $args );
