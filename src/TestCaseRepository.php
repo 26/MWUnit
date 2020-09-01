@@ -208,7 +208,7 @@ class TestCaseRepository {
             return false;
         }
 
-        return TestCase::newFromRow( $result->current()->test_group );
+        return TestCase::newFromRow( $result->current() );
     }
 
 	/**
