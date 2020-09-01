@@ -123,6 +123,33 @@ abstract class MWUnit {
         return true;
     }
 
+    /**
+     * Specify whether a page can be moved for technical reasons.
+     *
+     * @param Title $old
+     * @param Title $new
+     * @param \Status $status
+     */
+    public static function onMovePageIsValidMove( Title $old, Title $new, \Status &$status ) {
+        if ( $old->getContentModel() !== CONTENT_MODEL_TEST ) {
+            return;
+        }
+
+        if ( $old->getNamespace() !== NS_TEST ) {
+            return;
+        }
+
+        if ( $new->getContentModel() === CONTENT_MODEL_TEST ) {
+            return;
+        }
+
+        if ( $new->getNamespace() === NS_TEST ) {
+            return;
+        }
+
+        $status->fatal( "mwunit-cannot-move" );
+    }
+
 	/**
 	 * Returns a formatted error message.
 	 *

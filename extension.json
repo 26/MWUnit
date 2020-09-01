@@ -37,7 +37,8 @@
     ],
     "UnitTestsList": "MWUnit\\MWUnit::onUnitTestsList",
     "ContentHandlerDefaultModelFor": "MWUnit\\MWUnit::onContentHandlerDefaultModelFor",
-    "BeforePageDisplay": "MWUnit\\MWUnit::onBeforePageDisplay"
+    "BeforePageDisplay": "MWUnit\\MWUnit::onBeforePageDisplay",
+    "MovePageIsValidMove": "MWUnit\\MWUnit::onMovePageIsValidMove"
   },
   "SpecialPages": {
     "MWUnit": "MWUnit\\Special\\SpecialMWUnit"

@@ -22,7 +22,7 @@ class Mock implements MockInterface {
     /**
      * @inheritDoc
      */
-    public function setMock(string $mock_content) {
+    public function setMock( string $mock_content ) {
         $this->content = $mock_content;
     }
 

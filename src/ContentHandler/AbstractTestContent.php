@@ -2,10 +2,6 @@
 
 namespace MWUnit\ContentHandler;
 
-use DifferenceEngine;
-use DOMDocument;
-use HtmlArmor;
-use MediaWiki\Linker\LinkTarget;
 use MediaWiki\MediaWikiServices;
 use MWUnit\MWUnit;
 use MWUnit\WikitextParser;
