@@ -41,6 +41,7 @@ class AssertionFactory extends ParserFunctionFactory {
      *
      * @param Parser $parser
      * @return AssertionFactory
+     * @return AssertionFactory
      */
     public static function newFromParser( Parser $parser ): ParserFunctionFactory {
         return new self( $parser );

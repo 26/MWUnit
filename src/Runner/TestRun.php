@@ -240,10 +240,10 @@ class TestRun {
         $this->backupGlobals();
 
         $profiler = Profiler::getInstance();
+        $profiler_flag = md5( rand() );
 
 		try {
             $context = $this->getContext();
-
 			if ( $context === false ) {
 			    return;
             }
@@ -259,17 +259,15 @@ class TestRun {
                 ParserOptions::newCanonical( $context ),
                 true,
                 false
-            );
-
-            $profiler_flag = md5( rand() );
-
-            $profiler->flag( $profiler_flag );
-            $this->setExecutionTime( $profiler->getFlagExecutionTime( $profiler_flag ) );
+	        );
 
             $this->checkTemplateCoverage();
 		} finally {
+            $profiler->flag( $profiler_flag );
+            $this->setExecutionTime( $profiler->getFlagExecutionTime( $profiler_flag ) );
+
             $this->restoreGlobals();
-			$this->restoreUser();
+            $this->restoreUser();
 
             if ( !isset( $this->result ) ) {
                 $this->setSuccess();

@@ -131,19 +131,14 @@ abstract class MWUnit {
      * @param \Status $status
      */
     public static function onMovePageIsValidMove( Title $old, Title $new, \Status &$status ) {
-        if ( $old->getContentModel() !== CONTENT_MODEL_TEST ) {
+        $new_namespace = $new->getNamespace();
+        $new_content_model = $new->getContentModel();
+
+        if ( $new_namespace === NS_TEST && $new_content_model === CONTENT_MODEL_TEST ) {
             return;
         }
 
-        if ( $old->getNamespace() !== NS_TEST ) {
-            return;
-        }
-
-        if ( $new->getContentModel() === CONTENT_MODEL_TEST ) {
-            return;
-        }
-
-        if ( $new->getNamespace() === NS_TEST ) {
+        if ( $new_namespace !== NS_TEST && $new_content_model !== CONTENT_MODEL_TEST) {
             return;
         }
 
@@ -181,11 +176,18 @@ abstract class MWUnit {
      * @param string $test_name The test name
      * @return string
      */
-    public static function testNameToSentence(string $test_name ) {
+    public static function testNameToSentence( string $test_name ) {
         $parts = preg_split( '/(?=[A-Z_\-])/', $test_name, -1, PREG_SPLIT_NO_EMPTY );
         $parts = array_map( function ( $part ): string {
             return ucfirst( trim( $part, '_- ' ) );
         }, $parts );
+        $parts = array_filter( $parts, function( $part ): bool {
+            return !empty( $part );
+        } );
+
+        if ( count( $parts ) < 1 ) {
+            return "";
+        }
 
         if ( $parts[0] === "Test" ) {
             unset( $parts[0] );

@@ -12,11 +12,15 @@ use Title;
 class TestCaseRepository {
     protected static $instance = null;
 
-	/**
-	 * @var array Names of the test register initialisations in the current run of the parser.
-	 */
-	private $init_registered_tests = [];
+    /**
+     * TestCaseRepository constructor.
+     */
+    private function __construct() {
+    }
 
+    /**
+     * @return TestCaseRepository
+     */
     public static function getInstance(): TestCaseRepository {
 	    if ( self::$instance === null  ) {
 	        self::$instance = new TestCaseRepository();

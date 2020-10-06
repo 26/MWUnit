@@ -73,8 +73,8 @@ class ParserFunctionFactory {
             ] );
         }
 
-        $assertion_registrer = AssertionFactory::newFromParser( $this->parser );
-        $assertion_registrer->registerFunctionHandlers();
+        $assertion_factory = AssertionFactory::newFromParser( $this->parser );
+        $assertion_factory->registerFunctionHandlers();
     }
 
     private function getParserMockFunctionDefinition(): array {

@@ -142,7 +142,7 @@ abstract class AbstractTestContent extends \AbstractContent {
      *
      * @return string
      */
-    protected function getText(): string {
+    public function getText(): string {
         return $this->text;
     }
 
