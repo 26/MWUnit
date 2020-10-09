@@ -39,7 +39,7 @@ class TestContent extends AbstractTestContent {
 
         MWUnit::areAttributesValid( $attributes, $errors );
 
-        $name   = $attributes['name'] ?? '[invalid]';
+        $name   = htmlspecialchars( $attributes['name'] ?? '[invalid]' ) ;
         $title  = MWUnit::testNameToSentence( $name );
         $header = $title . Xml::tags( 'hr', [], '' );
 
@@ -86,6 +86,6 @@ class TestContent extends AbstractTestContent {
      * @return string
      */
     private function bodyFromErrors( array $errors ) {
-        return wfMessage( 'mwunit-test-not-registered' ) . "\n------\n" . implode( "\n", $errors );
+        return wfMessage( 'mwunit-test-not-registered' ) . "\n------\n" . htmlspecialchars( implode( "\n", $errors ) );
     }
 }

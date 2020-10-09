@@ -126,14 +126,11 @@ abstract class AbstractTestContent extends \AbstractContent {
         foreach ( $tags as $tag ) {
             $content = $tag['content'];
             $attributes = $tag['attributes'];
-
             $this->fillHtmlFromTag( $html, $content, $attributes );
-
             $divs[] = $html;
         }
 
         $page .= \Xml::tags( 'div', [ 'class' => 'mwunit-test-page' ], implode( "\n", $divs ) );
-
         $output->setText( $page );
     }
 

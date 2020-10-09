@@ -162,6 +162,7 @@ class ResultUI extends MWUnitUI {
      *
      * @param TestRun $run
      * @return string
+     * @throws \ConfigException
      */
     private function renderSucceededTest( TestRun $run ) {
         return sprintf(
@@ -179,6 +180,7 @@ class ResultUI extends MWUnitUI {
      *
      * @param TestRun $test_run
      * @return string|null
+     * @throws \ConfigException
      */
     private function formatTestHeader( TestRun $test_run ) {
         $result = $test_run->getResult();
@@ -214,9 +216,8 @@ class ResultUI extends MWUnitUI {
      * @return string
      */
     private function formatSummary( TestRun $run ): string {
-        $message = $run->getResult()->getMessage();
+        $message = htmlspecialchars( $run->getResult()->getMessage() );
         $collector = $run->getTestOutputCollector();
-
         $test_output = $this->formatTestOutput( $collector );
 
         if ( !$message && !$test_output ) {
