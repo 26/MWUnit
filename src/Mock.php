@@ -1,13 +1,13 @@
 <?php
 
-namespace MWUnit\Mock;
+namespace MWUnit;
 
 /**
  * Class Mock
  *
  * @package MWUnit\Mock
  */
-class Mock implements MockInterface {
+class Mock {
     private $content;
 
     /**

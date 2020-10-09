@@ -2,6 +2,7 @@
 
 namespace MWUnit\ContentHandler;
 
+use ConfigException;
 use MediaWiki\MediaWikiServices;
 use MWUnit\MWUnit;
 use Xml;
@@ -32,7 +33,7 @@ class TestContent extends AbstractTestContent {
 
     /**
      * @inheritDoc
-     * @throws \ConfigException
+     * @throws ConfigException
      */
     public function fillHtmlFromTag( &$html, string $content, array $attributes ) {
         $errors = [];

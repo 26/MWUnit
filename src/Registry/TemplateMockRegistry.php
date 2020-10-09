@@ -3,7 +3,7 @@
 namespace MWUnit\Registry;
 
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Mock\Mock;
+use MWUnit\Mock;
 use MWUnit\MWUnit;
 use Title;
 

@@ -4,8 +4,7 @@ namespace MWUnit\ParserFunction;
 
 use MediaWiki\MediaWikiServices;
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Mock\Mock;
-use MWUnit\Mock\MockInterface;
+use MWUnit\Mock;
 use MWUnit\MWUnit;
 use MWUnit\ParserData;
 use Parser;
@@ -147,9 +146,9 @@ class ParserMockParserFunction implements ParserFunction {
      * Mocks the given parser function with the given $mock_content.
      *
      * @param string $parser_function
-     * @param MockInterface $mock
+     * @param Mock $mock
      */
-	private function mockParserFunction( string $parser_function, MockInterface $mock ) {
+	private function mockParserFunction( string $parser_function, Mock $mock ) {
 		// Assert that the parser function was backed up
 		assert( isset( self::$function_hook_backups[$parser_function] ) );
 

@@ -4,7 +4,7 @@ namespace MWUnit\ParserFunction;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Injector\TestRunInjector;
-use MWUnit\Mock\Mock;
+use MWUnit\Mock;
 use MWUnit\MWUnit;
 use MWUnit\ParserData;
 use MWUnit\Registry\TemplateMockRegistry;
