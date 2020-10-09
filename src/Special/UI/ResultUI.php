@@ -69,7 +69,7 @@ class ResultUI extends MWUnitUI {
         }
 
         $this->getOutput()->addHTML(
-            \Xml::tags( 'p', [], \Xml::tags( 'b', [], $summary ) )
+            \Xml::tags( 'p', [], \Xml::tags( 'b', [], htmlspecialchars( $summary ) ) )
         );
 
         $store = $this->runner->getTestRunStore();

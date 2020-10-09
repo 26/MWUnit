@@ -56,13 +56,13 @@ class Equals implements Assertion {
 		$expected_lines = explode( "\n", $expected );
 		$actual_lines   = explode( "\n", $actual );
 
-		$expected_formatted = implode( "\n", array_map( function ( $line ): string {
+		$expected_formatted = htmlspecialchars( implode( "\n", array_map( function ( $line ): string {
 			return "- $line";
-		}, $expected_lines ) );
+		}, $expected_lines ) ) );
 
-		$actual_formatted = implode( "\n", array_map( function ( $line ): string {
+		$actual_formatted = htmlspecialchars( implode( "\n", array_map( function ( $line ): string {
 			return "+ $line";
-		}, $actual_lines ) );
+		}, $actual_lines ) ) );
 
 		return sprintf( "--- " . wfMessage( "mwunit-expected" )->plain() .
 			"\n+++ " . wfMessage( "mwunit-actual" )->plain() .
