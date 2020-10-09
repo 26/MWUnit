@@ -1,15 +1,15 @@
 <?php
 
-namespace MWUnit\Output;
+namespace MWUnit;
 
 use MWUnit\Exception\MWUnitException;
 
 /**
  * Class StringOutput
  *
- * @package MWUnit\Output
+ * @package MWUnit
  */
-class StringOutput implements TestOutput {
+class StringOutput {
     /**
      * @var string
      */

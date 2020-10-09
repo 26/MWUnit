@@ -4,12 +4,9 @@ namespace MWUnit\ParserFunction;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Injector\TestRunInjector;
-use MWUnit\MWUnit;
-use MWUnit\Output\StringOutput;
+use MWUnit\StringOutput;
 use MWUnit\ParserData;
 use MWUnit\Runner\TestRun;
-use Parser;
-use PPFrame;
 
 class VarDumpParserFunction implements ParserFunction, TestRunInjector {
     /**

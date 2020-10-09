@@ -2,7 +2,7 @@
 
 namespace MWUnit\Store;
 
-use MWUnit\Output\TestOutput;
+use MWUnit\StringOutput;
 use MWUnit\Exception\MWUnitException;
 
 class TestOutputStore implements StoreInterface {
@@ -20,11 +20,11 @@ class TestOutputStore implements StoreInterface {
     /**
      * Append a new TestOutput to the collector.
      *
-     * @param TestOutput $output
+     * @param StringOutput $output
      * @throws MWUnitException
      */
     public function append( $output ) {
-        if ( !$output instanceof TestOutput ) {
+        if ( !$output instanceof StringOutput ) {
             throw new MWUnitException( "TestOutputStore can only contain TestOutput objects" );
         }
 
