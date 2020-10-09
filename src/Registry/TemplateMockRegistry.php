@@ -3,7 +3,7 @@
 namespace MWUnit\Registry;
 
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Mock\MockInterface;
+use MWUnit\Mock\Mock;
 use MWUnit\MWUnit;
 use Title;
 
@@ -54,7 +54,7 @@ class TemplateMockRegistry implements Registry {
      * page is not mocked.
      *
      * @param Title $title
-     * @return MockInterface
+     * @return Mock
      * @throws MWUnitException
      * @inheritDoc
      */
@@ -70,7 +70,7 @@ class TemplateMockRegistry implements Registry {
      * Registers a new mock or overwrites an existing mock.
      *
      * @param Title $title
-     * @param MockInterface $content
+     * @param Mock $content
      * @inheritDoc
      */
 	public function register( $title, $content ) {
