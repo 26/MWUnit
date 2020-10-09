@@ -131,7 +131,12 @@ class ParserMockParserFunction implements ParserFunction {
 	 * @param string $parser_function
 	 */
 	private function backupFunctionHook( string $parser_function ) {
-		$parser   = MediaWikiServices::getInstance()->getParser();
+	    // We have already backed up this parser function's callback function.
+	    if ( isset(self::$function_hook_backups[ $parser_function ] ) ) {
+	        return;
+        }
+
+	    $parser   = MediaWikiServices::getInstance()->getParser();
 		$hooks    = $parser->mFunctionHooks;
 		$callable = $hooks[ $parser_function ];
 
