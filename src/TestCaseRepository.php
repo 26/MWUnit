@@ -38,6 +38,7 @@ class TestCaseRepository {
      * @param array $tests
      * @throws \FatalError
      * @throws \MWException
+     * @throws \ConfigException
      */
 	public function registerTests( \Title $title, array $tests ) {
         $article_id = $title->getArticleID();
@@ -58,8 +59,8 @@ class TestCaseRepository {
 		foreach ( $tests as $test ) {
 		    $attributes = $test['attributes'];
 
-		    if ( !isset( $attributes['name'] ) || !isset( $attributes['group'] ) ) {
-		        continue;
+            if ( !MWUnit::areAttributesValid( $attributes ) ) {
+                continue;
             }
 
 		    $name = $attributes['name'];

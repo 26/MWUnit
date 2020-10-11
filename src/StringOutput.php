@@ -16,7 +16,7 @@ class StringOutput {
     public $output;
 
     /**
-     * @inheritDoc
+     * @param $output
      * @throws MWUnitException When the given input is not a string
      */
     public function __construct( $output ) {
@@ -29,16 +29,10 @@ class StringOutput {
         $this->output = $output;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getOutput(): string {
         return $this->output;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function __toString(): string {
         return $this->output;
     }

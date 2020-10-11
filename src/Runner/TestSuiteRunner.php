@@ -169,14 +169,31 @@ class TestSuiteRunner {
 	}
 
     /**
-     * Returns the number of failures for the current run.
+     * Returns the number of tests marked as risky.
      *
      * @return int
      */
+	public function getRiskyCount() {
+	    return $this->test_run_store->getRiskyCount();
+    }
+
+    /**
+     * Returns the number of failed tests.
+     *
+     * @return int
+     */
+    public function getFailedCount() {
+	    return $this->test_run_store->getFailedCount();
+    }
+
+    /**
+     * Returns the number of failures for the current run.
+     *
+     * @return int
+     * @deprecated Since 1.2
+     */
 	public function getNotPassedCount(): int {
-		return array_reduce( $this->test_run_store->getTestResults(), function ( int $carry, TestResult $item ) {
-			return $carry + ( $item->getResult() === TestResult::T_SUCCESS ? 0 : 1 );
-		}, 0 );
+	    return $this->test_run_store->getRiskyCount() + $this->test_run_store->getFailedCount();
 	}
 
     /**
@@ -236,8 +253,6 @@ class TestSuiteRunner {
 	    $article_id = $test_case->getTitle()->getArticleID();
 		$wiki_page = WikiPage::newFromID( $article_id );
 
-		$this->test_case = $test_case;
-
 		if ( $wiki_page === false ) {
 			MWUnit::getLogger()->warning( 'Unable to run tests on article {article_id} because it does not exist', [
 				'article_id' => $article_id
@@ -254,17 +269,16 @@ class TestSuiteRunner {
 			return false;
 		}
 
-		$content = $wiki_page->getRevision()->getContent( Revision::RAW );
-
 		MWUnit::getLogger()->debug( 'Running tests on article {article_id}', [
 		    'article' => $article_id
         ] );
 
-        try {
-            WikitextParser::parseContentFromWikiPage( $wiki_page, $content, true );
-        } catch (MWException $e) {
-            return false;
-        }
+        $this->test_case = $test_case;
+        WikitextParser::parseContentFromWikiPage(
+            $wiki_page,
+            $wiki_page->getRevision()->getContent( Revision::RAW ),
+            true
+        );
 
         return true;
 	}

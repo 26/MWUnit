@@ -4,6 +4,8 @@ namespace MWUnit\Special\UI;
 
 use MediaWiki\Linker\LinkRenderer;
 use MWUnit\Exception\MWUnitException;
+use MWUnit\Renderer\Document;
+use MWUnit\Renderer\Tag;
 use OutputPage;
 
 class ExceptionUI extends MWUnitUI {
@@ -15,13 +17,12 @@ class ExceptionUI extends MWUnitUI {
     /**
      * ExceptionUI constructor.
      *
-     * @param MWUnitException $e
+     * @param \Exception $e
      * @param OutputPage $output_page
      * @param LinkRenderer $link_renderer
      */
-    public function __construct($e, OutputPage $output_page, LinkRenderer $link_renderer) {
+    public function __construct(\Exception $e, OutputPage $output_page, LinkRenderer $link_renderer) {
         $this->exception = $e;
-
         parent::__construct( $output_page, $link_renderer );
     }
 
@@ -31,16 +32,17 @@ class ExceptionUI extends MWUnitUI {
     public function render() {
         $this->getOutput()->addWikiMsg( 'mwunit-unhandled-exception-intro' );
         $this->getOutput()->addWikiText( '== Debug information ==' );
+
         $this->getOutput()->addHTML(
-            \Xml::tags( 'p', [], wfMessage( 'mwunit-unhandled-exception-debug-intro' ) )
+            ( new Tag( "p", wfMessage( 'mwunit-unhandled-exception-debug-intro' )->plain() ) )->__toString()
         );
+
         $this->getOutput()->addHTML(
-            \Xml::tags(
-                "pre",
-                [],
-                $this->exception->getMessage() . "<br/><br/>" .
-                $this->exception->getTraceAsString()
-            )
+            ( new Tag( "pre", new Document( [
+                new Tag( "span", $this->exception->getMessage() ),
+                new Tag( "br", "" ),
+                new Tag( "span", $this->exception->getTraceAsString() )
+            ] ), [] ) )->__toString()
         );
     }
 
@@ -48,7 +50,7 @@ class ExceptionUI extends MWUnitUI {
      * @inheritDoc
      */
     public function getNavigationPrefix(): string {
-        return wfMessage( 'mwunit-nav-introtext' )->plain();
+        return wfMessage( 'mwunit-nav-introtext' )->parse();
     }
 
     /**
@@ -56,7 +58,7 @@ class ExceptionUI extends MWUnitUI {
      */
     public function getNavigationItems(): array {
         return [
-            wfMessage( 'mwunit-nav-home' )->plain() => "Special:MWUnit"
+            wfMessage( 'mwunit-nav-home' )->parse() => "Special:MWUnit"
         ];
     }
 
@@ -64,7 +66,7 @@ class ExceptionUI extends MWUnitUI {
      * @inheritDoc
      */
     public function getHeader(): string {
-        return wfMessage( 'mwunit-exception-header' )->plain();
+        return wfMessage( 'mwunit-exception-header' )->parse();
     }
 
     /**

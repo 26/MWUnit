@@ -78,7 +78,7 @@ class ApiRunUnitTests extends ApiBase {
 
             $result_path = [ $id, "result" ];
 
-            $api_result->addValue( $result_path, "code", $result->getResult() );
+            $api_result->addValue( $result_path, "code", $result->getResultConstant() );
             $api_result->addValue( $result_path, "message", $result->getMessage() );
 
             $metadata_path = [ $id, "metadata" ];

@@ -61,7 +61,7 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
 
         if ( $title->getNamespace() === NS_TEMPLATE &&
             strtolower( $title->getText() ) === strtolower( self::$run->getCovered() ) ) {
-            self::$run->setRisky( wfMessage( "mwunit-mocked-cover-template" )->plain() );
+            self::$run->setRisky( wfMessage( "mwunit-mocked-cover-template" )->parse() );
             return;
         }
 

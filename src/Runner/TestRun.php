@@ -330,7 +330,7 @@ class TestRun {
 			) && $this->test_case->getOption( 'ignorestrictcoverage' ) === false;
 
 		if ( $this->covered && $strict_coverage && !in_array( $this->covered, self::$templates_used ) ) {
-			$this->setRisky( wfMessage( 'mwunit-strict-coverage-violation' )->plain() );
+			$this->setRisky( wfMessage( 'mwunit-strict-coverage-violation' )->parse() );
 		}
 	}
 
@@ -418,14 +418,14 @@ class TestRun {
                 }
 
                 if ( !$this->canMockUsers() ) {
-                    $this->setRisky( wfMessage( 'mwunit-missing-permissions-mock-user' )->plain() );
+                    $this->setRisky( wfMessage( 'mwunit-missing-permissions-mock-user' )->parse() );
                     return false;
                 }
 
                 $context = User::newFromName( $user_option );
 
                 if ( !$context instanceof User ) {
-                    $this->setRisky( wfMessage( 'mwunit-invalid-user' )->plain() );
+                    $this->setRisky( wfMessage( 'mwunit-invalid-user' )->parse() );
                     return false;
                 }
 
@@ -437,7 +437,7 @@ class TestRun {
                     'test'    => $this->test_name
                 ] );
 
-                $this->setRisky( wfMessage( 'mwunit-invalid-context' )->plain() );
+                $this->setRisky( wfMessage( 'mwunit-invalid-context' )->parse() );
                 return false;
         }
     }

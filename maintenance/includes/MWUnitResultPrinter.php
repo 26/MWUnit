@@ -69,11 +69,13 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 	public function outputTestResults( TestSuiteRunner $runner ) {
 		$no_tests 		= $runner->getTestCount();
 		$no_assertions	= $runner->getTotalAssertionsCount();
-		$no_not_passed 	= $runner->getNotPassedCount();
+
+		$no_risky    	= $runner->getRiskyCount();
+		$no_failed      = $runner->getFailedCount();
 
 		print( "\n\n" );
 
-		if ( $no_not_passed === 0 ) {
+		if ( ($no_risky + $no_failed) === 0 ) {
 			print( "OK ($no_tests tests, $no_assertions assertions)\n" );
 			return;
 		}
@@ -122,7 +124,8 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 		print( "\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
 			"Assertions: $no_assertions, " .
-			"Failures: $no_not_passed.\033[0m\n" );
+            "Risky tests: $risky_count, " .
+			"Failures: $failed_count.\033[0m\n" );
 	}
 
 	/**

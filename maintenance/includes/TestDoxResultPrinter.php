@@ -33,7 +33,7 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 
 		$sentence = MWUnit::testNameToSentence( $test_name );
 
-		switch ( $result->getResult() ) {
+		switch ( $result->getResultConstant() ) {
 			case TestResult::T_SUCCESS:
 				print( "  \033[0;32m✔\033[0m " . $sentence . "\n" );
 				break;
@@ -54,12 +54,15 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 	public function outputTestResults( TestSuiteRunner $runner ) {
 		$no_tests 		= $runner->getTestCount();
 		$no_assertions	= $runner->getTotalAssertionsCount();
-		$no_not_passed 	= $runner->getNotPassedCount();
 
-		if ( $runner->getNotPassedCount() > 0 ) {
+		$risky_count    = $runner->getRiskyCount();
+		$failed_count 	= $runner->getFailedCount();
+
+		if ( ( $risky_count + $failed_count ) > 0 ) {
 			print( "\n\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
 				"Assertions: $no_assertions, " .
-				"Failures: $no_not_passed.\033[0m\n" );
+				"Risky tests: $risky_count, " .
+                "Failures: $failed_count.\033[0m\n" );
 		} else {
 			print( "\nOK ($no_tests tests, $no_assertions assertions)\n" );
 		}

@@ -39,7 +39,7 @@ abstract class MWUnit {
 		$mwunit_tests_sql = sprintf( "%s/%s/table_mwunit_tests.sql", $directory, $type );
 
 		if ( !file_exists( $mwunit_tests_sql ) ) {
-			throw new MWException( wfMessage( 'mwunit-invalid-dbms', $type )->plain() );
+			throw new MWException( wfMessage( 'mwunit-invalid-dbms', $type )->parse() );
 		}
 
 		$updater->addExtensionTable( 'mwunit_tests', $mwunit_tests_sql );
@@ -79,9 +79,9 @@ abstract class MWUnit {
 		if ( $skin->getTitle()->getNamespace() === NS_TEMPLATE &&
             TestCaseRepository::getInstance()->isTemplateCovered( $skin->getTitle() ) ) {
 			$special_title = Title::newFromText( 'Special:MWUnit' );
-			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
+			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->parse() ] = [
 				[
-					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->plain(),
+					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->parse(),
 					'href' => $special_title->getFullURL( [
 						'unitTestCoverTemplate' => $skin->getTitle()->getText()
 					] ),
@@ -99,9 +99,9 @@ abstract class MWUnit {
 		}
 
 		$special_title = Title::newFromText( 'Special:MWUnit' );
-		$sidebar[ wfMessage( 'mwunit-sidebar-header' )->plain() ] = [
+		$sidebar[ wfMessage( 'mwunit-sidebar-header' )->parse() ] = [
 			[
-				'text' => wfMessage( 'mwunit-sidebar-run-tests' )->plain(),
+				'text' => wfMessage( 'mwunit-sidebar-run-tests' )->parse(),
 				'href' => $special_title->getFullURL( [ 'unitTestPage' => $skin->getTitle()->getFullText() ] ),
 				'id' => 'mwunit-sb-run',
 				'active' => '',
@@ -232,16 +232,16 @@ abstract class MWUnit {
 
         if ( !isset( $tag_arguments[ 'name' ] ) ) {
             // The "name" argument is required.
-            $errors[] = wfMessage( 'mwunit-missing-test-name' )->plain();
+            $errors[] = wfMessage( 'mwunit-missing-test-name' )->parse();
         } else if ( strlen( $tag_arguments['name'] ) > 255 || preg_match( '/^[A-Za-z0-9_\-]+$/', $tag_arguments['name'] ) !== 1 ) {
-            $errors[] = wfMessage( 'mwunit-invalid-test-name', $tag_arguments['name'] )->plain();
+            $errors[] = wfMessage( 'mwunit-invalid-test-name', $tag_arguments['name'] )->parse();
         }
 
         if ( !isset( $tag_arguments[ 'group' ] ) ) {
             // The "group" argument is required.
-            $errors[] = wfMessage( 'mwunit-missing-group' )->plain();
+            $errors[] = wfMessage( 'mwunit-missing-group' )->parse();
         } else if ( strlen( $tag_arguments['group'] ) > 255 || preg_match( '/^[A-Za-z0-9_\- ]+$/', $tag_arguments['group'] ) !== 1 ) {
-            $errors[] = wfMessage( 'mwunit-invalid-group-name', $tag_arguments['group'] )->plain();
+            $errors[] = wfMessage( 'mwunit-invalid-group-name', $tag_arguments['group'] )->parse();
         }
 
         $force_covers = MediaWikiServices::getInstance()
@@ -249,7 +249,7 @@ abstract class MWUnit {
             ->get( 'MWUnitForceCoversAnnotation' );
 
         if ( $force_covers && !isset( $tag_arguments[ 'covers' ] ) ) {
-            $errors[] = wfMessage( 'mwunit-missing-covers-annotation', $tag_arguments[ 'name' ] )->plain();
+            $errors[] = wfMessage( 'mwunit-missing-covers-annotation', $tag_arguments[ 'name' ] )->parse();
         }
 
         return count( $errors ) === 0;

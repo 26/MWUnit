@@ -49,7 +49,7 @@ abstract class TestResult {
      *
      * @return int
      */
-	abstract public function getResult(): int;
+	abstract public function getResultConstant(): int;
 
     /**
      * Returns the message describing why the test did not succeed.

@@ -3,9 +3,8 @@
 namespace MWUnit\Store;
 
 use MWUnit\StringOutput;
-use MWUnit\Exception\MWUnitException;
 
-class TestOutputStore implements StoreInterface {
+class TestOutputStore implements \Iterator, \Countable {
     private $index;
     private $outputs;
 
@@ -21,13 +20,8 @@ class TestOutputStore implements StoreInterface {
      * Append a new TestOutput to the collector.
      *
      * @param StringOutput $output
-     * @throws MWUnitException
      */
-    public function append( $output ) {
-        if ( !$output instanceof StringOutput ) {
-            throw new MWUnitException( "TestOutputStore can only contain TestOutput objects" );
-        }
-
+    public function append( StringOutput $output) {
         $this->outputs[] = $output;
     }
 
@@ -40,41 +34,27 @@ class TestOutputStore implements StoreInterface {
         return $this->outputs;
     }
 
-    /**
-     * @inheritDoc
-     * @return TestOutput
-     */
-    public function current(): TestOutput {
+    public function current(): StringOutput {
         return $this->outputs[$this->index];
     }
 
-    /**
-     * @inheritDoc
-     */
     public function next() {
         ++$this->index;
     }
 
-    /**
-     * @inheritDoc
-     * @return int
-     */
     public function key(): int {
         return $this->index;
     }
 
-    /**
-     * @inheritDoc
-     * @return bool
-     */
     public function valid(): bool {
         return isset( $this->outputs[$this->index] );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function rewind() {
         $this->index = 0;
+    }
+
+    public function count() {
+        return count( $this->outputs );
     }
 }

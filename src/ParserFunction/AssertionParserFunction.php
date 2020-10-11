@@ -70,7 +70,7 @@ class AssertionParserFunction implements ParserFunction, TestRunInjector {
 		$argument_range 	= range( $required_arg_count, $required_arg_count + 1 );
 
 		if ( !in_array( $actual_arg_count, $argument_range ) ) {
-            self::$run->setRisky( wfMessage( 'mwunit-invalid-assertion' )->plain() );
+            self::$run->setRisky( wfMessage( 'mwunit-invalid-assertion' )->parse() );
 			return '';
 		}
 

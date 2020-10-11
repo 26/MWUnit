@@ -3,6 +3,8 @@
 namespace MWUnit\Maintenance;
 
 use MediaWiki\MediaWikiServices;
+use MWUnit\TestCaseRepository;
+use MWUnit\WikitextParser;
 
 error_reporting( 0 );
 
@@ -83,13 +85,10 @@ class RebuildTestsIndex extends \Maintenance {
 
 			$title = \Title::newFromText( $row->page_title, (int)$row->page_namespace );
 			$page = \WikiPage::newFromID( $title->getArticleID() );
+			$content = $page->getContent();
 
-			$parser = ( MediaWikiServices::getInstance() )->getParser();
-			$parser->parse(
-				\ContentHandler::getContentText( $page->getContent() ),
-				$title,
-				\ParserOptions::newCanonical( $context )
-			);
+            $tags = WikitextParser::getTestCasesFromWikitext( $content->getNativeData() );
+            TestCaseRepository::getInstance()->registerTests( $page->getTitle(), $tags );
 
 			$this->done++;
 			$this->showProgress();

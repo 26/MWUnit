@@ -40,7 +40,6 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
     }
 
     public function formatDump( string $variable ): string {
-        $value  = htmlentities( $variable );
         $type   = $this->determineVariableType( $variable );
 
         switch ( $type ) {
@@ -48,10 +47,10 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
                 return "NULL";
             case "int":
             case "float":
-                return sprintf( '%s(%d)', $type, $value );
+                return sprintf( '%s(%d)', $type, $variable );
             default:
                 $length = strlen( $variable );
-                return sprintf( '%s(%d) "%s"', $type, $length, $value );
+                return sprintf( '%s(%d) "%s"', $type, $length, $variable );
         }
     }
 

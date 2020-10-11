@@ -112,7 +112,7 @@ abstract class AbstractTestContent extends \AbstractContent {
             ->rawParams( \RequestContext::getMain()->getLanguage()->pipeList( [
                 \Xml::tags( 'a', [ 'href' => $href ], wfMessage( "mwunit-nav-run-tests" ) )
             ] ) )->text() : '';
-        $nav = wfMessage( "mwunit-no-tests", $number_of_tests )->plain() . " $nav";
+        $nav = wfMessage( "mwunit-no-tests", $number_of_tests )->parse() . " $nav";
         $nav = \Xml::tags('div', ['class' => 'mwunit-subtitle'], $nav );
 
         $page = \Xml::tags(

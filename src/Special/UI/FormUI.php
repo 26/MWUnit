@@ -19,7 +19,7 @@ class FormUI extends MWUnitUI {
     }
 
     public function getHeader(): string {
-        return wfMessage( "mwunit-special-title" )->plain();
+        return wfMessage( "mwunit-special-title" )->parse();
     }
 
     public function getClass(): string {

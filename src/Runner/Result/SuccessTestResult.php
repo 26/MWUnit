@@ -18,7 +18,7 @@ class SuccessTestResult extends TestResult {
     /**
      * @inheritDoc
      */
-    public function getResult(): int {
+    public function getResultConstant(): int {
         return self::T_SUCCESS;
     }
 

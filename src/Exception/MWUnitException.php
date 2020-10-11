@@ -20,6 +20,6 @@ class MWUnitException extends \Exception {
 		$this->message_name = $message_name;
 		$this->arguments = $arguments;
 
-		parent::__construct( wfMessage( $message_name, ...$arguments )->plain(), 4500 );
+		parent::__construct( wfMessage( $message_name, ...$arguments )->parse(), 4500 );
 	}
 }

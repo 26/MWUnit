@@ -4,6 +4,7 @@ namespace MWUnit\Special\UI;
 
 use HtmlArmor;
 use MediaWiki\Linker\LinkRenderer;
+use MWUnit\Renderer\Tag;
 use OutputPage;
 use SpecialPage;
 use Title;
@@ -122,10 +123,7 @@ abstract class MWUnitUI {
      */
     private function renderHeader() {
         $this->getOutput()->setPageTitle(
-            \Xml::element("div",
-                ["class" => "pdp title"],
-                $this->getHeader()
-            )
+            ( new Tag( "div", $this->getHeader(), ["class" => "title"] ) )->__toString()
         );
     }
 
@@ -144,7 +142,7 @@ abstract class MWUnitUI {
             $title = Title::newFromText( $value );
 
             if ( $this->getParameter() === $key ) {
-                return Xml::tags( 'strong', null, $key );
+                return ( new Tag( "strong", $key ) );
             }
 
             return $this->getLinkRenderer()->makeLink( $title, new HtmlArmor( $key ) );

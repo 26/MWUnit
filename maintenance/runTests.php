@@ -96,7 +96,7 @@ class RunTests extends \Maintenance {
 
 		$group = $this->getOption( 'group', false );
 		$test = $this->getOption( 'test', false );
-		$testsuite = $this->getOption( 'testsuite', false );
+		$testsuite = $this->getOption( 'page', false );
 		$covers = $this->getOption( 'covers', false );
 
 		if ( !$group && !$test && !$testsuite && !$covers ) {
@@ -106,7 +106,7 @@ class RunTests extends \Maintenance {
 		try {
             $tests = $this->getTests();
         } catch( MWUnitException $e ) {
-		    $this->fatalError( wfMessage( 'mwunit-rebuild-required' )->plain() );
+		    $this->fatalError( wfMessage( 'mwunit-rebuild-required' )->parse() );
         }
 
 		if ( count( $tests ) === 0 ) {
