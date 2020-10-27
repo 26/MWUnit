@@ -47,7 +47,7 @@ class ResultUI extends MWUnitUI {
         $profiler = Profiler::getInstance();
 
         // In milliseconds
-        $execution_time = floor( $profiler->getExecutionTime() * 1000 );
+        $execution_time = floor( $profiler->getTotalExecutionTime() * 1000 );
 
         // In megabytes
         $memory_usage = floor( $profiler->getPeakMemoryUse() / 1024 / 1024 );

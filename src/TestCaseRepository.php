@@ -16,6 +16,7 @@ class TestCaseRepository {
      * TestCaseRepository constructor.
      */
     private function __construct() {
+        // TODO: Do not make this a singleton, but make it injectable instead
     }
 
     /**
@@ -105,7 +106,7 @@ class TestCaseRepository {
 	 *
 	 * @param int $article_id The article ID of the page from which the tests should be deregistered.
 	 */
-	public function deregisterTests( int $article_id ) {
+	public function deregisterTestsOnPage( int $article_id ) {
 		$database = wfGetDb( DB_MASTER );
 		$database->delete(
 			'mwunit_tests',
@@ -119,7 +120,7 @@ class TestCaseRepository {
 	 * @param string $test_group
 	 * @return bool
 	 */
-	public function testGroupExists( string $test_group ) {
+	public function doesTestGroupExist( string $test_group ) {
 		return wfGetDb( DB_REPLICA )->select(
 			'mwunit_tests',
 			[ 'test_name' ],
@@ -162,7 +163,7 @@ class TestCaseRepository {
 	}
 
     /**
-     * Returns a TestSuite of tests that cover the given Title object. The given page must be an existing template,
+     * Returns a list of tests that cover the given Title object. The given page must be an existing template,
      * else an empty TestSuite is returned.
      *
      * @param string $title
@@ -190,7 +191,7 @@ class TestCaseRepository {
 
     /**
      * @param string|false $test_name
-     * @return false|TestCase
+     * @return false|DatabaseTestCase
      */
 	public function getTestCaseFromTestName( string $test_name ) {
         list ( $page_name, $name ) = explode( "::", $test_name );
@@ -213,7 +214,7 @@ class TestCaseRepository {
             return false;
         }
 
-        return TestCase::newFromRow( $result->current() );
+        return DatabaseTestCase::newFromRow( $result->current() );
     }
 
 	/**

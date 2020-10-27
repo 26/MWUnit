@@ -65,7 +65,7 @@ class UpdateHandler  {
 		] );
 
 		// Deregister all tests on the page and let the parser re-register them.
-		TestCaseRepository::getInstance()->deregisterTests( $article_id );
+		TestCaseRepository::getInstance()->deregisterTestsOnPage( $article_id );
 
 		$tags = WikitextParser::getTestCasesFromWikitext( $content->getNativeData() );
 
@@ -109,7 +109,7 @@ class UpdateHandler  {
 			'id' => $deleted_id
 		] );
 
-		TestCaseRepository::getInstance()->deregisterTests( $deleted_id );
+		TestCaseRepository::getInstance()->deregisterTestsOnPage( $deleted_id );
 
 		return true;
 	}

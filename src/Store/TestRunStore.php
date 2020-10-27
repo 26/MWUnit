@@ -5,7 +5,7 @@ namespace MWUnit\Store;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
-use MWUnit\TestCase;
+use MWUnit\DatabaseTestCase;
 
 class TestRunStore implements \Iterator, \Countable {
     /**
@@ -24,7 +24,7 @@ class TestRunStore implements \Iterator, \Countable {
     private $test_results = [];
 
     /**
-     * @var TestCase[]
+     * @var DatabaseTestCase[]
      */
     private $test_cases = [];
 
@@ -137,7 +137,7 @@ class TestRunStore implements \Iterator, \Countable {
     }
 
     /**
-     * Returns all the TestCase objects contained in the TestRun objects.
+     * Returns all the DatabaseTestCase objects contained in the TestRun objects.
      *
      * @return array
      */

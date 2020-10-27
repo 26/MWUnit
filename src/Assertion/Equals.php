@@ -34,7 +34,7 @@ class Equals implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $expected, $actual, $message = null ) {
+	public static function assert( string &$failure_message, string $expected, string $actual, $message = null ) {
 		$failure_message = $message ??
 			sprintf(
 				wfMessage( "mwunit-assert-failure-equal" )->plain() . "\n\n%s",

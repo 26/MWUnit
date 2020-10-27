@@ -34,7 +34,7 @@ class EqualsIgnoreCase implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $expected, $actual, $message = null ) {
+	public static function assert( string &$failure_message, string $expected, string $actual, $message = null ) {
 		$expected_lower = strtolower( $expected );
 		$actual_lower = strtolower( $actual );
 

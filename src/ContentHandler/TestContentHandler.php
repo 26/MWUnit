@@ -38,28 +38,7 @@ class TestContentHandler extends TextContentHandler {
     /**
      * @inheritDoc
      */
-    public function supportsSections() {
-        return false;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function supportsRedirects() {
-        return false;
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function supportsCategories() {
-        return false;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function isParserCacheSupported() {
         return false;
     }
 
@@ -77,8 +56,6 @@ class TestContentHandler extends TextContentHandler {
      * @return AbstractTestContent
      */
     public function newTestContent( $text = null ) {
-        $text = $text ?? '';
-
-        return TestContent::newFromText( $text );
+        return TestContent::newFromText( $text ?: '' );
     }
 }

@@ -2,7 +2,7 @@
 
 namespace MWUnit\Runner\Result;
 
-use MWUnit\TestCase;
+use MWUnit\DatabaseTestCase;
 
 /**
  * Class TestResult
@@ -15,25 +15,25 @@ abstract class TestResult {
 	const T_SUCCESS = 2; /* phpcs:ignore */
 
 	/**
-	 * @var TestCase
+	 * @var DatabaseTestCase
 	 */
 	private $test_case;
 
     /**
      * TestResult constructor.
      *
-     * @param TestCase $case
+     * @param DatabaseTestCase $case
      */
-	public function __construct( TestCase $case ) {
+	public function __construct(DatabaseTestCase $case ) {
         $this->test_case = $case;
 	}
 
 	/**
 	 * Returns the test case associated with this TestResult.
 	 *
-	 * @return TestCase
+	 * @return DatabaseTestCase
 	 */
-	public function getTestCase(): TestCase {
+	public function getTestCase(): DatabaseTestCase {
 		return $this->test_case;
 	}
 

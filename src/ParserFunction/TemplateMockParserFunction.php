@@ -4,10 +4,9 @@ namespace MWUnit\ParserFunction;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Injector\TestRunInjector;
-use MWUnit\Mock;
 use MWUnit\MWUnit;
 use MWUnit\ParserData;
-use MWUnit\Registry\TemplateMockRegistry;
+use MWUnit\TemplateMockStore;
 use MWUnit\Runner\TestRun;
 use Parser;
 use PPFrame;
@@ -49,7 +48,7 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
         &$text,
         array &$deps
     ) {
-        $registry = TemplateMockRegistry::getInstance();
+        $registry = TemplateMockStore::getInstance();
 
         if ( !$registry->exists( $title ) ) {
             return;
@@ -65,7 +64,7 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
             return;
         }
 
-        $text = $registry->get( $title )->getMock();
+        $text = $registry->get( $title );
     }
 
     /**
@@ -103,10 +102,8 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
             );
         }
 
-		$mock = new Mock( $content );
-
-		$mock_registry = TemplateMockRegistry::getInstance();
-		$mock_registry->register( $title, $mock );
+		$mock_registry = TemplateMockStore::getInstance();
+		$mock_registry->register( $title, $content );
 
 		return '';
 	}

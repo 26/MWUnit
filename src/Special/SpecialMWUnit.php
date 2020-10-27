@@ -2,11 +2,9 @@
 
 namespace MWUnit\Special;
 
-use MWUnit\Exception\RebuildRequiredException;
-use MWUnit\Special\UI\MWUnitFormUI;
 use MWUnit\Exception\MWUnitException;
-use MWUnit\MWUnit;
 use MWUnit\Runner\TestSuiteRunner;
+use MWUnit\Store\TestRunStore;
 use MWUnit\TestSuite;
 
 /**
@@ -35,26 +33,31 @@ class SpecialMWUnit extends \SpecialPage {
 		return 'mwunit';
 	}
 
-	/**
-	 * @param string|null $subpage
-	 * @throws \MWException
-	 */
+    /**
+     * @param string|null $subpage
+     * @throws \PermissionsError
+     */
 	public function execute( $subpage ) {
 		$this->checkPermissions();
 
-		if ( $this->shouldRun() ) {
-		    try {
-                $this->runTests();
-            } catch( MWUnitException $e ) {
-                $ui = new UI\ExceptionUI( $e, $this->getOutput(), $this->getLinkRenderer() );
-                $ui->execute();
-            }
+		if ( !$this->shouldRun() ) {
+            $ui = new UI\FormUI( $this->getOutput(), $this->getLinkRenderer() );
+            $ui->execute();
 
-		    return;
+            return;
         }
 
-        $ui = new UI\FormUI( $this->getOutput(), $this->getLinkRenderer() );
-		$ui->execute();
+        try {
+            $result = $this->runTests();
+
+            if ( !$result ) {
+                $ui = new UI\FormUI( $this->getOutput(), $this->getLinkRenderer() );
+                $ui->execute();
+            }
+        } catch( MWUnitException $e ) {
+            $ui = new UI\ExceptionUI( $e, $this->getOutput(), $this->getLinkRenderer() );
+            $ui->execute();
+        }
 	}
 
     /**
@@ -64,27 +67,33 @@ class SpecialMWUnit extends \SpecialPage {
 	private function runTests(): bool {
 	    $request = $this->getRequest();
 
-		if ( $request->getVal( 'unitTestCoverTemplate' ) ) {
-            $covers = $request->getVal( 'unitTestCoverTemplate' );
+	    $covers     = $request->getVal( 'unitTestCoverTemplate' );
+        $individual = $request->getVal( 'unitTestIndividual' );;
+        $group      = $request->getVal( 'unitTestGroup' );
+        $title      = $request->getVal( 'unitTestPage' );
+
+		if ( !empty( $covers ) ) {
             $test_suite = TestSuite::newFromCovers( $covers );
-		} elseif ( $request->getVal( 'unitTestIndividual' ) ) {
-		    $test_case = $request->getVal( 'unitTestIndividual' );
-		    $test_suite = TestSuite::newFromText( $test_case );
-        } elseif ( $request->getVal( 'unitTestGroup' ) ) {
-		    $test_case = $request->getVal( 'unitTestGroup' );
-		    $test_suite = TestSuite::newFromGroup( $test_case );
-        } else {
+		} elseif ( !empty( $individual ) ) {
+		    $test_suite = TestSuite::newFromText( $individual );
+        } elseif ( !empty( $group ) ) {
+		    $test_suite = TestSuite::newFromGroup( $group );
+        } elseif ( !empty( $title ) ) {
 			// Run the specified page
-			$title = \Title::newFromText( $this->getRequest()->getVal( 'unitTestPage' ) );
+			$title_object = \Title::newFromText( $title );
 
-			if ( !$title instanceof \Title || !$title->exists() ) {
-			    throw new RebuildRequiredException( 'mwunit-rebuild-required' );
-			}
+			if ( !$title_object instanceof \Title ) {
+			    return false;
+            }
 
-			$test_suite = TestSuite::newFromTitle( $title );
-		}
+			$test_suite = TestSuite::newFromTitle( $title_object );
+		} else {
+		    return false;
+        }
 
-		$runner = new TestSuiteRunner( $test_suite, null );
+		$test_run_store = new TestRunStore();
+
+		$runner = new TestSuiteRunner( $test_suite, $test_run_store );
 		$runner->run();
 
         $ui = new UI\ResultUI( $runner, $this->getOutput(), $this->getLinkRenderer() );

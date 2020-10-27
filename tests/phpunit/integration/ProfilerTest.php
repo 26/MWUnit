@@ -37,7 +37,7 @@ class ProfilerTest extends MediaWikiTestCase {
 
         // getExecutionTime must now be AT LEAST 10 microseconds.
 
-        $this->assertGreaterThan( 10, $this->instance->getExecutionTime() * 1000000 );
+        $this->assertGreaterThan( 10, $this->instance->getTotalExecutionTime() * 1000000 );
     }
 
     public function testGetFlagExecutionTime() {

@@ -2,7 +2,7 @@
 
 namespace MWUnit\Runner\Result;
 
-use MWUnit\TestCase;
+use MWUnit\DatabaseTestCase;
 
 /**
  * Class FailureTestResult
@@ -19,9 +19,9 @@ class FailureTestResult extends TestResult {
      * FailureTestResult constructor.
      *
      * @param string $message
-     * @param TestCase $test_case
+     * @param DatabaseTestCase $test_case
      */
-    public function __construct( string $message, TestCase $test_case ) {
+    public function __construct(string $message, DatabaseTestCase $test_case ) {
         $this->message = $message;
         parent::__construct( $test_case );
     }

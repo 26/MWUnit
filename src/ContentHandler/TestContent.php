@@ -3,11 +3,9 @@
 namespace MWUnit\ContentHandler;
 
 use ConfigException;
-use MediaWiki\MediaWikiServices;
 use MWUnit\MWUnit;
 use MWUnit\Renderer\Document;
 use MWUnit\Renderer\Tag;
-use Xml;
 
 /**
  * Class TestContent
@@ -35,30 +33,23 @@ class TestContent extends AbstractTestContent {
 
     /**
      * @inheritDoc
+     *
      * @throws ConfigException
      */
     public function fillHtmlFromTag( &$html, string $content, array $attributes ) {
         $errors = [];
 
+        // Check if the attributes are valid
         MWUnit::areAttributesValid( $attributes, $errors );
 
-        $name   = $attributes['name'] ?? '[invalid]';
-        $title  = MWUnit::testNameToSentence( $name );
-        $header = new Tag( "span", new Document( [ new Tag( "span", $title ), new Tag( "hr", "" ) ] ) );
+        // Create a header
+        $header = $this->headerFromAttributes( $attributes, $errors );
 
-        if ( isset( $attributes['name'] ) ) {
-            $mTest = $attributes['name'];
-
-            if ( in_array( $mTest, $this->mTests ) ) {
-                $errors[] = wfMessage( "mwunit-duplicate-test", $attributes['name'] );
-            }
-
-            $this->mTests[] = $mTest;
-        }
-
+        // Get the appropriate class
         $class = $errors === [] ?
             'mwunit-test-case mwunit-valid successbox' :
             'mwunit-test-case mwunit-invalid errorbox';
+
         $tag = $errors === [] ?
             $this->tagFromAttributes( $content, $attributes ) :
             $this->tagFromErrors( $errors );
@@ -90,8 +81,47 @@ class TestContent extends AbstractTestContent {
      * @return Tag
      */
     private function tagFromErrors( array $errors ): Tag {
-        $text = wfMessage( 'mwunit-test-not-registered' ) . "\n------\n" . implode( "\n", $errors );
+        $text = wfMessage( 'mwunit-test-not-registered' );
+        $text .= "\n------\n";
+        $text .= implode( "\n", $errors );
 
         return new Tag( "pre", $text, [ 'class' => 'mwunit-body' ] );
+    }
+
+    /**
+     * Creates a header tag from the given attributes.
+     *
+     * @param array $attributes
+     * @param array $errors
+     * @return Tag
+     */
+    private function headerFromAttributes( array $attributes, array &$errors ): Tag {
+        if ( isset( $attributes['name'] ) ) {
+            $name = $attributes['name'];
+            $title = MWUnit::testNameToSentence( $name );
+
+            if ( in_array( $name, $this->mTests ) ) {
+                $errors[] = wfMessage( "mwunit-duplicate-test", $name );
+            }
+
+            $this->mTests[] = $name;
+        } else {
+            $title = "[invalid]";
+        }
+
+        return new Tag(
+            "span",
+            new Document(
+                [
+                    new Tag(
+                        "span",
+                        $title
+                    ), new Tag(
+                        "hr",
+                        ""
+                    )
+                ]
+            )
+        );
     }
 }

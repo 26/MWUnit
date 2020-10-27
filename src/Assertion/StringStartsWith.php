@@ -33,7 +33,7 @@ class StringStartsWith implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $needle, $haystack, $message = null ) {
+	public static function assert( string &$failure_message, string $needle, string $haystack, $message = null ) {
 		$needle_length = strlen( $needle );
 
 		$failure_message = $message ??

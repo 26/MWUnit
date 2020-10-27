@@ -4,7 +4,6 @@ namespace MWUnit\ParserFunction;
 
 use MediaWiki\MediaWikiServices;
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Mock;
 use MWUnit\MWUnit;
 use MWUnit\ParserData;
 use Parser;
@@ -40,7 +39,6 @@ class ParserMockParserFunction implements ParserFunction {
             );
         }
 
-		$mock = new Mock( $content );
 		$reserved_functions = self::getReservedFunctions();
 
 		if ( $reserved_functions === false ) {
@@ -65,7 +63,7 @@ class ParserMockParserFunction implements ParserFunction {
 		}
 
 		$this->backupFunctionHook( $parser_function );
-		$this->mockParserFunction( $parser_function, $mock );
+		$this->mockParserFunction( $parser_function, $content );
 
 		return '';
 	}
@@ -146,9 +144,9 @@ class ParserMockParserFunction implements ParserFunction {
      * Mocks the given parser function with the given $mock_content.
      *
      * @param string $parser_function
-     * @param Mock $mock
+     * @param string $mock
      */
-	private function mockParserFunction( string $parser_function, Mock $mock ) {
+	private function mockParserFunction( string $parser_function, string $mock ) {
 		// Assert that the parser function was backed up
 		assert( isset( self::$function_hook_backups[$parser_function] ) );
 
@@ -162,7 +160,7 @@ class ParserMockParserFunction implements ParserFunction {
 
                 $args = self::argsToTemplateArgs( $args );
                 return [ $p->recursivePreprocess(
-                    $mock->getMock(),
+                    $mock,
                     $p->getPreprocessor()->newCustomFrame( $args )
                 ), 'isHTML' => false, 'noparse' => true ];
             } : function ( \Parser $p ) use ( $mock ) {
@@ -171,7 +169,7 @@ class ParserMockParserFunction implements ParserFunction {
 
                 $args = self::argsToTemplateArgs( $args );
                 return [ $p->recursivePreprocess(
-                    $mock->getMock(),
+                    $mock,
                     $p->getPreprocessor()->newCustomFrame( $args )
                 ), 'isHTML' => false, 'noparse' => true ];
             };

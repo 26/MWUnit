@@ -3,6 +3,7 @@
 namespace MWUnit\Maintenance;
 
 use MWUnit\Exception\MWUnitException;
+use MWUnit\Store\TestRunStore;
 use MWUnit\TestCaseRepository;
 use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestSuite;
@@ -69,14 +70,16 @@ class RunTests extends \Maintenance {
 	 * @throws MWUnitException|\ConfigException
      */
 	public function execute() {
-		$version = \ExtensionRegistry::getInstance()->getAllThings()['MWUnit']['version'] ?? null;
-		$this->output( "MWUnit $version by Marijn van Wezel and contributors.\n" );
+		$this->outputIntro();
 
-		if ( $this->getOption( 'version' ) === 1 ) {
+		if ( $this->getOption( 'version' ) === 1 || count( $this->orderedOptions ) < 1 ) {
+		    // The intro already contains the version; exit here
 			return true;
 		}
 
 		$this->output( "\n" );
+
+		// Check if the given parameters are not mutually exclusive
 		$this->checkMutuallyExclusiveOptions();
 
 		if ( $this->getOption( 'list-groups' ) === 1 ) {
@@ -94,37 +97,19 @@ class RunTests extends \Maintenance {
 			return true;
 		}
 
-		$group = $this->getOption( 'group', false );
-		$test = $this->getOption( 'test', false );
-		$testsuite = $this->getOption( 'page', false );
-		$covers = $this->getOption( 'covers', false );
-
-		if ( !$group && !$test && !$testsuite && !$covers ) {
-			$this->fatalError( "No tests to run." );
-		}
-
-		try {
-            $tests = $this->getTests();
-        } catch( MWUnitException $e ) {
-		    $this->fatalError( wfMessage( 'mwunit-rebuild-required' )->parse() );
-        }
+		$tests = $this->getTests();
 
 		if ( count( $tests ) === 0 ) {
 			$this->fatalError( 'No tests to run.' );
 		}
 
-		$interface = $this->getOption( 'testdox', 0 ) === 1 ||
-					 $this->getConfig()->get( "MWUnitDefaultTestDox" ) === true ?
-			new TestDoxResultPrinter() :
-			new MWUnitResultPrinter(
-				(int)$this->getOption( 'columns', 16 ),
-				(bool)$this->getOption( 'no-progress', false )
-			);
+		$result_printer = $this->getResultPrinter();
+		$test_run_store = new TestRunStore();
 
-		$unit_test_runner = new TestSuiteRunner( $tests, [ $interface, "testCompletionCallback" ] );
+		$unit_test_runner = new TestSuiteRunner( $tests, $test_run_store, [ $result_printer, "testCompletionCallback" ] );
 		$unit_test_runner->run();
 
-		$interface->outputTestResults( $unit_test_runner );
+		$result_printer->outputTestResults( $unit_test_runner );
 
 		return true;
 	}
@@ -132,7 +117,7 @@ class RunTests extends \Maintenance {
 	private function checkMutuallyExclusiveOptions() {
 		$set = 0;
 		foreach ( self::MUTUALLY_EXCLUSIVE_OPTIONS as $option ) {
-			$set += (bool)$this->getOption( $option, false );
+			$set += $this->hasOption( $option );
 		}
 
 		if ( $set > 1 ) {
@@ -270,14 +255,41 @@ class RunTests extends \Maintenance {
 		}
 
         $test = $this->getOption( 'test', false );
+		if ( $test !== false ) {
+            if ( strpos( $test, '::' ) === false ) {
+                $this->fatalError( "The test name '$test' is invalid." );
+            }
 
-		// Run test
-		if ( strpos( $test, '::' ) === false ) {
-			$this->fatalError( "The test name '$test' is invalid." );
-		}
+            return TestSuite::newFromText( $test );
+        }
 
-		return TestSuite::newFromText( $test );
+		return TestSuite::newEmpty();
 	}
+
+    /**
+     * Outputs the "intro" text.
+     */
+    private function outputIntro() {
+        $version = \ExtensionRegistry::getInstance()->getAllThings()['MWUnit']['version'] ?? null;
+        $this->output( "MWUnit $version by Marijn van Wezel and contributors.\n" );
+    }
+
+    /**
+     * Return the appropriate ResultPrinter for the given CLI arguments.
+     *
+     * @return CommandLineResultPrinter
+     * @throws \ConfigException
+     */
+    private function getResultPrinter() {
+        if ( $this->hasOption( "testdox" ) || $this->getConfig()->get( "MWUnitDefaultTestDox" ) === true ) {
+            return new TestDoxResultPrinter();
+        }
+
+        return new MWUnitResultPrinter(
+            (int)$this->getOption( 'columns', 16 ),
+            $this->hasOption( 'no-progress' )
+        );
+    }
 }
 
 $maintClass = RunTests::class;

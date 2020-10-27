@@ -2,111 +2,105 @@
 
 namespace MWUnit;
 
+use ConfigException;
 use MediaWiki\MediaWikiServices;
+use Parser;
 use Title;
 
-class TestCase {
-    private $name;
-    private $group;
-    private $title;
-    private $covers;
+/**
+ * Class TestCase
+ *
+ * @package MWUnit
+ */
+class TestCase extends DatabaseTestCase {
+	private $input;
+	private $options;
 
-    /**
-     * @param $row
-     * @return false|TestCase
-     */
-    public static function newFromRow( $row ) {
-        if ( !$row->article_id ) {
-            return false;
+	/**
+	 * TestCase constructor.
+	 *
+	 * @param string $input The contents of the test case
+	 * @param string $name The name of this test case
+	 * @param string $group The group this test case is in
+	 * @param array $options Associative array of additional options
+	 * @param Title $title The Title object for this test case
+	 */
+	public function __construct(
+		string $input,
+		string $name,
+		string $group,
+		array $options,
+		Title $title ) {
+	    $covers = $options['covers'] ?? null;
+
+	    parent::__construct( $name, $group, $covers, $title );
+
+        $this->input = $input;
+        $this->options = $options;
+	}
+
+	/**
+	 * Creates a new DatabaseTestCase object from input received by tag register callback
+	 *
+	 * @param string $tag_input The input given directly to the tag
+	 * @param array $tag_arguments The arguments given to the tag, entered like HTML tag attributes
+	 * @param Parser $parser The parent parser
+	 * @return TestCase|false The newly created DatabaseTestCase object or false upon failure
+     * @throws ConfigException
+	 */
+	public static function newFromTag( string $tag_input, array $tag_arguments, Parser $parser ) {
+	    $result = MWUnit::areAttributesValid( $tag_arguments );
+
+	    if ( $result === false ) {
+	        return false;
         }
 
-        $title = \Title::newFromId( $row->article_id );
+		$title = $parser->getTitle();
+		$name  = self::array_shift_key( 'name', $tag_arguments );
+		$group = self::array_shift_key( 'group', $tag_arguments );
 
-        if ( !$row->test_name ) {
-            return false;
-        }
+		return new TestCase( $tag_input, $name, $group, $tag_arguments, $title );
+	}
 
-        $name = $row->test_name;
+	/**
+	 * Returns the contents of this test case.
+	 *
+	 * @return string The contents of the test case
+	 */
+	public function getInput(): string {
+		return $this->input;
+	}
 
-        if ( !$row->test_group ) {
-            return false;
-        }
+	/**
+	 * Returns the option with the given name if it is set, else it returns false.
+	 *
+	 * @param string $option
+	 * @return bool|string
+	 */
+	public function getOption( string $option ) {
+		return isset( $this->options[ $option ] ) ? $this->options[ $option ] : false;
+	}
 
-        $group = $row->test_group;
-        $covers = $row->covers;
-
-        return new TestCase( $name, $group, $covers, $title );
-    }
+	/**
+	 * Returns an associative array of options.
+	 *
+	 * @return array The options as a key-value pair
+	 */
+	public function getOptions(): array {
+		return $this->options;
+	}
 
     /**
-     * TestCase constructor.
-     * @param string $name
-     * @param string $group
-     * @param string|null $covers
-     * @param Title $title
-     */
-    public function __construct( string $name, string $group, $covers, Title $title ) {
-        $this->name = $name;
-        $this->group = $group;
-        $this->title = $title;
-        $this->covers = $covers;
-    }
-
-    /**
-     * Returns the name of this test case.
+     * Removes the element in the given array specified by the given key and returns it.
      *
-     * @return string The name of this test case
+     * @param $key
+     * @param $array
+     * @return mixed
      */
-    public function getName(): string {
-        return $this->name;
-    }
+	private static function array_shift_key( $key, &$array ) {
+	    $value = $array[$key];
+	    unset( $array[$key] );
 
-    /**
-     * Returns the group this test case is in.
-     *
-     * @return string The group this test case is in
-     */
-    public function getGroup(): string {
-        return $this->group;
-    }
-
-    /**
-     * Returns the Title object associated with this TestCase.
-     *
-     * @return Title The title object of the page this test case is on
-     */
-    public function getTitle(): Title {
-        return $this->title;
-    }
-
-    /**
-     * Returns the covers annotation for this test case, or null when not available.
-     *
-     * @return string|null
-     */
-    public function getCovers() {
-        return $this->covers;
-    }
-
-    /**
-     * Converts the test case to a human readable name.
-     *
-     * @return string
-     */
-    public function __toString(): string {
-        return $this->title->getText() . "::" . $this->name;
-    }
-
-    /**
-     * Returns true if and only if the given TestCase object refers to the same test case as
-     * this object.
-     *
-     * @param TestCase $test_case
-     * @return bool
-     */
-    public function equals( TestCase $test_case ) {
-        return $this->group === $test_case->getGroup() &&
-            $this->name === $test_case->getName() &&
-            $this->getTitle()->getArticleId() === $test_case->getTitle()->getArticleId();
+	    return $value;
     }
 }

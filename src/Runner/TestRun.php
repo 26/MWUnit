@@ -17,9 +17,9 @@ use MWUnit\MWUnit;
 use MWUnit\Runner\Result\FailureTestResult;
 use MWUnit\Runner\Result\RiskyTestResult;
 use MWUnit\Runner\Result\SuccessTestResult;
-use MWUnit\ConcreteTestCase;
-use MWUnit\Runner\Result\TestResult;
 use MWUnit\TestCase;
+use MWUnit\Runner\Result\TestResult;
+use MWUnit\DatabaseTestCase;
 use Parser;
 use ParserOptions;
 use RequestContext;
@@ -70,7 +70,7 @@ class TestRun {
     private $test_output_collector;
 
     /**
-	 * @var ConcreteTestCase
+	 * @var TestCase
 	 */
 	private $test_case;
 
@@ -118,9 +118,9 @@ class TestRun {
 	/**
 	 * TestCaseRun constructor.
 	 *
-	 * @param ConcreteTestCase $test_case
+	 * @param TestCase $test_case
 	 */
-	public function __construct( ConcreteTestCase $test_case ) {
+	public function __construct(TestCase $test_case ) {
 	    $this->test_case = $test_case;
         $this->covered   = strtolower( $test_case->getOption( 'covers' ) );
         $this->test_output_collector = new TestOutputStore;
@@ -208,9 +208,9 @@ class TestRun {
     /**
      * Returns the test case associated with this run.
      *
-     * @return TestCase
+     * @return DatabaseTestCase
      */
-    public function getTestCase(): TestCase {
+    public function getTestCase(): DatabaseTestCase {
         return $this->test_case;
     }
 

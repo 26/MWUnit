@@ -5,6 +5,7 @@ namespace MWUnit\API;
 use ApiBase;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Runner\TestSuiteRunner;
+use MWUnit\Store\TestRunStore;
 use MWUnit\TestSuite;
 
 class ApiRunUnitTests extends ApiBase {
@@ -56,7 +57,8 @@ class ApiRunUnitTests extends ApiBase {
 
         $test_suite = $group_test_suite->merge( $test_test_suite, $page_test_suite, $covers_test_suite );
 
-        $runner = new TestSuiteRunner( $test_suite );
+        $test_run_store = new TestRunStore();
+        $runner = new TestSuiteRunner( $test_suite, $test_run_store );
 
         try {
             $runner->run();

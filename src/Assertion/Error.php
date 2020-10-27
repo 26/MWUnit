@@ -34,7 +34,7 @@ class Error implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $haystack, $message = null ) {
+	public static function assert( string &$failure_message, string $haystack, $message = null ) {
 		$failure_message = $message ??
 			wfMessage( "mwunit-assert-failure-error" )->plain();
 

@@ -8,7 +8,7 @@ use MWException;
 use MWUnit\Exception;
 use MWUnit\Injector\TestSuiteRunnerInjector;
 use MWUnit\MWUnit;
-use MWUnit\ConcreteTestCase;
+use MWUnit\TestCase;
 use MWUnit\Runner\Result\TestResult;
 
 /**
@@ -26,7 +26,7 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
     private static $runner;
 
     /**
-	 * @var ConcreteTestCase The test case
+	 * @var TestCase The test case
 	 */
 	private $test_case;
 
@@ -39,14 +39,14 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
 
 	/**
 	 * TestCaseRunner constructor.
-	 * @param ConcreteTestCase $test_case
+	 * @param TestCase $test_case
 	 */
-	public function __construct( ConcreteTestCase $test_case ) {
+	public function __construct(TestCase $test_case ) {
 		$this->test_case = $test_case;
 	}
 
 	/**
-	 * Runs the given TestCase.
+	 * Runs the given DatabaseTestCase.
 	 *
 	 * @throws Exception\MWUnitException
 	 * @throws FatalError
@@ -75,13 +75,8 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
             }
         }
 
-        $callback = self::$runner->getCallback();
-		if ( is_callable( $callback ) ) {
-			MWUnit::getLogger()->debug( "Calling test case completion callback {callback}", [
-                self::$runner->getCallback()
-			] );
-
-            $callback( $run->getResult() );
+		if ( self::$runner->hasCallback() ) {
+            self::$runner->getCallback()( $run->getResult() );
 		}
 
         self::$runner->addTestRun( $run );

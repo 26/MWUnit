@@ -2,6 +2,8 @@
 
 namespace MWUnit\Maintenance;
 
+use Wikimedia\Rdbms\IResultWrapper;
+
 error_reporting( 0 );
 
 /**
@@ -26,6 +28,11 @@ class UpdateContentModels extends \Maintenance {
         $this->requireExtension( "MWUnit" );
     }
 
+    /**
+     * @throws \MWException
+     * @throws \MWUnknownContentModelException
+     * @throws \MalformedTitleException
+     */
     public function execute() {
         if ( !$this->getOption( 'quick', false ) ) {
             $this->output( "Abort the update with control-c in the next five seconds... " );
@@ -36,8 +43,49 @@ class UpdateContentModels extends \Maintenance {
         $this->output( "Updating content models ...\n" );
         $this->output( "\t... fetching test pages ...\n" );
 
+        // Get all pages currently in the Test namespace
+        $pages = $this->fetchTestPages();
+
+        $this->total = $pages->numRows();
+        $this->showProgress();
+
+        foreach ( $pages as $page ) {
+            // Create a new Revision object
+            $title = \Title::newFromTextThrow( $page->page_title, (int)$page->page_namespace );
+            $wikipage = \WikiPage::factory( $title );
+            $revision = $wikipage->getRevision() ?: false;
+
+            // Create a new Content object with the right content model
+            $new_content = $revision instanceof \Revision ?
+                \ContentHandler::makeContent( $revision->getContent()->serialize(), $title, CONTENT_MODEL_TEST ) :
+                \ContentHandler::getForModelID( CONTENT_MODEL_TEST )->makeEmptyContent();
+
+            // Flag the edit appropriately
+            $flags = $revision instanceof \Revision ? EDIT_UPDATE : EDIT_NEW;
+            $flags |= EDIT_INTERNAL;
+
+            // Edit the Content object of the WikiPage
+            $wikipage->doEditContent(
+                $new_content,
+                "",
+                $flags
+            );
+
+            $this->done++;
+            $this->showProgress();
+        }
+
+        $this->output( "\n" );
+    }
+
+    /**
+     * Returns an IResultWrapper object of all pages in the Test namespace.
+     *
+     * @return IResultWrapper
+     */
+    private function fetchTestPages(): IResultWrapper {
         $dbr = wfGetDB( DB_REPLICA );
-        $res = $dbr->select(
+        return $dbr->select(
             'page',
             [ 'page_namespace', 'page_title' ],
             [
@@ -45,50 +93,6 @@ class UpdateContentModels extends \Maintenance {
             ],
             __METHOD__
         );
-
-        $this->total = $res->numRows();
-        $this->showProgress();
-
-        for ( $i = 0; $i < $res->numRows(); $i++ ) {
-            $row = $res->next();
-
-            $title = \Title::newFromText( $row->page_title, (int)$row->page_namespace );
-
-            $page = \WikiPage::factory( $title );
-            $revision = $page->getRevision() ?: false;
-
-            if ( $revision ) {
-                $content = $revision->getContent();
-
-                try {
-                    $new_content = \ContentHandler::makeContent( $content->serialize(), $title, CONTENT_MODEL_TEST );
-                } catch ( \MWException $e ) {
-                    $this->fatalError( "Unable to convert content model: " . $e->getMessage() );
-                    return;
-                }
-            } else {
-                $new_content = \ContentHandler::getForModelID( CONTENT_MODEL_TEST )->makeEmptyContent();
-            }
-
-            $flags = $revision ? EDIT_UPDATE : EDIT_NEW;
-            $flags |= EDIT_INTERNAL;
-
-            try {
-                $page->doEditContent(
-                    $new_content,
-                    "",
-                    $flags
-                );
-            } catch ( \MWException $e ) {
-                $this->fatalError( "Unable to edit content: " . $e->getMessage() );
-                return;
-            }
-
-            $this->done++;
-            $this->showProgress();
-        }
-
-        $this->output( "\n" );
     }
 
     /**

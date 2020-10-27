@@ -76,9 +76,14 @@ abstract class MWUnit {
 	 * @return bool
 	 */
 	public static function onSkinBuildSidebar( \Skin $skin, array &$sidebar ) {
-		if ( $skin->getTitle()->getNamespace() === NS_TEMPLATE &&
-            TestCaseRepository::getInstance()->isTemplateCovered( $skin->getTitle() ) ) {
-			$special_title = Title::newFromText( 'Special:MWUnit' );
+	    $title = $skin->getTitle();
+	    $namespace = $title->getNamespace();
+
+	    // TODO: Make it injectable
+	    $testcase_repository = TestCaseRepository::getInstance();
+
+		if ( $namespace === NS_TEMPLATE && $testcase_repository->isTemplateCovered( $title ) ) {
+			$special_title = Title::newFromText( 'MWUnit', NS_SPECIAL );
 			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->parse() ] = [
 				[
 					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->parse(),

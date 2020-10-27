@@ -67,21 +67,8 @@ class Profiler {
      *
      * @return float
      */
-    public function getExecutionTime() {
-        $a = $this->flags[0];
-        $b = $this->flags[count( $this->flags ) - 1];
-
-        if ( $a === $b ) {
-            return 0;
-        }
-
-        $a_idx = array_search( $a, $this->flags );
-        $b_idx = array_search( $b, $this->flags );
-
-        $a_time = $this->timings[$a_idx] ?? 0;
-        $b_time = $this->timings[$b_idx] ?? 0;
-
-        return $a_time > $b_time ? $a_time - $b_time : $b_time - $a_time;
+    public function getTotalExecutionTime() {
+        return $this->timings[count($this->timings) - 1] - $this->timings[0];
     }
 
     /**

@@ -32,7 +32,7 @@ class TestSuite implements Iterator, Countable {
 
         $test_cases = [];
         foreach ( $result as $row ) {
-            $test_cases[] = TestCase::newFromRow( $row );
+            $test_cases[] = DatabaseTestCase::newFromRow( $row );
         }
 
         return new TestSuite( $test_cases );
@@ -55,7 +55,7 @@ class TestSuite implements Iterator, Countable {
 
         $test_cases = [];
         foreach ( $result as $row ) {
-            $test_cases[] = TestCase::newFromRow( $row );
+            $test_cases[] = DatabaseTestCase::newFromRow( $row );
         }
 
         return new TestSuite( $test_cases );
@@ -102,7 +102,7 @@ class TestSuite implements Iterator, Countable {
 
         $test_cases = [];
         foreach ( $result as $row ) {
-            $test_cases[] = TestCase::newFromRow( $row );
+            $test_cases[] = DatabaseTestCase::newFromRow( $row );
         }
 
         return new TestSuite( $test_cases );
@@ -149,7 +149,7 @@ class TestSuite implements Iterator, Countable {
 
     /**
      * @inheritDoc
-     * @return ConcreteTestCase
+     * @return TestCase
      */
     public function current() {
         return $this->test_cases[ $this->index ];

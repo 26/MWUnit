@@ -4,7 +4,7 @@
 namespace MWUnit\Tests\Integration;
 
 use MediaWikiTestCase;
-use MWUnit\ConcreteTestCase;
+use MWUnit\TestCase;
 
 class ConcreteTestCaseTest extends MediaWikiTestCase {
     /**
@@ -31,7 +31,7 @@ class ConcreteTestCaseTest extends MediaWikiTestCase {
         $parser_mock->method('getTitle')
             ->willReturn($this->title_mock);
 
-        $this->assertFalse( ConcreteTestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
+        $this->assertFalse( TestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
     }
 
     public function testNewFromTagMissingName() {
@@ -44,7 +44,7 @@ class ConcreteTestCaseTest extends MediaWikiTestCase {
         $parser_mock->method('getTitle')
             ->willReturn($this->title_mock);
 
-        $this->assertFalse( ConcreteTestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
+        $this->assertFalse( TestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
     }
 
     public function testNewFromTagMissingGroup() {
@@ -57,7 +57,7 @@ class ConcreteTestCaseTest extends MediaWikiTestCase {
         $parser_mock->method('getTitle')
             ->willReturn($this->title_mock);
 
-        $this->assertFalse( ConcreteTestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
+        $this->assertFalse( TestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
     }
 
     public function testNewFromTagValid() {
@@ -71,7 +71,7 @@ class ConcreteTestCaseTest extends MediaWikiTestCase {
         $parser_mock->method('getTitle')
             ->willReturn($this->title_mock);
 
-        $this->assertNotFalse( ConcreteTestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
+        $this->assertNotFalse( TestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
     }
 
     public function testNewFromTagForceCoversAnnotation() {
@@ -86,10 +86,10 @@ class ConcreteTestCaseTest extends MediaWikiTestCase {
             ->willReturn($this->title_mock);
 
         $this->setMwGlobals( 'wgMWUnitForceCoversAnnotation', true );
-        $this->assertFalse( ConcreteTestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
+        $this->assertFalse( TestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
 
         $this->setMwGlobals( 'wgMWUnitForceCoversAnnotation', false );
-        $this->assertNotFalse( ConcreteTestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
+        $this->assertNotFalse( TestCase::newFromTag($tag_input, $tag_arguments, $parser_mock) );
     }
 
     public function testGetName() {
@@ -148,6 +148,6 @@ class ConcreteTestCaseTest extends MediaWikiTestCase {
         $parser_mock->method('getTitle')
             ->willReturn($this->title_mock);
 
-        return ConcreteTestCase::newFromTag($input, $tag_arguments, $parser_mock);
+        return TestCase::newFromTag($input, $tag_arguments, $parser_mock);
     }
 }

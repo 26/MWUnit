@@ -33,7 +33,7 @@ class StringContains implements Assertion {
 	 * @param string|null $message
 	 * @return bool|null
 	 */
-	public static function assert( &$failure_message, $needle, $haystack, $message = null ) {
+	public static function assert( string &$failure_message, string $needle, string $haystack, $message = null ) {
 		if ( mb_strlen( $needle ) < 1 || mb_strlen( $haystack ) < 1 ) {
 			$failure_message = wfMessage( "mwunit-invalid-assertion" )->plain();
 			return null;

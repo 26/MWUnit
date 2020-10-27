@@ -11,9 +11,9 @@ use MWUnit\Injector\TestSuiteRunnerInjector;
 use MWUnit\ParserData;
 use MWUnit\Runner\BaseTestRunner;
 use MWUnit\MWUnit;
-use MWUnit\ConcreteTestCase;
-use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestCase;
+use MWUnit\Runner\TestSuiteRunner;
+use MWUnit\DatabaseTestCase;
 use Parser;
 
 /**
@@ -67,7 +67,7 @@ class TestCaseParserTag implements ParserTag, TestSuiteRunnerInjector {
             return MWUnit::error( "mwunit-outside-test-namespace" );
         }
 
-        $test_case = ConcreteTestCase::newFromTag( $input, $args, $parser );
+        $test_case = TestCase::newFromTag( $input, $args, $parser );
 
         if ( $test_case === false ) {
             return false;
@@ -84,14 +84,14 @@ class TestCaseParserTag implements ParserTag, TestSuiteRunnerInjector {
     }
 
     /**
-     * Returns true if and only if the given TestCase object should be run now. A test should
+     * Returns true if and only if the given DatabaseTestCase object should be run now. A test should
      * only be run if the TestSuiteRunner requested the
      * current test case to be run and this test case has not run before.
      *
-     * @param TestCase $test_case
+     * @param DatabaseTestCase $test_case
      * @return bool
      */
-    private static function shouldRunTestcase( TestCase $test_case ): bool {
+    private static function shouldRunTestcase(DatabaseTestCase $test_case ): bool {
         return self::$test_suite_runner &&
             self::$test_suite_runner->getCurrentTestCase()->equals( $test_case ) &&
             !self::$test_suite_runner->testCompleted( $test_case );

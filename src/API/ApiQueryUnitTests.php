@@ -4,7 +4,7 @@ namespace MWUnit\API;
 
 use ApiBase;
 use ApiQueryBase;
-use MWUnit\TestCase;
+use MWUnit\DatabaseTestCase;
 use MWUnit\TestCaseRepository;
 
 class ApiQueryUnitTests extends ApiQueryBase {
@@ -52,7 +52,7 @@ class ApiQueryUnitTests extends ApiQueryBase {
         $api_result = $this->getResult();
 
         foreach ( $tests as $row ) {
-            $test_case = TestCase::newFromRow( $row );
+            $test_case = DatabaseTestCase::newFromRow( $row );
 
             $id =  "{$test_case->getTitle()->getText()}::{$test_case->getName()}";
 

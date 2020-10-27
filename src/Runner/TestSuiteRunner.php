@@ -2,16 +2,14 @@
 
 namespace MWUnit\Runner;
 
-use MWException;
 use MWUnit\ParserFunction\ParserMockParserFunction;
 use MWUnit\Exception;
 use MWUnit\MWUnit;
 use MWUnit\ParserTag\TestCaseParserTag;
 use MWUnit\Store\TestRunStore;
-use MWUnit\TestCase;
+use MWUnit\DatabaseTestCase;
 use MWUnit\TestSuite;
-use MWUnit\Registry\TemplateMockRegistry;
-use MWUnit\Runner\Result\TestResult;
+use MWUnit\TemplateMockStore;
 use MWUnit\WikitextParser;
 use Revision;
 use Title;
@@ -28,7 +26,7 @@ use WikiPage;
  */
 class TestSuiteRunner {
     /**
-     * @var TestCase The TestCase that is currently running.
+     * @var DatabaseTestCase The DatabaseTestCase that is currently running.
      */
     private $test_case;
 
@@ -58,15 +56,16 @@ class TestSuiteRunner {
     private $test_run_store;
 
     /**
-	 * UnitTestRunner constructor.
+     * UnitTestRunner constructor.
      *
-	 * @param TestSuite $test_suite The TestSuite to run
+     * @param TestSuite $test_suite The TestSuite to run
+     * @param TestRunStore $test_run_store
      * @param callable|null $callback Callback function that gets called after every completed test
-	 */
-	public function __construct( TestSuite $test_suite, callable $callback = null ) {
+     */
+	public function __construct( TestSuite $test_suite, TestRunStore $test_run_store, callable $callback = null ) {
 		$this->test_suite = $test_suite;
 		$this->callback   = $callback;
-		$this->test_run_store = new TestRunStore;
+		$this->test_run_store = $test_run_store;
 
         // Dependency injection
         BaseTestRunner::setTestSuiteRunner( $this );
@@ -141,6 +140,15 @@ class TestSuiteRunner {
 	    return $this->callback;
     }
 
+    /**
+     * Returns true if and only if a callback function is supplied.
+     *
+     * @return bool
+     */
+    public function hasCallback() {
+        return is_callable( $this->callback );
+    }
+
 	/**
 	 * Returns the test cases run in this Test Suite as a TestRunStore object.
 	 *
@@ -197,23 +205,23 @@ class TestSuiteRunner {
 	}
 
     /**
-     * Returns the current TestCase object.
+     * Returns the current DatabaseTestCase object.
      *
-     * @return TestCase
+     * @return DatabaseTestCase
      */
-    public function getCurrentTestCase(): TestCase {
+    public function getCurrentTestCase(): DatabaseTestCase {
         return $this->test_case;
     }
 
     /**
-     * Returns true if and only if the given TestCase has been run.
+     * Returns true if and only if the given DatabaseTestCase has been run.
      *
-     * @param TestCase $test_case
+     * @param DatabaseTestCase $test_case
      * @return bool
      */
-    public function testCompleted( TestCase $test_case ): bool {
+    public function testCompleted(DatabaseTestCase $test_case ): bool {
         foreach ( $this->test_run_store->getTestCases() as $test_run ) {
-            assert( $test_run instanceof TestCase );
+            assert( $test_run instanceof DatabaseTestCase );
 
             if ( $test_run->equals( $test_case ) ) {
                 return true;
@@ -237,7 +245,7 @@ class TestSuiteRunner {
             return false;
         }
 
-        TemplateMockRegistry::getInstance()->reset();
+        TemplateMockStore::getInstance()->reset();
         ParserMockParserFunction::restoreAndReset();
 
         return true;
@@ -246,10 +254,10 @@ class TestSuiteRunner {
     /**
      * Runs a specific test page.
      *
-     * @param TestCase $test_case
+     * @param DatabaseTestCase $test_case
      * @return bool Returns false on failure, true otherwise
      */
-	private function runTestCase( TestCase $test_case ) {
+	private function runTestCase(DatabaseTestCase $test_case ) {
 	    $article_id = $test_case->getTitle()->getArticleID();
 		$wiki_page = WikiPage::newFromID( $article_id );
 

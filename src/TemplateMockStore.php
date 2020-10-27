@@ -1,41 +1,34 @@
 <?php
 
-namespace MWUnit\Registry;
+namespace MWUnit;
 
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Mock;
-use MWUnit\MWUnit;
 use Title;
 
-class TemplateMockRegistry implements Registry {
+class TemplateMockStore {
     protected static $instance = null;
 
 	/**
 	 * Key value pair, where the key is the page ID for the page that is mocked and
 	 * the value is the mock value.
 	 *
-	 * @var array
+	 * @var string[]
 	 */
 	private $mocks = [];
 
 	private function __construct() {}
 
     /**
-     * @inheritDoc
-     * @return TemplateMockRegistry
+     * Returns the instance of TemplateMockRegistry.
+     *
+     * @return TemplateMockStore
      */
-    public static function getInstance(): Registry {
-        self::setInstance();
-        return self::$instance;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function setInstance() {
+    public static function getInstance(): TemplateMockStore {
         if ( !isset( self::$instance ) ) {
             self::$instance = new self();
         }
+
+        return self::$instance;
     }
 
 	/**
@@ -43,9 +36,8 @@ class TemplateMockRegistry implements Registry {
 	 *
 	 * @param Title $title
 	 * @return bool
-     * @inheritDoc
 	 */
-	public function exists( $title ): bool {
+	public function exists( Title $title ): bool {
 		return isset( $this->mocks[ $title->getArticleID() ] );
 	}
 
@@ -54,11 +46,10 @@ class TemplateMockRegistry implements Registry {
      * page is not mocked.
      *
      * @param Title $title
-     * @return Mock
+     * @return string
      * @throws MWUnitException
-     * @inheritDoc
      */
-	public function get( $title ) {
+	public function get( Title $title ) {
 		if ( !$this->exists( $title ) ) {
 		    throw new MWUnitException( "{$title->getFullText()} is not mocked" );
 		}
@@ -70,10 +61,9 @@ class TemplateMockRegistry implements Registry {
      * Registers a new mock or overwrites an existing mock.
      *
      * @param Title $title
-     * @param Mock $content
-     * @inheritDoc
+     * @param string $content
      */
-	public function register( $title, $content ) {
+	public function register( Title $title, string $content ) {
 		$id = $title->getArticleID();
 		$this->mocks[ $id ] = $content;
 
