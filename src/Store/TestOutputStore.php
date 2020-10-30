@@ -2,8 +2,6 @@
 
 namespace MWUnit\Store;
 
-use MWUnit\StringOutput;
-
 class TestOutputStore implements \Iterator, \Countable {
     private $index;
     private $outputs;
@@ -19,22 +17,22 @@ class TestOutputStore implements \Iterator, \Countable {
     /**
      * Append a new TestOutput to the collector.
      *
-     * @param StringOutput $output
+     * @param string $output
      */
-    public function append( StringOutput $output) {
+    public function append( string $output) {
         $this->outputs[] = $output;
     }
 
     /**
      * Returns the outputs already collected by the collector.
      *
-     * @return array
+     * @return string[]
      */
     public function getAll(): array {
         return $this->outputs;
     }
 
-    public function current(): StringOutput {
+    public function current(): string {
         return $this->outputs[$this->index];
     }
 

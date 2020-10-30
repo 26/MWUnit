@@ -2,24 +2,16 @@
 
 namespace MWUnit\Assertion\SemanticMediaWiki;
 
-use MWUnit\Assertion\Assertion;
 use SMW\StoreFactory;
 use SMWDIProperty;
 use SMWDIWikiPage;
 
-class HasProperty implements Assertion {
+class HasProperty extends SMWAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "has_property";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' );
 	}
 
 	/**

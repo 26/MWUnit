@@ -2,20 +2,13 @@
 
 namespace MWUnit\Assertion;
 
-class StringContains implements Assertion {
+class StringContains extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
-		return "string_contains";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
-	}
+        return "string_contains";
+    }
 
 	/**
 	 * @inheritDoc

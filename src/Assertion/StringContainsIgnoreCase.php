@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class StringContainsIgnoreCase implements Assertion {
+class StringContainsIgnoreCase extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "string_contains_ignore_case";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

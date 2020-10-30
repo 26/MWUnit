@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class GreaterThan implements Assertion {
+class GreaterThan extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "greater_than";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

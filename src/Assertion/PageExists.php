@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class PageExists implements Assertion {
+class PageExists extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "page_exists";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

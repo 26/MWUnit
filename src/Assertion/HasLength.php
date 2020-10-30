@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class HasLength implements Assertion {
+class HasLength extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "has_length";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

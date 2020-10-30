@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class IsEmpty implements Assertion {
+class IsEmpty extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "empty";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

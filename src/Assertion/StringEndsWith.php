@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class StringEndsWith implements Assertion {
+class StringEndsWith extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "string_ends_with";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

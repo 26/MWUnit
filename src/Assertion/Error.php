@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class Error implements Assertion {
+class Error extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "error";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

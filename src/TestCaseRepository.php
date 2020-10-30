@@ -2,9 +2,6 @@
 
 namespace MWUnit;
 
-use MWUnit\ParserFunction\TestCaseParserTag;
-use MWUnit\Exception\MWUnitException;
-use MWUnit\Exception\TestCaseRegistrationException;
 use Wikimedia\Rdbms\IResultWrapper;
 use Wikimedia\Rdbms\ResultWrapper;
 use Title;
@@ -112,21 +109,6 @@ class TestCaseRepository {
 			'mwunit_tests',
             [ 'article_id' => $article_id ]
 		);
-	}
-
-	/**
-	 * Returns true if and only if the given test group name exists.
-	 *
-	 * @param string $test_group
-	 * @return bool
-	 */
-	public function doesTestGroupExist( string $test_group ) {
-		return wfGetDb( DB_REPLICA )->select(
-			'mwunit_tests',
-			[ 'test_name' ],
-			[ 'test_group' => $test_group ],
-            __METHOD__
-		)->numRows() > 0;
 	}
 
     /**

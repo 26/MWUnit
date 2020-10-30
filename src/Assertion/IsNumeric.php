@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class IsNumeric implements Assertion {
+class IsNumeric extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "is_numeric";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

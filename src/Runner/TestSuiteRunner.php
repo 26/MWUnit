@@ -2,6 +2,7 @@
 
 namespace MWUnit\Runner;
 
+use MediaWiki\MediaWikiServices;
 use MWUnit\ParserFunction\ParserMockParserFunction;
 use MWUnit\Exception;
 use MWUnit\MWUnit;
@@ -257,7 +258,7 @@ class TestSuiteRunner {
      * @param DatabaseTestCase $test_case
      * @return bool Returns false on failure, true otherwise
      */
-	private function runTestCase(DatabaseTestCase $test_case ) {
+	private function runTestCase( DatabaseTestCase $test_case ) {
 	    $article_id = $test_case->getTitle()->getArticleID();
 		$wiki_page = WikiPage::newFromID( $article_id );
 
@@ -281,12 +282,14 @@ class TestSuiteRunner {
 		    'article' => $article_id
         ] );
 
-        $this->test_case = $test_case;
-        WikitextParser::parseContentFromWikiPage(
-            $wiki_page,
-            $wiki_page->getRevision()->getContent( Revision::RAW ),
-            true
-        );
+        $text    = $wiki_page->getRevision()->getContent( Revision::RAW )->getNativeData();
+        $title   = $wiki_page->getTitle();
+        $options = $wiki_page->makeParserOptions( 'canonical' );
+
+        $parser = MediaWikiServices::getInstance()->getParser();
+        $parser = $parser->getFreshParser();
+
+        $parser->parse( $text, $title, $options );
 
         return true;
 	}

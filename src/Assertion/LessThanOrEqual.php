@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class LessThanOrEqual implements Assertion {
+class LessThanOrEqual extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "less_than_or_equal";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

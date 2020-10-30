@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class EqualsIgnoreCase implements Assertion {
+class EqualsIgnoreCase extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "equals_ignore_case";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

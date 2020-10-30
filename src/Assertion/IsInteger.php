@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class IsInteger implements Assertion {
+class IsInteger extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "is_integer";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

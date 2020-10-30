@@ -24,7 +24,9 @@ abstract class TestResult {
      *
      * @param DatabaseTestCase $case
      */
-	public function __construct(DatabaseTestCase $case ) {
+	public function __construct( DatabaseTestCase $case ) {
+	    // TODO: Make TestResults more generic, so other extension can add new TestResult's if they want to
+        // using a hook.
         $this->test_case = $case;
 	}
 

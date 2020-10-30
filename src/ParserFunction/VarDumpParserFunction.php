@@ -4,7 +4,6 @@ namespace MWUnit\ParserFunction;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Injector\TestRunInjector;
-use MWUnit\StringOutput;
 use MWUnit\ParserData;
 use MWUnit\Runner\TestRun;
 
@@ -33,8 +32,7 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
         $value = $data->getArgument( 0 );
         $formatted_value = $this->formatDump( $value );
 
-        $test_output = new StringOutput( $formatted_value );
-        self::$run->getTestOutputCollector()->append( $test_output );
+        self::$run->getTestOutputCollector()->append( $formatted_value );
 
         return '';
     }

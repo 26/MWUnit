@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class That implements Assertion {
+class That extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "that";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

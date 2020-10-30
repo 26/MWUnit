@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class NoError implements Assertion {
+class NoError extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "no_error";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

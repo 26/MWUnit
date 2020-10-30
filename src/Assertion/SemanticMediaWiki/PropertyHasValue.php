@@ -2,10 +2,9 @@
 
 namespace MWUnit\Assertion\SemanticMediaWiki;
 
-use MWUnit\Assertion\Assertion;
 use Title;
 
-class PropertyHasValue implements Assertion {
+class PropertyHasValue extends SMWAssertion {
 	/**
 	 * @inheritDoc
 	 */
@@ -13,16 +12,9 @@ class PropertyHasValue implements Assertion {
 		return "property_has_value";
 	}
 
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' );
-	}
-
-		/**
-		 * @inheritDoc
-		 */
+    /**
+     * @inheritDoc
+     */
 	public static function getRequiredArgumentCount(): int {
 		return 3;
 	}

@@ -68,6 +68,8 @@ class Profiler {
      * @return float
      */
     public function getTotalExecutionTime() {
+        assert( count( $this->timings ) > 0 );
+
         return $this->timings[count($this->timings) - 1] - $this->timings[0];
     }
 

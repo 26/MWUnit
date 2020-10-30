@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class StringStartsWith implements Assertion {
+class StringStartsWith extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "string_starts_with";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

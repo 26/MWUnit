@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class Equals implements Assertion {
+class Equals extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "equals";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**

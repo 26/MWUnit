@@ -37,6 +37,11 @@ class WikitextParser {
         // We use "@" to suppress the warning about invalid HTML tags.
         @$dom->loadHTML( $text );
 
+        // Filter all empty tags
+        $valid_tags = array_filter( iterator_to_array( $dom->getElementsByTagName( "testcase" ) ), function( DOMNode $tag ) {
+            return $tag->textContent !== "";
+        } );
+
         return array_map( function( DOMNode $tag ): array {
             $content    = trim( $tag->textContent );
             $attributes = self::getAttributesFromTag( $tag );
@@ -45,37 +50,7 @@ class WikitextParser {
                 "content" => $content,
                 "attributes" => $attributes
             ];
-        }, array_filter( iterator_to_array( $dom->getElementsByTagName("testcase") ), function( DOMNode $tag ) {
-            return $tag->textContent !== "";
-        } ) );
-    }
-
-    /**
-     * Parses the given content in the given page's context.
-     *
-     * @param WikiPage $wikiPage The WikiPage object to use for context
-     * @param Content $content The Content object to parse
-     * @param bool $use_fresh_parser Whether or not to use a fresh parser, or the parser from MediaWikiServices
-     */
-    public static function parseContentFromWikiPage(
-        WikiPage $wikiPage,
-        Content $content,
-        bool $use_fresh_parser = false
-    ) {
-        MWUnit::getLogger()->debug( '(Re)parsing wikitext for article {id}', [
-            'id' => $wikiPage->getTitle()->getFullText()
-        ] );
-
-        $text    = $content->getNativeData();
-        $title   = $wikiPage->getTitle();
-        $options = $wikiPage->makeParserOptions( 'canonical' );
-        $parser  = MediaWikiServices::getInstance()->getParser();
-
-        if ( $use_fresh_parser ) {
-            $parser = $parser->getFreshParser();
-        }
-
-        $parser->parse( $text, $title, $options );
+        }, $valid_tags );
     }
 
     /**
