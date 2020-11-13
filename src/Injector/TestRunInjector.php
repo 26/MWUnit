@@ -8,7 +8,7 @@ use MWUnit\Runner\TestRun;
  * Interface TestRunInjector
  * @package MWUnit\Injector
  */
-interface TestRunInjector extends InjectorInterface {
+interface TestRunInjector {
     /**
      * Dependency injector for the TestRun object.
      *
