@@ -71,7 +71,7 @@ class TestSuite implements Iterator, Countable {
      */
     public static function newFromText( string $test_name ): TestSuite {
         if ( !strpos( $test_name, '::' ) ) {
-            throw new MWUnitException( "Invalid test name" );
+            throw new MWUnitException( "mwunit-exception-invalid-test-name");
         }
 
         $test_case = TestCaseRepository::getInstance()->getTestCaseFromTestName( $test_name );

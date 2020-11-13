@@ -51,7 +51,7 @@ class TemplateMockStore {
      */
 	public function get( Title $title ) {
 		if ( !$this->exists( $title ) ) {
-		    throw new MWUnitException( "{$title->getFullText()} is not mocked" );
+		    throw new MWUnitException( "mwunit-exception-invalid-mock", [ $title->getFullText() ] );
 		}
 
 		return $this->mocks[ $title->getArticleID() ];

@@ -221,7 +221,7 @@ class ParserMockParserFunction implements ParserFunction {
                 [ "function" => $parser_function ]
             );
 
-            throw new MWUnitException( 'Could not restore function hook for ' . $parser_function );
+            throw new MWUnitException( "mwunit-exception-function-hook", [ $parser_function ] );
         }
 
         $parser = MediaWikiServices::getInstance()->getParser();

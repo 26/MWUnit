@@ -47,15 +47,8 @@ class TestRunStore implements \Iterator, \Countable {
      * TestRunStore constructor.
      *
      * @param array $runs
-     * @throws MWUnitException
      */
     public function __construct( array $runs = [] ) {
-        foreach ( $runs as $run ) {
-            if ( !$run instanceof TestRun ) {
-                throw new MWUnitException( "TestRunStore can only contain TestRun objects" );
-            }
-        }
-
         $this->index = 0;
 
         foreach( $runs as $run ) {
@@ -119,7 +112,6 @@ class TestRunStore implements \Iterator, \Countable {
      *
      * @param int $result Either T_RISKY, T_FAILED or T_SUCCESS
      * @return TestRunStore
-     * @throws MWUnitException
      */
     public function getRunsWithResult( int $result ): TestRunStore {
         return new TestRunStore( array_filter( $this->runs, function( TestRun $run ) use ( $result ): bool {
