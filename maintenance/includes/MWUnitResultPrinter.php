@@ -3,7 +3,6 @@
 namespace MWUnit\Maintenance;
 
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Store\TestOutputStore;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
 use MWUnit\Runner\TestSuiteRunner;
@@ -138,7 +137,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 	    $message = $test->getMessage();
 	    $output  = $this->formatOutput(
-	        $run->getTestOutputCollector()
+	        $run->getTestOutputs()
         );
 
 	    if ( $message || $output ) {
@@ -161,12 +160,12 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 	}
 
     /**
-     * @param TestOutputStore $collector
+     * @param string[] $test_outputs
      * @return string
      */
-	private function formatOutput(TestOutputStore $collector ): string {
-        return count( $collector->getAll() ) === 0 ?
+	private function formatOutput(array $test_outputs ): string {
+        return count( $test_outputs ) === 0 ?
             '' :
-            implode( "\n", $collector->getAll() );
+            implode( "\n", $test_outputs );
     }
 }

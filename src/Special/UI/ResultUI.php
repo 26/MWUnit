@@ -10,7 +10,6 @@ use MWUnit\Renderer\Document;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
 use MWUnit\Runner\TestSuiteRunner;
-use MWUnit\Store\TestOutputStore;
 use MWUnit\Renderer\Tag;
 use OutputPage;
 
@@ -255,8 +254,8 @@ class ResultUI extends MWUnitUI {
      */
     private function formatSummary( TestRun $run ): Document {
         $message = $run->getResult()->getMessage();
-        $collector = $run->getTestOutputCollector();
-        $test_output = $this->formatTestOutput( $collector );
+        $test_outputs = $run->getTestOutputs();
+        $test_output = $this->formatTestOutput( $test_outputs );
 
         if ( !$message && !$test_output ) {
             return new Document( [] );
@@ -282,13 +281,13 @@ class ResultUI extends MWUnitUI {
     /**
      * Formats the given TestOutputStore as a string.
      *
-     * @param TestOutputStore $store
+     * @param string[] $test_outputs
      * @return string
      */
-    private function formatTestOutput( TestOutputStore $store ): string {
-        return count( $store->getAll() ) === 0 ?
+    private function formatTestOutput( array $test_outputs ): string {
+        return count( $test_outputs ) === 0 ?
             '' :
-            implode( "\n", $store->getAll() );
+            implode( "\n", $test_outputs );
     }
 
     /**

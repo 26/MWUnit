@@ -73,7 +73,7 @@ class ApiRunUnitTests extends ApiBase {
             $id = $test_run->getTestCase()->__toString();
 
             $result     = $test_run->getResult();
-            $output     = $test_run->getTestOutputCollector();
+            $output     = $test_run->getTestOutputs();
             $test_case  = $test_run->getTestCase();
             $covered    = $test_run->getCovered();
             $assertions = $test_run->getAssertionCount();
@@ -94,7 +94,7 @@ class ApiRunUnitTests extends ApiBase {
             $output_path = [ $id, "output" ];
 
             foreach ( $output as $out ) {
-                $api_result->addValue( $output_path, null, $out->getOutput() );
+                $api_result->addValue( $output_path, null, $out );
             }
         }
     }

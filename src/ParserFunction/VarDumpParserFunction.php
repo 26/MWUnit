@@ -32,7 +32,7 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
         $value = $data->getArgument( 0 );
         $formatted_value = $this->formatDump( $value );
 
-        self::$run->getTestOutputCollector()->append( $formatted_value );
+        self::$run->test_outputs[] = $formatted_value;
 
         return '';
     }

@@ -11,7 +11,6 @@ use MWUnit\ParserFunction\AssertionParserFunction;
 use MWUnit\ParserFunction\TemplateMockParserFunction;
 use MWUnit\ParserFunction\VarDumpParserFunction;
 use MWUnit\Profiler;
-use MWUnit\Store\TestOutputStore;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\Runner\Result\FailureTestResult;
@@ -37,6 +36,11 @@ use User;
  * @package MWUnit
  */
 class TestRun {
+    /**
+     * @var string[]
+     */
+    public $test_outputs;
+
 	/**
 	 * The name of the template that this test case covers, or false if it does not cover a template.
 	 *
@@ -63,11 +67,6 @@ class TestRun {
      * @var float
      */
     private $execution_time;
-
-    /**
-     * @var TestOutputStore
-     */
-    private $test_output_collector;
 
     /**
 	 * @var TestCase
@@ -123,7 +122,7 @@ class TestRun {
 	public function __construct(TestCase $test_case ) {
 	    $this->test_case = $test_case;
         $this->covered   = strtolower( $test_case->getOption( 'covers' ) );
-        $this->test_output_collector = new TestOutputStore;
+        $this->test_outputs = [];
 
         self::$templates_used = [];
 
@@ -181,10 +180,10 @@ class TestRun {
     /**
      * Returns the TestOutputCollector object for this TestRun.
      *
-     * @return TestOutputStore
+     * @return string[]
      */
-    public function getTestOutputCollector(): TestOutputStore {
-        return $this->test_output_collector;
+    public function getTestOutputs(): array {
+        return $this->test_outputs;
     }
 
     /**
