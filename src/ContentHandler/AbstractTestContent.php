@@ -104,7 +104,7 @@ abstract class AbstractTestContent extends \AbstractContent {
         }
 
         $tags = WikitextParser::getTestCasesFromWikitext( $this->text );
-        $href = \Title::newFromText( "Special:MWUnit" )->getFullURL( [ 'unitTestPage' => $title->getFullText() ] );
+        $href = \Title::newFromText( "Special:UnitTests" )->getFullURL( [ 'unitTestPage' => $title->getFullText() ] );
 
         $number_of_tests = count( $tags );
 

@@ -91,7 +91,6 @@ class TestRunStore implements \Iterator, \Countable {
      * Returns the failed TestRun objects in the store as a TestRunStore object.
      *
      * @return TestRunStore
-     * @throws MWUnitException
      */
     public function getFailedRuns(): TestRunStore {
         return $this->getRunsWithResult( TestResult::T_FAILED );
@@ -101,7 +100,6 @@ class TestRunStore implements \Iterator, \Countable {
      * Returns the risky TestRun objects in the store as a TestRunStore object.
      *
      * @return TestRunStore
-     * @throws MWUnitException
      */
     public function getRiskyRuns(): TestRunStore {
         return $this->getRunsWithResult( TestResult::T_RISKY );

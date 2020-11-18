@@ -41,7 +41,7 @@
     "MovePageIsValidMove": "MWUnit\\MWUnit::onMovePageIsValidMove"
   },
   "SpecialPages": {
-    "MWUnit": "MWUnit\\Special\\SpecialMWUnit"
+    "UnitTests": "MWUnit\\Special\\SpecialUnitTests"
   },
   "config": {
     "MWUnitMaxTestExecutionTime": {

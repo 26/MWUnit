@@ -39,14 +39,14 @@ class TestRun {
     /**
      * @var string[]
      */
-    public $test_outputs;
+    public $test_outputs = [];
 
-	/**
-	 * The name of the template that this test case covers, or false if it does not cover a template.
-	 *
-	 * @var bool|string
-	 */
-	private $covered;
+    /**
+     * The name of the template that this test case covers, or false if it does not cover a template.
+     *
+     * @var bool|string
+     */
+    private $covered;
 
     /**
      * @var int Number of assertions used in this test run.
@@ -122,7 +122,6 @@ class TestRun {
 	public function __construct(TestCase $test_case ) {
 	    $this->test_case = $test_case;
         $this->covered   = strtolower( $test_case->getOption( 'covers' ) );
-        $this->test_outputs = [];
 
         self::$templates_used = [];
 
@@ -223,6 +222,9 @@ class TestRun {
     }
 
     /**
+     * Runs the test case. A Result object is guaranteed to be available if this function
+     * finished successfully.
+     *
 	 * @throws FatalError
 	 * @throws MWException
 	 * @throws MWUnitException
@@ -268,7 +270,7 @@ class TestRun {
             $this->restoreGlobals();
             $this->restoreUser();
 
-            if ( !isset( $this->result ) ) {
+            if ( !$this->resultAvailable() ) {
                 $this->setSuccess();
             }
 		}
@@ -282,6 +284,7 @@ class TestRun {
 
 		if ( $option ) {
 			MWUnit::getLogger()->debug( "Backing up globals" );
+
 			$this->globals[ 'GLOBALS' ] 	= $GLOBALS;
 			$this->globals[ '_SERVER' ] 	= $_SERVER;
 			$this->globals[ '_GET' ]    	= $_GET; // phpcs:ignore
@@ -295,8 +298,8 @@ class TestRun {
 
 	/**
 	 * Restores globals backed up previously. This function should not be called before backupGlobals() is called.
+     *
 	 * @throws MWUnitException
-	 * @throws ConfigException
 	 */
 	private function restoreGlobals() {
 		$option = MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
@@ -324,11 +327,22 @@ class TestRun {
      * Checks if the template specified in "covers" is covered and marks $test_result accordingly.
      */
 	private function checkTemplateCoverage() {
-		$strict_coverage = MediaWikiServices::getInstance()->getMainConfig()->get(
-				'MWUnitStrictCoverage'
-			) && $this->test_case->getOption( 'ignorestrictcoverage' ) === false;
+	    if ( !$this->covered ) {
+	        // This test case does not have a "covers" annotation
+	        return;
+        }
 
-		if ( $this->covered && $strict_coverage && !in_array( $this->covered, self::$templates_used ) ) {
+	    if ( !MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitStrictCoverage' ) ) {
+	        // Strict coverage is not enforced
+            return;
+        }
+
+	    if ( $this->test_case->getOption( 'ignorestrictcoverage' ) !== false ) {
+	        // Strict coverage is explicitly ignored
+            return;
+        }
+
+		if ( !in_array( $this->covered, self::$templates_used ) ) {
 			$this->setRisky( wfMessage( 'mwunit-strict-coverage-violation' )->parse() );
 		}
 	}
@@ -337,6 +351,7 @@ class TestRun {
 	 * Serializes the current User from RequestContext and stores the result in a class variable.
 	 */
 	private function backupUser() {
+	    // TODO: Profile this, it might be very slow
 		$this->user = serialize( RequestContext::getMain()->getUser() );
 	}
 
@@ -344,7 +359,7 @@ class TestRun {
 	 * Deserializes the backed up User object and restores the User object globally.
 	 */
 	private function restoreUser() {
-		assert( isset( $this->user ) );
+	    // TODO: Profile this, it might be very slow
 		$this->setUser( unserialize( $this->user ) );
 	}
 
@@ -387,20 +402,18 @@ class TestRun {
 	 * @return bool
 	 */
 	private function canMockUsers(): bool {
-		try {
-			$allow_running_tests_as_other_user = MediaWikiServices::getInstance()
-				->getMainConfig()
-				->get( 'MWUnitAllowRunningTestAsOtherUser' );
-		} catch ( ConfigException $exception ) {
-			return false;
-		}
+        if ( !MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitAllowRunningTestAsOtherUser' ) ) {
+            // Mocking users is disabled
+            return false;
+        }
 
-		return $allow_running_tests_as_other_user === true &&
-			in_array( 'mwunit-mock-user', RequestContext::getMain()->getUser()->getRights() );
+		return in_array( 'mwunit-mock-user', RequestContext::getMain()->getUser()->getRights() );
 	}
 
     /**
-     * @return false|string|User|null
+     * Returns the context to use, or false on failure.
+     *
+     * @return string|User|null|false
      */
     private function getContext() {
         $context_option = $this->test_case->getOption( 'context' );

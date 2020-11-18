@@ -76,15 +76,11 @@ class TestSuiteRunner {
     /**
      * Runs all tests in the group specified in the constructor.
      *
-     * @throws Exception\MWUnitException
+     * @throws \Exception
      */
 	public function run() {
-        try {
-            if ( !\Hooks::run('MWUnitBeforeFirstTest', [ &$pages ] ) ) {
-                return;
-            }
-        } catch ( \Exception $e ) {
-            throw new Exception\MWUnitException( 'mwunit-generic-error-description' );
+        if ( !\Hooks::run('MWUnitBeforeFirstTest', [ &$pages ] ) ) {
+            return;
         }
 
         foreach ( $this->test_suite as $test_case ) {
@@ -126,7 +122,6 @@ class TestSuiteRunner {
      * Adds a test run.
      *
      * @param TestRun $run
-     * @throws Exception\MWUnitException
      */
 	public function addTestRun( TestRun $run ) {
 	    $this->test_run_store->append( $run );
@@ -220,10 +215,8 @@ class TestSuiteRunner {
      * @param DatabaseTestCase $test_case
      * @return bool
      */
-    public function testCompleted(DatabaseTestCase $test_case ): bool {
+    public function testCompleted(DatabaseTestCase $test_case): bool {
         foreach ( $this->test_run_store->getTestCases() as $test_run ) {
-            assert( $test_run instanceof DatabaseTestCase );
-
             if ( $test_run->equals( $test_case ) ) {
                 return true;
             }
@@ -259,10 +252,12 @@ class TestSuiteRunner {
      * @return bool Returns false on failure, true otherwise
      */
 	private function runTestCase( DatabaseTestCase $test_case ) {
+	    $this->test_case = $test_case;
+
 	    $article_id = $test_case->getTitle()->getArticleID();
 		$wiki_page = WikiPage::newFromID( $article_id );
 
-		if ( $wiki_page === false ) {
+		if ( !$wiki_page instanceof WikiPage ) {
 			MWUnit::getLogger()->warning( 'Unable to run tests on article {article_id} because it does not exist', [
 				'article_id' => $article_id
 			] );

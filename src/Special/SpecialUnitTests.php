@@ -12,13 +12,13 @@ use MWUnit\TestSuite;
  *
  * @package MWUnit\Special
  */
-class SpecialMWUnit extends \SpecialPage {
+class SpecialUnitTests extends \SpecialPage {
     /**
 	 * SpecialMWUnit constructor.
 	 * @throws \UserNotLoggedIn|\ConfigException
      */
 	public function __construct() {
-		parent::__construct( "MWUnit", "mwunit-runtests", true );
+		parent::__construct( "UnitTests", "mwunit-runtests", true );
 		parent::requireLogin();
 
 		set_time_limit( $this->getConfig()->get( 'MWUnitMaxTestExecutionTime' ) );

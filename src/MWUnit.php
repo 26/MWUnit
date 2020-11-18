@@ -83,7 +83,7 @@ abstract class MWUnit {
 	    $testcase_repository = TestCaseRepository::getInstance();
 
 		if ( $namespace === NS_TEMPLATE && $testcase_repository->isTemplateCovered( $title ) ) {
-			$special_title = Title::newFromText( 'MWUnit', NS_SPECIAL );
+			$special_title = Title::newFromText( 'UnitTests', NS_SPECIAL );
 			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->parse() ] = [
 				[
 					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->parse(),
@@ -103,7 +103,7 @@ abstract class MWUnit {
 			return true;
 		}
 
-		$special_title = Title::newFromText( 'Special:MWUnit' );
+		$special_title = Title::newFromText( 'Special:UnitTests' );
 		$sidebar[ wfMessage( 'mwunit-sidebar-header' )->parse() ] = [
 			[
 				'text' => wfMessage( 'mwunit-sidebar-run-tests' )->parse(),

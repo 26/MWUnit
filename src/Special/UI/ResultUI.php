@@ -96,7 +96,7 @@ class ResultUI extends MWUnitUI {
      */
     public function getNavigationItems(): array {
         return [
-            wfMessage( 'mwunit-nav-home' )->plain() => "Special:MWUnit"
+            wfMessage( 'mwunit-nav-home' )->plain() => "Special:UnitTests"
         ];
     }
 
