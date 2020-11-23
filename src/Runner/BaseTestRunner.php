@@ -41,22 +41,21 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
 	 * TestCaseRunner constructor.
 	 * @param TestCase $test_case
 	 */
-	public function __construct(TestCase $test_case ) {
+	public function __construct( TestCase $test_case ) {
 		$this->test_case = $test_case;
 	}
 
 	/**
-	 * Runs the given DatabaseTestCase.
+	 * Runs the TestCase.
 	 *
 	 * @throws Exception\MWUnitException
 	 * @throws FatalError
 	 * @throws MWException
-	 * @throws ConfigException
      * @return void
 	 */
 	public function run() {
 	    MWUnit::getLogger()->debug( "Running test case {testcase}", [
-			'testcase' => $this->test_case->__toString()
+			'testcase' => $this->test_case->getCanonicalName()
 		] );
 
 		$run = new TestRun( $this->test_case );
@@ -67,12 +66,7 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
 		self::$runner->incrementTotalAssertionCount( $run->getAssertionCount() );
         self::$runner->incrementTestCount();
 
-        if ( $run->resultAvailable() && $run->getResult()->getResultConstant() !== TestResult::T_RISKY ) {
-            // If the test is already marked as risky, do not overwrite it.
-            if ( $this->test_case->getOption( 'doesnotperformassertions' ) === false && $run->getAssertionCount() === 0 ) {
-                $run->setRisky( wfMessage( 'mwunit-no-assertions' )->parse() );
-            }
-        }
+        $this->doAssertionCheck( $run );
 
 		if ( self::$runner->hasCallback() ) {
             self::$runner->getCallback()( $run->getResult() );
@@ -80,4 +74,27 @@ class BaseTestRunner implements TestSuiteRunnerInjector {
 
         self::$runner->addTestRun( $run );
 	}
+
+    /**
+     * Checks whether or not the test case performed any assertions and marks it as "Risky" when
+     * no assertions were performed.
+     * @param TestRun $run
+     */
+	private function doAssertionCheck( TestRun $run ) {
+        $test_result = $run->getResult();
+
+        if ( $test_result->getResultConstant() === TestResult::T_RISKY ) {
+            // Do not overwrite the result of tests already marked as risky
+            return;
+        }
+
+        if ( $this->test_case->getAttribute( 'doesnotperformassertions' ) !== false ) {
+            // This test is explicitly marked as not performing any assertions
+            return;
+        }
+
+        if ( $run->getAssertionCount() === 0 ) {
+            $run->setRisky( wfMessage( 'mwunit-no-assertions' )->parse() );
+        }
+    }
 }

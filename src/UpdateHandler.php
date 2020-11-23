@@ -65,11 +65,9 @@ class UpdateHandler  {
 		] );
 
 		// Deregister all tests on the page and let the parser re-register them.
-		TestCaseRepository::getInstance()->deregisterTestsOnPage( $article_id );
-
-		$tags = WikitextParser::getTestCasesFromWikitext( $content->getNativeData() );
-
-		TestCaseRepository::getInstance()->registerTests( $wikiPage->getTitle(), $tags );
+        TestCaseRepository::getInstance()->deregisterTestsOnPage( $article_id );
+        $test_class = TestClass::newFromWikipage( $wikiPage );
+        TestCaseRepository::getInstance()->registerTestClass( $test_class );
 
 		return true;
 	}

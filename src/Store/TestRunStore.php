@@ -2,10 +2,9 @@
 
 namespace MWUnit\Store;
 
-use MWUnit\Exception\MWUnitException;
+use MWUnit\TestCase;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
-use MWUnit\DatabaseTestCase;
 
 class TestRunStore implements \Iterator, \Countable {
     /**
@@ -24,7 +23,7 @@ class TestRunStore implements \Iterator, \Countable {
     private $test_results = [];
 
     /**
-     * @var DatabaseTestCase[]
+     * @var TestCase[]
      */
     private $test_cases = [];
 
@@ -62,10 +61,7 @@ class TestRunStore implements \Iterator, \Countable {
     public function append( TestRun $run ) {
         $this->runs[] = $run;
 
-        $result = $run->getResult();
-        $this->test_results[] = $result;
-
-        switch ( $result->getResultConstant() ) {
+        switch ( $run->getResult()->getResultConstant() ) {
             case TestResult::T_SUCCESS:
                 $this->success_count++;
                 break;
@@ -115,33 +111,6 @@ class TestRunStore implements \Iterator, \Countable {
         return new TestRunStore( array_filter( $this->runs, function( TestRun $run ) use ( $result ): bool {
             return $run->getResult()->getResultConstant() === $result;
         } ) );
-    }
-
-    /**
-     * Returns all the TestResult objects contained in the TestRun objects.
-     *
-     * @return array
-     */
-    public function getTestResults(): array {
-        return $this->test_results;
-    }
-
-    /**
-     * Returns all the DatabaseTestCase objects contained in the TestRun objects.
-     *
-     * @return array
-     */
-    public function getTestCases(): array {
-        return $this->test_cases;
-    }
-
-    /**
-     * Returns the number of tests that passed.
-     *
-     * @return int
-     */
-    public function getSuccessCount(): int {
-        return $this->success_count;
     }
 
     /**

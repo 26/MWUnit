@@ -2,105 +2,179 @@
 
 namespace MWUnit;
 
-use ConfigException;
-use MediaWiki\MediaWikiServices;
-use Parser;
+use Exception;
 use Title;
 
-/**
- * Class TestCase
- *
- * @package MWUnit
- */
-class TestCase extends DatabaseTestCase {
-	private $input;
-	private $options;
-
-	/**
-	 * TestCase constructor.
-	 *
-	 * @param string $input The contents of the test case
-	 * @param string $name The name of this test case
-	 * @param string $group The group this test case is in
-	 * @param array $options Associative array of additional options
-	 * @param Title $title The Title object for this test case
-	 */
-	public function __construct(
-		string $input,
-		string $name,
-		string $group,
-		array $options,
-		Title $title ) {
-	    $covers = $options['covers'] ?? null;
-
-	    parent::__construct( $name, $group, $covers, $title );
-
-        $this->input = $input;
-        $this->options = $options;
-	}
-
-	/**
-	 * Creates a new DatabaseTestCase object from input received by tag register callback
-	 *
-	 * @param string $tag_input The input given directly to the tag
-	 * @param array $tag_arguments The arguments given to the tag, entered like HTML tag attributes
-	 * @param Parser $parser The parent parser
-	 * @return TestCase|false The newly created DatabaseTestCase object or false upon failure
-     * @throws ConfigException
-	 */
-	public static function newFromTag( string $tag_input, array $tag_arguments, Parser $parser ) {
-	    $result = MWUnit::areAttributesValid( $tag_arguments );
-
-	    if ( $result === false ) {
-	        return false;
-        }
-
-		$title = $parser->getTitle();
-		$name  = self::array_shift_key( 'name', $tag_arguments );
-		$group = self::array_shift_key( 'group', $tag_arguments );
-
-		return new TestCase( $tag_input, $name, $group, $tag_arguments, $title );
-	}
-
-	/**
-	 * Returns the contents of this test case.
-	 *
-	 * @return string The contents of the test case
-	 */
-	public function getInput(): string {
-		return $this->input;
-	}
-
-	/**
-	 * Returns the option with the given name if it is set, else it returns false.
-	 *
-	 * @param string $option
-	 * @return bool|string
-	 */
-	public function getOption( string $option ) {
-		return isset( $this->options[ $option ] ) ? $this->options[ $option ] : false;
-	}
-
-	/**
-	 * Returns an associative array of options.
-	 *
-	 * @return array The options as a key-value pair
-	 */
-	public function getOptions(): array {
-		return $this->options;
-	}
+class TestCase {
+    /**
+     * @var string
+     */
+    private $name;
 
     /**
-     * Removes the element in the given array specified by the given key and returns it.
-     *
-     * @param $key
-     * @param $array
-     * @return mixed
+     * @var string
      */
-	private static function array_shift_key( $key, &$array ) {
-	    $value = $array[$key];
-	    unset( $array[$key] );
+    private $group;
 
-	    return $value;
+    /**
+     * @var Title
+     */
+    private $title;
+
+    /**
+     * @var string[]
+     */
+    private $attributes;
+
+    /**
+     * @var string
+     */
+    private $content;
+
+    /**
+     * @var Title|null
+     */
+    private $covers;
+
+    /**
+     * Creates a new TestCase object from the given $name and $group or returns false if the test case does not
+     * exist.
+     *
+     * @param string $name
+     * @param Title $test_page
+     *
+     * @return TestCase|false
+     * @throws Exception
+     */
+    public static function newFromName( string $name, Title $test_page ) {
+        $dbr = wfGetDB( DB_REPLICA );
+
+        $test_case_db_result = $dbr->select(
+            "mwunit_tests",
+            [ "test_group", "covers" ],
+            [ "article_id" => $test_page->getArticleID(), "test_name" => $name ]
+        );
+
+        if ( $test_case_db_result->numRows() < 1 ) {
+            return false;
+        }
+
+        $test_group = $test_case_db_result->current()->test_group;
+        $covers = $test_case_db_result->current()->covers ?: null;
+
+        $attributes_db_result = $dbr->select(
+            "mwunit_attributes",
+            [ "attribute_name", "attribute_value" ],
+            [ "article_id" => $test_page->getArticleID(), "test_name" => $name ]
+        );
+
+        $attributes = [];
+
+        foreach( $attributes_db_result as $attribute_db_result ) {
+            $attributes[$attribute_db_result->attribute_name] = $attribute_db_result->attribute_value;
+        }
+
+        $content_db_result = $dbr->select(
+            "mwunit_content",
+            [ "content" ],
+            [ "article_id" => $test_page->getArticleID(), "test_name" => $name ]
+        );
+
+        if ( $content_db_result->numRows() < 1 ) {
+            throw new Exception( "Missing content for test case $name" );
+        }
+
+        $content = $content_db_result->current()->content;
+
+        return new self( $name, $test_group, $test_page, $attributes, $content, $covers );
+    }
+
+    /**
+     * TestCase constructor.
+     *
+     * @param string $name
+     * @param string $group
+     * @param Title $test_page
+     * @param array $attributes
+     * @param string $content
+     * @param Title|null $covers
+     */
+    public function __construct( string $name, string $group, Title $test_page, array $attributes, string $content, $covers = null ) {
+        $this->name = $name;
+        $this->group = $group;
+        $this->title = $test_page;
+        $this->attributes = $attributes;
+        $this->content = $content;
+        $this->covers = $covers;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTestName(): string {
+        return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTestGroup(): string {
+        return $this->group;
+    }
+
+    /**
+     * @return Title
+     */
+    public function getTestPage(): Title {
+        return $this->title;
+    }
+
+    /**
+     * @return array|string[]
+     */
+    public function getAttributes(): array {
+        return $this->attributes;
+    }
+
+    /**
+     * Returns the value of a specific attribute, or false if it does not exist.
+     *
+     * @param string $attribute
+     * @return string
+     */
+    public function getAttribute( string $attribute ): string {
+        return $this->attributes[$attribute] ?? false;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContent(): string {
+        return $this->content;
+    }
+
+    /**
+     * @return Title|null
+     */
+    public function getCovers() {
+        return $this->covers;
+    }
+
+    /**
+     * Returns the canonical name of this test case.
+     *
+     * @return string
+     */
+    public function getCanonicalName(): string {
+        return $this->title->getText() . "::" . $this->name;
+    }
+
+    /**
+     * Outputs the string representation of this object.
+     *
+     * @return string
+     */
+    public function __toString() {
+        return $this->getCanonicalName();
     }
 }

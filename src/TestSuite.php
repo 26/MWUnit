@@ -3,6 +3,7 @@
 namespace MWUnit;
 
 use Countable;
+use Exception;
 use Iterator;
 use Title;
 use MWUnit\Exception\MWUnitException;
@@ -16,26 +17,53 @@ class TestSuite implements Iterator, Countable {
     /**
      * @var array
      */
-    private $test_cases;
+    public $test_classes;
+
+    /**
+     * @var int
+     */
     private $index = 0;
 
     /**
      * @param string $group
      * @return TestSuite
+     * @throws Exception
      */
     public static function newFromGroup( string $group ): TestSuite {
-        $result = TestCaseRepository::getInstance()->getTestsFromGroup( $group );
+        $dbr = wfGetDB( DB_REPLICA );
 
-        if ( !$result ) {
+        $db_result = $dbr->select(
+            'mwunit_tests',
+            [ 'article_id', 'test_name' ],
+            [ 'test_group' => $group ],
+            __METHOD__,
+            'DISTINCT'
+        );
+
+        if ( !$db_result ) {
             return self::newEmpty();
         }
 
-        $test_cases = [];
-        foreach ( $result as $row ) {
-            $test_cases[] = DatabaseTestCase::newFromRow( $row );
+        $grouped_tests = [];
+
+        // Group the database result based on article_id
+        foreach ( $db_result as $item ) {
+            $grouped_tests[$item->article_id][] = $item->test_name;
         }
 
-        return new TestSuite( $test_cases );
+        $test_classes = [];
+
+        foreach ( $grouped_tests as $article_id => $tests ) {
+            $title = \Title::newFromID( $article_id );
+
+            if ( !$title instanceof Title || !$title->exists() ) {
+                throw new Exception( "Invalid article_id in database, please run the rebuildTestsIndex.php maintenance script" );
+            }
+
+            $test_classes[] = TestClass::newFromDb( $title, $tests );
+        }
+
+        return new TestSuite( $test_classes );
     }
 
     /**
@@ -45,20 +73,10 @@ class TestSuite implements Iterator, Countable {
      *
      * @param Title $title
      * @return TestSuite
+     * @throws Exception
      */
     public static function newFromTitle( \Title $title ): TestSuite {
-        $result = TestCaseRepository::getInstance()->getTestsFromTitle( $title );
-
-        if ( !$result ) {
-            return self::newEmpty();
-        }
-
-        $test_cases = [];
-        foreach ( $result as $row ) {
-            $test_cases[] = DatabaseTestCase::newFromRow( $row );
-        }
-
-        return new TestSuite( $test_cases );
+        return new TestSuite( [ TestClass::newFromDb( $title ) ] );
     }
 
     /**
@@ -68,21 +86,22 @@ class TestSuite implements Iterator, Countable {
      * @param string $test_name
      * @return TestSuite
      * @throws MWUnitException When an invalid test name is given
+     * @throws Exception
      */
     public static function newFromText( string $test_name ): TestSuite {
         if ( !strpos( $test_name, '::' ) ) {
             throw new MWUnitException( "mwunit-exception-invalid-test-name");
         }
 
-        $test_case = TestCaseRepository::getInstance()->getTestCaseFromTestName( $test_name );
+        list ( $article_text, $test_name ) = explode( "::", $test_name );
 
-        if ( $test_case === false ) {
+        $title = Title::newFromText( $article_text, NS_TEST );
+
+        if ( !$title instanceof Title || !$title->exists() ) {
             return self::newEmpty();
         }
 
-        return new TestSuite( [
-            $test_case
-        ] );
+        return new TestSuite( [ TestClass::newFromDb( $title, [ $test_name ] ) ] );
     }
 
     /**
@@ -92,20 +111,43 @@ class TestSuite implements Iterator, Countable {
      *
      * @param string $covers
      * @return TestSuite
+     * @throws Exception
      */
     public static function newFromCovers( string $covers ): TestSuite {
-        $result = TestCaseRepository::getInstance()->getTestsCoveringTemplate( $covers );
+        $dbr = wfGetDB( DB_REPLICA );
 
-        if ( !$result ) {
+        $db_result = $dbr->select(
+            'mwunit_tests',
+            [ 'article_id', 'test_name' ],
+            [ 'covers' => $covers ],
+            __METHOD__,
+            'DISTINCT'
+        );
+
+        if ( !$db_result ) {
             return self::newEmpty();
         }
 
-        $test_cases = [];
-        foreach ( $result as $row ) {
-            $test_cases[] = DatabaseTestCase::newFromRow( $row );
+        $grouped_tests = [];
+
+        // Group the database result based on article_id
+        foreach ( $db_result as $item ) {
+            $grouped_tests[$item->article_id][] = $item->test_name;
         }
 
-        return new TestSuite( $test_cases );
+        $test_classes = [];
+
+        foreach ( $grouped_tests as $article_id => $tests ) {
+            $title = \Title::newFromID( $article_id );
+
+            if ( !$title instanceof Title || !$title->exists() ) {
+                throw new Exception( "Invalid article_id in database, please run the rebuildTestsIndex.php maintenance script" );
+            }
+
+            $test_classes[] = TestClass::newFromDb( $title, $tests );
+        }
+
+        return new TestSuite( $test_classes );
     }
 
     /**
@@ -120,10 +162,10 @@ class TestSuite implements Iterator, Countable {
     /**
      * TestSuite constructor.
      *
-     * @param array $test_cases
+     * @param TestClass[] $test_classes
      */
-    public function __construct( array $test_cases ) {
-        $this->test_cases = $test_cases;
+    public function __construct( array $test_classes ) {
+        $this->test_classes = $test_classes;
     }
 
     /**
@@ -133,9 +175,9 @@ class TestSuite implements Iterator, Countable {
      * @return TestSuite
      */
     public function merge( TestSuite ...$test_suites ): TestSuite {
-        $a = $this->test_cases;
+        $a = $this->test_classes;
         $b = array_map( function ( TestSuite $suite ): array {
-            return $suite->getTestCases();
+            return $suite->test_classes;
         }, $test_suites );
 
         $result = array_merge( $a, ...$b );
@@ -143,16 +185,12 @@ class TestSuite implements Iterator, Countable {
         return new TestSuite( $result );
     }
 
-    public function getTestCases(): array {
-        return $this->test_cases;
-    }
-
     /**
      * @inheritDoc
      * @return TestCase
      */
     public function current() {
-        return $this->test_cases[ $this->index ];
+        return $this->test_classes[ $this->index ];
     }
 
     /**
@@ -173,7 +211,7 @@ class TestSuite implements Iterator, Countable {
      * @inheritDoc
      */
     public function valid() {
-        return isset( $this->test_cases[ $this->index ] );
+        return isset( $this->test_classes[ $this->index ] );
     }
 
     /**
@@ -184,6 +222,6 @@ class TestSuite implements Iterator, Countable {
     }
 
     public function count() {
-        return count( $this->test_cases );
+        return count( $this->test_classes );
     }
 }

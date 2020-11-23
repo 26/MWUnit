@@ -2,16 +2,17 @@
 
 namespace MWUnit\Runner;
 
+use Exception;
 use MediaWiki\MediaWikiServices;
+use MWUnit\Exception\MWUnitException;
+use MWUnit\TestCase;
 use MWUnit\ParserFunction\ParserMockParserFunction;
-use MWUnit\Exception;
 use MWUnit\MWUnit;
 use MWUnit\ParserTag\TestCaseParserTag;
 use MWUnit\Store\TestRunStore;
-use MWUnit\DatabaseTestCase;
+use MWUnit\TestClass;
 use MWUnit\TestSuite;
 use MWUnit\TemplateMockStore;
-use MWUnit\WikitextParser;
 use Revision;
 use Title;
 use WikiPage;
@@ -26,11 +27,6 @@ use WikiPage;
  * @package MWUnit
  */
 class TestSuiteRunner {
-    /**
-     * @var DatabaseTestCase The DatabaseTestCase that is currently running.
-     */
-    private $test_case;
-
 	/**
 	 * @var int The total number of assertions for the current run.
 	 */
@@ -76,27 +72,22 @@ class TestSuiteRunner {
     /**
      * Runs all tests in the group specified in the constructor.
      *
-     * @throws \Exception
+     * @throws Exception
      */
 	public function run() {
         if ( !\Hooks::run('MWUnitBeforeFirstTest', [ &$pages ] ) ) {
             return;
         }
 
-        foreach ( $this->test_suite as $test_case ) {
-			$result = $this->runTestCase( $test_case );
-
-			if ( $result === false ) {
-			    throw new Exception\MWUnitException( 'mwunit-failure-running-test', [$test_case->getName()] );
-            }
-
-			$this->cleanupAfterFixture( $test_case->getTitle() );
+        foreach ( $this->test_suite as $test_class ) {
+			$this->runTestClass( $test_class );
+			$this->cleanupAfterFixture( $test_class->getTestPage() );
 		}
 
         try {
             \Hooks::run( 'MWUnitAfterTests', [ &$this->test_run_store ] );
-        } catch ( \Exception $e ) {
-            throw new Exception\MWUnitException( 'mwunit-generic-error-description' );
+        } catch (Exception $e ) {
+            throw new MWUnitException( 'mwunit-generic-error-description' );
         }
 	}
 
@@ -201,41 +192,16 @@ class TestSuiteRunner {
 	}
 
     /**
-     * Returns the current DatabaseTestCase object.
-     *
-     * @return DatabaseTestCase
-     */
-    public function getCurrentTestCase(): DatabaseTestCase {
-        return $this->test_case;
-    }
-
-    /**
-     * Returns true if and only if the given DatabaseTestCase has been run.
-     *
-     * @param DatabaseTestCase $test_case
-     * @return bool
-     */
-    public function testCompleted(DatabaseTestCase $test_case): bool {
-        foreach ( $this->test_run_store->getTestCases() as $test_run ) {
-            if ( $test_run->equals( $test_case ) ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Called after having run the tests on a page.
      *
      * @param $page Title The article ID of the page
      * @return bool Returns false on failure, true otherwise
-     * @throws Exception\MWUnitException
+     * @throws MWUnitException
      */
     private function cleanupAfterFixture( Title $page ) {
         try {
             \Hooks::run('MWUnitCleanupAfterPage', [$page]);
-        } catch ( \Exception $e ) {
+        } catch (Exception $e ) {
             return false;
         }
 
@@ -246,46 +212,31 @@ class TestSuiteRunner {
     }
 
     /**
-     * Runs a specific test page.
+     * Runs the given test class.
      *
-     * @param DatabaseTestCase $test_case
-     * @return bool Returns false on failure, true otherwise
+     * @param TestClass $test_class
+     * @return void
+     * @throws Exception
      */
-	private function runTestCase( DatabaseTestCase $test_case ) {
-	    $this->test_case = $test_case;
-
-	    $article_id = $test_case->getTitle()->getArticleID();
-		$wiki_page = WikiPage::newFromID( $article_id );
-
-		if ( !$wiki_page instanceof WikiPage ) {
-			MWUnit::getLogger()->warning( 'Unable to run tests on article {article_id} because it does not exist', [
-				'article_id' => $article_id
-			] );
-
-			return false;
-		}
-
-		if ( $wiki_page->getTitle()->getNamespace() !== NS_TEST ) {
-			MWUnit::getLogger()->warning( 'Unable to run tests on article {article} because it is not in the NS_TEST namespace', [
-				'article' => $wiki_page->getTitle()->getFullText()
-			] );
-
-			return false;
-		}
-
-		MWUnit::getLogger()->debug( 'Running tests on article {article_id}', [
-		    'article' => $article_id
-        ] );
-
-        $text    = $wiki_page->getRevision()->getContent( Revision::RAW )->getNativeData();
-        $title   = $wiki_page->getTitle();
-        $options = $wiki_page->makeParserOptions( 'canonical' );
-
+	private function runTestClass( TestClass $test_class ) {
         $parser = MediaWikiServices::getInstance()->getParser();
         $parser = $parser->getFreshParser();
 
-        $parser->parse( $text, $title, $options );
+        $title = $test_class->getTitle();
+        $wiki_page = WikiPage::factory( $title );
 
-        return true;
+        $parser_options = $wiki_page->makeParserOptions( "canonical" );
+
+        // Run the "setup" tag
+        $parser->parse( $test_class->getSetUp(), $title, $parser_options );
+
+        // Run each test case
+        foreach ( $test_class->getTestCases() as $test_case ) {
+            $runner = new BaseTestRunner( $test_case );
+            $runner->run();
+        }
+
+        // Run the "teardown" tag
+        $parser->parse( $test_class->getTearDown(), $title, $parser_options );
 	}
 }

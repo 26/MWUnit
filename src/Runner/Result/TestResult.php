@@ -2,7 +2,7 @@
 
 namespace MWUnit\Runner\Result;
 
-use MWUnit\DatabaseTestCase;
+use MWUnit\TestCase;
 
 /**
  * Class TestResult
@@ -15,16 +15,16 @@ abstract class TestResult {
 	const T_SUCCESS = 2; /* phpcs:ignore */
 
 	/**
-	 * @var DatabaseTestCase
+	 * @var TestCase
 	 */
 	private $test_case;
 
     /**
      * TestResult constructor.
      *
-     * @param DatabaseTestCase $case
+     * @param TestCase $case
      */
-	public function __construct( DatabaseTestCase $case ) {
+	public function __construct(TestCase $case ) {
 	    // TODO: Make TestResults more generic, so other extension can add new TestResult's if they want to
         // using a hook.
         $this->test_case = $case;
@@ -33,9 +33,9 @@ abstract class TestResult {
 	/**
 	 * Returns the test case associated with this TestResult.
 	 *
-	 * @return DatabaseTestCase
+	 * @return TestCase
 	 */
-	public function getTestCase(): DatabaseTestCase {
+	public function getTestCase(): TestCase {
 		return $this->test_case;
 	}
 

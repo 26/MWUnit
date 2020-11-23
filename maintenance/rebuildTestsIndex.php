@@ -3,6 +3,7 @@
 namespace MWUnit\Maintenance;
 
 use MWUnit\TestCaseRepository;
+use MWUnit\TestClass;
 use MWUnit\WikitextParser;
 use Wikimedia\Rdbms\IResultWrapper;
 
@@ -75,12 +76,8 @@ class RebuildTestsIndex extends \Maintenance {
 		    $title = \Title::newFromTextThrow( $page->page_title, (int)$page->page_namespace );
             $wikipage = \WikiPage::factory( $title );
 
-            // Get the content of the wiki page
-            $content = $wikipage->getContent()->getNativeData();
-
-            // Register the page as a Test
-            $tags = WikitextParser::getTestCasesFromWikitext( $content );
-            TestCaseRepository::getInstance()->registerTests( $title, $tags );
+            $test_class = TestClass::newFromWikipage( $wikipage );
+            TestCaseRepository::getInstance()->registerTestClass( $test_class );
 
             $this->done++;
             $this->showProgress();

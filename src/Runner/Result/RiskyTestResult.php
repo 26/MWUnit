@@ -2,7 +2,7 @@
 
 namespace MWUnit\Runner\Result;
 
-use MWUnit\DatabaseTestCase;
+use MWUnit\TestCase;
 
 /**
  * Class RiskyTestResult
@@ -19,9 +19,9 @@ class RiskyTestResult extends TestResult {
      * RiskyTestResult constructor.
      *
      * @param string $message
-     * @param DatabaseTestCase $test_case
+     * @param TestCase $test_case
      */
-    public function __construct(string $message, DatabaseTestCase $test_case ) {
+    public function __construct(string $message, TestCase $test_case ) {
         $this->message = $message;
         parent::__construct( $test_case );
     }

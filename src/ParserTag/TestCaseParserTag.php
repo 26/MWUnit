@@ -91,7 +91,7 @@ class TestCaseParserTag implements ParserTag, TestSuiteRunnerInjector {
      * @param DatabaseTestCase $test_case
      * @return bool
      */
-    private static function shouldRunTestcase(DatabaseTestCase $test_case ): bool {
+    private static function shouldRunTestcase( DatabaseTestCase $test_case ): bool {
         return self::$test_suite_runner &&
             self::$test_suite_runner->getCurrentTestCase()->equals( $test_case ) &&
             !self::$test_suite_runner->testCompleted( $test_case );

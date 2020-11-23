@@ -7,6 +7,7 @@ use FatalError;
 use Hooks;
 use MediaWiki\MediaWikiServices;
 use MWException;
+use MWUnit\TestCase;
 use MWUnit\ParserFunction\AssertionParserFunction;
 use MWUnit\ParserFunction\TemplateMockParserFunction;
 use MWUnit\ParserFunction\VarDumpParserFunction;
@@ -16,9 +17,7 @@ use MWUnit\MWUnit;
 use MWUnit\Runner\Result\FailureTestResult;
 use MWUnit\Runner\Result\RiskyTestResult;
 use MWUnit\Runner\Result\SuccessTestResult;
-use MWUnit\TestCase;
 use MWUnit\Runner\Result\TestResult;
-use MWUnit\DatabaseTestCase;
 use Parser;
 use ParserOptions;
 use RequestContext;
@@ -121,7 +120,7 @@ class TestRun {
 	 */
 	public function __construct(TestCase $test_case ) {
 	    $this->test_case = $test_case;
-        $this->covered   = strtolower( $test_case->getOption( 'covers' ) );
+        $this->covered   = strtolower( $test_case->getCovers() );
 
         self::$templates_used = [];
 
@@ -206,9 +205,9 @@ class TestRun {
     /**
      * Returns the test case associated with this run.
      *
-     * @return DatabaseTestCase
+     * @return TestCase
      */
-    public function getTestCase(): DatabaseTestCase {
+    public function getTestCase(): TestCase {
         return $this->test_case;
     }
 
@@ -228,7 +227,6 @@ class TestRun {
 	 * @throws FatalError
 	 * @throws MWException
 	 * @throws MWUnitException
-	 * @throws ConfigException
 	 */
 	public function runTest() {
 		// Store a clone of the initial parser, so we can properly perform coverage checks, without
@@ -245,6 +243,7 @@ class TestRun {
 
 		try {
             $context = $this->getContext();
+
 			if ( $context === false ) {
 			    return;
             }
@@ -255,8 +254,8 @@ class TestRun {
 
             // Run test case
             MediaWikiServices::getInstance()->getParser()->parse(
-                $this->test_case->getInput(),
-                $this->test_case->getTitle(),
+                $this->test_case->getContent(),
+                $this->test_case->getTestPage(),
                 ParserOptions::newCanonical( $context ),
                 true,
                 false
@@ -270,7 +269,7 @@ class TestRun {
             $this->restoreGlobals();
             $this->restoreUser();
 
-            if ( !$this->resultAvailable() ) {
+            if ( !isset( $this->result ) ) {
                 $this->setSuccess();
             }
 		}
@@ -337,7 +336,7 @@ class TestRun {
             return;
         }
 
-	    if ( $this->test_case->getOption( 'ignorestrictcoverage' ) !== false ) {
+	    if ( $this->test_case->getAttribute( 'ignorestrictcoverage' ) !== false ) {
 	        // Strict coverage is explicitly ignored
             return;
         }
@@ -416,8 +415,8 @@ class TestRun {
      * @return string|User|null|false
      */
     private function getContext() {
-        $context_option = $this->test_case->getOption( 'context' );
-        $user_option    = $this->test_case->getOption( 'user' );
+        $context_option = $this->test_case->getAttribute( 'context' );
+        $user_option    = $this->test_case->getAttribute( 'user' );
 
         switch ( $context_option ) {
             case 'canonical':

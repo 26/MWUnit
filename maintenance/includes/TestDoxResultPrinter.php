@@ -19,7 +19,7 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 	 * @inheritDoc
 	 */
 	public function testCompletionCallback( TestResult $result ) {
-	    $title = $result->getTestCase()->getTitle();
+	    $title = $result->getTestCase()->getTestPage();
 		$page = $title->getFullText();
 
 		if ( !isset( $this->current_testsuite ) || $this->current_testsuite !== $page ) {

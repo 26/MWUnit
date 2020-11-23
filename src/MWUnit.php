@@ -79,7 +79,6 @@ abstract class MWUnit {
 	    $title = $skin->getTitle();
 	    $namespace = $title->getNamespace();
 
-	    // TODO: Make it injectable
 	    $testcase_repository = TestCaseRepository::getInstance();
 
 		if ( $namespace === NS_TEMPLATE && $testcase_repository->isTemplateCovered( $title ) ) {

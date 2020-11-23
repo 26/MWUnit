@@ -4,6 +4,7 @@ namespace MWUnit\ContentHandler;
 
 use MediaWiki\MediaWikiServices;
 use MWUnit\MWUnit;
+use MWUnit\TestClass;
 use MWUnit\WikitextParser;
 use ParserOptions;
 use ParserOutput;
@@ -103,10 +104,10 @@ abstract class AbstractTestContent extends \AbstractContent {
             return;
         }
 
-        $tags = WikitextParser::getTestCasesFromWikitext( $this->text );
+        $test_class = TestClass::newFromDb( $title );
         $href = \Title::newFromText( "Special:UnitTests" )->getFullURL( [ 'unitTestPage' => $title->getFullText() ] );
 
-        $number_of_tests = count( $tags );
+        $number_of_tests = count( $test_class->getTestCases() );
 
         $nav = $number_of_tests > 0 ? wfMessage( 'parentheses' )
             ->rawParams( \RequestContext::getMain()->getLanguage()->pipeList( [
@@ -123,9 +124,10 @@ abstract class AbstractTestContent extends \AbstractContent {
 
         $divs = [];
 
-        foreach ( $tags as $tag ) {
-            $content = $tag['content'];
-            $attributes = $tag['attributes'];
+        foreach ( $test_class->getTestCases() as $test_case ) {
+            $content = $test_case->getContent();
+            $attributes = $test_case->getAttributes();
+
             $this->fillHtmlFromTag( $html, $content, $attributes );
             $divs[] = $html;
         }

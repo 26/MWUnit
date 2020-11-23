@@ -105,6 +105,7 @@ class ResultUI extends MWUnitUI {
      *
      * @param TestRun $run
      * @return string
+     * @throws \Exception
      */
     private function renderTest( TestRun $run ): string {
         switch ( $run->getResult()->getResultConstant() ) {
@@ -116,8 +117,7 @@ class ResultUI extends MWUnitUI {
                 return $this->renderSucceededTest( $run )->__toString();
         }
 
-        // To stop PHP from complaining.
-        return '';
+        throw new \Exception( "Invalid result constant" );
     }
 
     /**
@@ -213,12 +213,12 @@ class ResultUI extends MWUnitUI {
     private function formatTestHeader( TestRun $test_run ): Document {
         $result = $test_run->getResult();
 
-        $test_name = $result->getTestCase()->getName();
-        $page_name = $result->getTestCase()->getTitle()->getFullText();
+        $test_name = $result->getTestCase()->getTestName();
+        $page_name = $result->getTestCase()->getTestPage()->getFullText();
 
         $title = \Title::newFromText( $page_name );
         $link_href = $title->getLinkURL();
-        $link_title = $result->getTestCase()->__toString();
+        $link_title = $result->getTestCase()->getCanonicalName();
         $link = new Tag( "a", $link_title, [ "href" => $link_href, "title" => $link_title ]);
 
         try {
