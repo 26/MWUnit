@@ -81,7 +81,7 @@ class TestCase {
         );
 
         if ( $content_db_result->numRows() < 1 ) {
-            throw new Exception( "Missing content for test case $name" );
+            throw new Exception( "Missing content for test case $name; run update" );
         }
 
         $content = $content_db_result->current()->content;
@@ -140,9 +140,9 @@ class TestCase {
      * Returns the value of a specific attribute, or false if it does not exist.
      *
      * @param string $attribute
-     * @return string
+     * @return string|false
      */
-    public function getAttribute( string $attribute ): string {
+    public function getAttribute( string $attribute ) {
         return $this->attributes[$attribute] ?? false;
     }
 
@@ -173,8 +173,33 @@ class TestCase {
      * Outputs the string representation of this object.
      *
      * @return string
+     * @deprecated Since 2.0 Use TestCase::getCanonicalName() instead.
      */
     public function __toString() {
         return $this->getCanonicalName();
+    }
+
+    /**
+     * @return string
+     * @deprecated Since 2.0 Use TestCase::getTestName() instead.
+     */
+    public function getName(): string {
+        return $this->getTestName();
+    }
+
+    /**
+     * @return string
+     * @deprecated Since 2.0 Use TestCase::getTestGroup() instead.
+     */
+    public function getGroup(): string {
+        return $this->getTestGroup();
+    }
+
+    /**
+     * @return Title
+     * @deprecated Since 2.0 Use TestCase::getTestPage() instead.
+     */
+    public function getTitle(): Title {
+        return $this->getTestPage();
     }
 }

@@ -77,6 +77,7 @@ class TestClass {
         }
 
         $test_cases = [];
+        $test_names = [];
 
         foreach ( $test_case_tags as $test_case_tag ) {
             $content = trim( $test_case_tag->textContent );
@@ -89,6 +90,10 @@ class TestClass {
             $name = $attributes["name"];
             $group = $attributes["group"];
 
+            if ( in_array( $name, $test_names ) ) {
+                continue;
+            }
+
             unset( $attributes["name"] );
             unset( $attributes["group"] );
 
@@ -100,6 +105,7 @@ class TestClass {
             }
 
             $test_cases[] = new TestCase( $name, $group, $wikipage->getTitle(), $attributes, $content, $covers );
+            $test_names[] = $name;
         }
 
         return new self( $setup, $teardown, $test_cases, $wikipage->getTitle() );
@@ -196,5 +202,88 @@ class TestClass {
      */
     public function getTitle(): Title {
         return $this->title;
+    }
+
+    /**
+     * Updates/stores this instance in the database.
+     */
+    public function doUpdate() {
+        $dbr = wfGetDB(DB_MASTER);
+        $article_id = $this->title->getArticleID();
+
+        // Delete original setup from the database
+        $dbr->delete(
+            "mwunit_setup",
+            [ "article_id" => $article_id ]
+        );
+
+        // Insert setup function
+        $dbr->insert(
+            "mwunit_setup",
+            [ "article_id" => $article_id, "content" => $this->setup]
+        );
+
+        // Delete original teardown from the database
+        $dbr->delete(
+            "mwunit_teardown",
+            [ "article_id" => $article_id ]
+        );
+
+        // Insert teardown function
+        $dbr->insert(
+            "mwunit_teardown",
+            [ "article_id" => $article_id, "content" => $this->teardown]
+        );
+
+        foreach ( $this->test_cases as $test_case ) {
+            $article_id = $test_case->getTestPage()->getArticleID();
+            $test_name = $test_case->getTestName();
+
+            $dbr->delete(
+                "mwunit_tests",
+                [ "article_id" => $article_id, "test_name" => $test_name ]
+            );
+
+            $dbr->delete(
+                "mwunit_content",
+                [ "article_id" => $article_id, "test_name" => $test_name ]
+            );
+
+            $dbr->delete(
+                "mwunit_attributes",
+                [ "article_id" => $article_id, "test_name" => $test_name ]
+            );
+
+            $dbr->insert(
+                "mwunit_tests",
+                [
+                    "article_id" => $article_id,
+                    "test_name" => $test_name,
+                    "test_group" => $test_case->getTestGroup(),
+                    "covers" => $test_case->getCovers() ?? ""
+                ]
+            );
+
+            $dbr->insert(
+                "mwunit_content",
+                [
+                    "article_id" => $article_id,
+                    "test_name" => $test_name,
+                    "content" => $test_case->getContent()
+                ]
+            );
+
+            foreach ( $test_case->getAttributes() as $attribute_name => $attribute_value ) {
+                $dbr->insert(
+                    "mwunit_attributes",
+                    [
+                        "article_id" => $article_id,
+                        "test_name" => $test_name,
+                        "attribute_name" => $attribute_name,
+                        "attribute_value" => $attribute_value
+                    ]
+                );
+            }
+        }
     }
 }

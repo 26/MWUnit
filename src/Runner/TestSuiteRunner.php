@@ -81,7 +81,7 @@ class TestSuiteRunner {
 
         foreach ( $this->test_suite as $test_class ) {
 			$this->runTestClass( $test_class );
-			$this->cleanupAfterFixture( $test_class->getTestPage() );
+			$this->cleanupAfterFixture( $test_class->getTitle() );
 		}
 
         try {

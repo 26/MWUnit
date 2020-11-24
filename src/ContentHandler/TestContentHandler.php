@@ -2,9 +2,10 @@
 
 namespace MWUnit\ContentHandler;
 
-use TextContentHandler;
+use CodeContentHandler;
+use Title;
 
-class TestContentHandler extends TextContentHandler {
+class TestContentHandler extends CodeContentHandler {
     /**
      * @inheritDoc
      */
@@ -53,9 +54,23 @@ class TestContentHandler extends TextContentHandler {
      * Creates a new TestContent object from the given $text.
      *
      * @param string|null $text
-     * @return AbstractTestContent
+     * @return TestContent
      */
     public function newTestContent( $text = null ) {
         return TestContent::newFromText( $text ?: '' );
+    }
+
+    /**
+     * Only allow this content handler to be used in the Test namespace.
+     *
+     * @param Title $title
+     * @return bool
+     */
+    public function canBeUsedOn( Title $title ) {
+        if ( $title->getNamespace() !== NS_TEST ) {
+            return false;
+        }
+
+        return parent::canBeUsedOn( $title );
     }
 }

@@ -2,17 +2,24 @@
 
 namespace MWUnit\ContentHandler;
 
-use ConfigException;
+use MediaWiki\MediaWikiServices;
 use MWUnit\MWUnit;
 use MWUnit\Renderer\Document;
 use MWUnit\Renderer\Tag;
+use MWUnit\TestCase;
+use MWUnit\TestClass;
+use MWUnit\WikitextParser;
+use ParserOptions;
+use ParserOutput;
+use Title;
 
 /**
- * Class TestContent
+ * Class AbstractTestContent
+ *
  * @package MWUnit\ContentHandler
  */
-class TestContent extends AbstractTestContent {
-    private $mTests = [];
+class TestContent extends \AbstractContent {
+    private $text;
 
     /**
      * Creates a new TestContent object from the given $text.
@@ -27,101 +34,95 @@ class TestContent extends AbstractTestContent {
     /**
      * @inheritDoc
      */
-    public function getSummaryText(): string {
-        return "[tests]";
+    public function __construct( $text, $model_id = CONTENT_MODEL_TEST ) {
+        parent::__construct( $model_id );
+        $this->text = $text;
     }
 
     /**
      * @inheritDoc
-     *
-     * @throws ConfigException
      */
-    public function fillHtmlFromTag( &$html, string $content, array $attributes ) {
-        $errors = [];
-
-        // Check if the attributes are valid
-        MWUnit::areAttributesValid( $attributes, $errors );
-
-        // Create a header
-        $header = $this->headerFromAttributes( $attributes, $errors );
-
-        // Get the appropriate class
-        $class = $errors === [] ?
-            'mwunit-test-case mwunit-valid successbox' :
-            'mwunit-test-case mwunit-invalid errorbox';
-
-        $tag = $errors === [] ?
-            $this->tagFromAttributes( $content, $attributes ) :
-            $this->tagFromErrors( $errors );
-
-        $html = new Tag(
-            "div",
-            new Document( [ $header, $tag ] ),
-            [ "class" => $class ]
-        );
+    public function getTextForSearchIndex() {
+        return $this->text;
     }
 
     /**
-     * @param string $content
-     * @param array $attributes
-     * @return Tag
+     * @inheritDoc
      */
-    private function tagFromAttributes( string $content, array $attributes ): Tag {
-        $attributes = array_map( function ( $key, $value ): string {
-            return sprintf( "@%s %s", $key, $value );
-        }, array_keys( $attributes ), $attributes );
-
-        $text = implode( "\n", $attributes ) . "\n------\n" . $content;
-
-        return new Tag( "pre", $text, [ 'class' => 'mwunit-body' ] );
+    public function getWikitextForTransclusion() {
+        $allow_transclusion = MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitAllowTransclusion" );
+        return $allow_transclusion ? $this->text : MWUnit::error( "mwunit-test-transclusion-error" );
     }
 
     /**
-     * @param array $errors
-     * @return Tag
+     * @inheritDoc
      */
-    private function tagFromErrors( array $errors ): Tag {
-        $text = wfMessage( 'mwunit-test-not-registered' );
-        $text .= "\n------\n";
-        $text .= implode( "\n", $errors );
-
-        return new Tag( "pre", $text, [ 'class' => 'mwunit-body' ] );
+    public function getNativeData() {
+        return $this->text;
     }
 
     /**
-     * Creates a header tag from the given attributes.
-     *
-     * @param array $attributes
-     * @param array $errors
-     * @return Tag
+     * @inheritDoc
      */
-    private function headerFromAttributes( array $attributes, array &$errors ): Tag {
-        if ( isset( $attributes['name'] ) ) {
-            $name = $attributes['name'];
-            $title = MWUnit::testNameToSentence( $name );
+    public function getSize() {
+        return strlen( $this->text );
+    }
 
-            if ( in_array( $name, $this->mTests ) ) {
-                $errors[] = wfMessage( "mwunit-duplicate-test", $name );
-            }
+    /**
+     * @inheritDoc
+     */
+    public function copy() {
+        return TestContent::newFromText( $this->text );
+    }
 
-            $this->mTests[] = $name;
-        } else {
-            $title = "[invalid]";
+    /**
+     * @inheritDoc
+     */
+    public function isCountable( $hasLinks = null ) {
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isValid() {
+        $title = \RequestContext::getMain()->getTitle();
+
+        if ( $title instanceof Title ) {
+            return \RequestContext::getMain()->getTitle()->getNamespace() === NS_TEST;
         }
 
-        return new Tag(
-            "span",
-            new Document(
-                [
-                    new Tag(
-                        "span",
-                        $title
-                    ), new Tag(
-                        "hr",
-                        ""
-                    )
-                ]
-            )
-        );
+        return false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getTextForSummary( $max_length = 250 ) {
+        $text = $this->getNativeData();
+        $suffix = "";
+
+        if ( strlen( $text ) > $max_length - 3 ) {
+            $suffix = "...";
+        }
+
+        return mb_substr( $this->getNativeData(), 0, $max_length - 3 ) . $suffix;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fillParserOutput(
+        Title $title,
+        $revId,
+        ParserOptions $options,
+        $generateHtml,
+        ParserOutput &$output
+    ) {
+        if ( !$generateHtml ) {
+            return;
+        }
+
+        // TODO
     }
 }

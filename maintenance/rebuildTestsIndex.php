@@ -77,7 +77,7 @@ class RebuildTestsIndex extends \Maintenance {
             $wikipage = \WikiPage::factory( $title );
 
             $test_class = TestClass::newFromWikipage( $wikipage );
-            TestCaseRepository::getInstance()->registerTestClass( $test_class );
+            $test_class->doUpdate();
 
             $this->done++;
             $this->showProgress();

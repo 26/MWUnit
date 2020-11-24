@@ -65,9 +65,9 @@ class UpdateHandler  {
 		] );
 
 		// Deregister all tests on the page and let the parser re-register them.
-        TestCaseRepository::getInstance()->deregisterTestsOnPage( $article_id );
+        self::deregisterTestsOnPage( $article_id );
         $test_class = TestClass::newFromWikipage( $wikiPage );
-        TestCaseRepository::getInstance()->registerTestClass( $test_class );
+        $test_class->doUpdate();
 
 		return true;
 	}
@@ -107,8 +107,42 @@ class UpdateHandler  {
 			'id' => $deleted_id
 		] );
 
-		TestCaseRepository::getInstance()->deregisterTestsOnPage( $deleted_id );
+		self::deregisterTestsOnPage( $deleted_id );
 
 		return true;
 	}
+
+    /**
+     * Removes all test cases on a page from the database.
+     *
+     * @param int $article_id The article ID of the page from which the tests should be deregistered.
+     */
+    private static function deregisterTestsOnPage( int $article_id ) {
+        $database = wfGetDb( DB_MASTER );
+
+        $database->delete(
+            'mwunit_tests',
+            [ 'article_id' => $article_id ]
+        );
+
+        $database->delete(
+            'mwunit_attributes',
+            [ 'article_id' => $article_id ]
+        );
+
+        $database->delete(
+            'mwunit_setup',
+            [ 'article_id' => $article_id ]
+        );
+
+        $database->delete(
+            'mwunit_teardown',
+            [ 'article_id' => $article_id ]
+        );
+
+        $database->delete(
+            'mwunit_content',
+            [ 'article_id' => $article_id ]
+        );
+    }
 }

@@ -161,7 +161,7 @@ class ResultUI extends MWUnitUI {
             $run,
             "successbox",
             "#14866d",
-            "mwunit-test-risky"
+            "mwunit-test-success"
         );
     }
 
