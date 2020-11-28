@@ -12,10 +12,10 @@ use MWUnit\Assertion\Assertion;
  * @package MWUnit\Assertion\SemanticMediaWiki
  */
 abstract class SMWAssertion implements Assertion {
-    /**
-     * @inheritDoc
-     */
-    public static function shouldRegister(): bool {
-        return \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' );
-    }
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' );
+	}
 }

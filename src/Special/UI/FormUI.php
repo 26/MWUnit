@@ -10,19 +10,19 @@ use MWUnit\Special\Form\IndividualForm;
  * @package MWUnit\Special\UI
  */
 class FormUI extends MWUnitUI {
-    public function render() {
-        $form = new GroupForm( $this->getOutput() );
-        $form->show();
+	public function render() {
+		$form = new GroupForm( $this->getOutput() );
+		$form->show();
 
-        $form = new IndividualForm( $this->getOutput() );
-        $form->show();
-    }
+		$form = new IndividualForm( $this->getOutput() );
+		$form->show();
+	}
 
-    public function getHeader(): string {
-        return wfMessage( "mwunit-special-title" )->parse();
-    }
+	public function getHeader(): string {
+		return wfMessage( "mwunit-special-title" )->parse();
+	}
 
-    public function getClass(): string {
-        return self::class;
-    }
+	public function getClass(): string {
+		return self::class;
+	}
 }

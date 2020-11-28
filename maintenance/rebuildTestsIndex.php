@@ -2,9 +2,9 @@
 
 namespace MWUnit\Maintenance;
 
-use MWUnit\TestCaseRepository;
+use MWUnit\Exception\InvalidTestPageException;
 use MWUnit\TestClass;
-use MWUnit\WikitextParser;
+use Revision;
 use Wikimedia\Rdbms\IResultWrapper;
 
 error_reporting( 0 );
@@ -41,17 +41,15 @@ class RebuildTestsIndex extends \Maintenance {
 
 		$this->addDescription( 'Rebuilds the index of tests by reparsing all pages in the "Test" namespace.' );
 		$this->requireExtension( "MWUnit" );
-
-
 	}
 
-    /**
-     * @inheritDoc
-     * @throws \MWException|\ConfigException
-     * @throws \MalformedTitleException
-     */
+	/**
+	 * @inheritDoc
+	 * @throws \MWException|\ConfigException
+	 * @throws \MalformedTitleException
+	 */
 	public function execute() {
-	    // Give the user some time to abort the rebuild
+		// Give the user some time to abort the rebuild
 		if ( !$this->getOption( 'quick', false ) ) {
 			$this->output( "Abort the rebuild with control-c in the next five seconds... " );
 			$this->countDown( 5 );
@@ -64,44 +62,53 @@ class RebuildTestsIndex extends \Maintenance {
 		// Delete all current records in the testcase table, since they are assumed to be bad
 		$this->deleteIndices();
 
-        // Fetch all pages in the Test namespace
-        $this->output( "\t... fetching test pages ...\n" );
-        $pages = $this->fetchTestPages();
+		// Fetch all pages in the Test namespace
+		$this->output( "\t... fetching test pages ...\n" );
+		$pages = $this->fetchTestPages();
 
 		$this->total = $pages->numRows();
 		$this->showProgress();
 
 		// Loop over all pages in the Test namespace and register them
 		foreach ( $pages as $page ) {
-		    $title = \Title::newFromTextThrow( $page->page_title, (int)$page->page_namespace );
-            $wikipage = \WikiPage::factory( $title );
+			$title = \Title::newFromTextThrow( $page->page_title, (int)$page->page_namespace );
+			$wikipage = \WikiPage::factory( $title );
 
-            $test_class = TestClass::newFromWikipage( $wikipage );
-            $test_class->doUpdate();
+			$content = $wikipage->getContent( Revision::FOR_THIS_USER );
+			$wikitext = $wikipage->getContentHandler()->serializeContent( $content );
 
-            $this->done++;
-            $this->showProgress();
-        }
+			try {
+				$test_class = TestClass::newFromWikitext( $wikitext, $wikipage->getTitle() );
+			} catch ( InvalidTestPageException $e ) {
+				$this->output( "Skipping page {$wikipage->getTitle()->getArticleID()}, because of invalid tests." );
+				continue;
+			}
+
+			$test_class->doUpdate();
+
+			$this->done++;
+			$this->showProgress();
+		}
 
 		$this->output( "\n" );
 	}
 
-    /**
-     * Returns an IResultWrapper object of all pages in the Test namespace.
-     *
-     * @return IResultWrapper
-     */
+	/**
+	 * Returns an IResultWrapper object of all pages in the Test namespace.
+	 *
+	 * @return IResultWrapper
+	 */
 	private function fetchTestPages(): IResultWrapper {
-	    $dbr = wfGetDB( DB_REPLICA );
-        return $dbr->select(
-            'page',
-            [ 'page_namespace', 'page_title' ],
-            [
-                'page_namespace' => NS_TEST,
-            ],
-            __METHOD__
-        );
-    }
+		$dbr = wfGetDB( DB_REPLICA );
+		return $dbr->select(
+			'page',
+			[ 'page_namespace', 'page_title' ],
+			[
+				'page_namespace' => NS_TEST,
+			],
+			__METHOD__
+		);
+	}
 
 	/**
 	 * Shows the rebuilding progress dynamically.
@@ -141,16 +148,16 @@ class RebuildTestsIndex extends \Maintenance {
 		return $this->total;
 	}
 
-    /**
-     * Deletes all test page records from the database.
-     */
-    private function deleteIndices() {
-        $dbr = wfGetDB( DB_MASTER );
-        $dbr->delete(
-            'mwunit_tests',
-            '*'
-        );
-    }
+	/**
+	 * Deletes all test page records from the database.
+	 */
+	private function deleteIndices() {
+		$dbr = wfGetDB( DB_MASTER );
+		$dbr->delete(
+			'mwunit_tests',
+			'*'
+		);
+	}
 }
 
 $maintClass = RebuildTestsIndex::class;

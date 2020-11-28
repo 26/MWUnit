@@ -7,8 +7,8 @@ class StringContains extends StandardAssertion {
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
-        return "string_contains";
-    }
+		return "string_contains";
+	}
 
 	/**
 	 * @inheritDoc

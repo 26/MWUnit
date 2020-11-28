@@ -12,9 +12,9 @@ class PropertyHasValue extends SMWAssertion {
 		return "property_has_value";
 	}
 
-    /**
-     * @inheritDoc
-     */
+	/**
+	 * @inheritDoc
+	 */
 	public static function getRequiredArgumentCount(): int {
 		return 3;
 	}
@@ -56,20 +56,20 @@ class PropertyHasValue extends SMWAssertion {
 
 		// Filter out all the properties that do not equal the expected value
 		$valid_properties = array_filter( $values, function ( $value ) use ( $expected_value ) {
-            return $value->getSortKey() === $expected_value;
-        } );
+			return $value->getSortKey() === $expected_value;
+		} );
 
-        // Check if there are any properties left that did met the expected value
+		// Check if there are any properties left that did met the expected value
 		$property_has_value = count( $valid_properties ) > 0;
 
-        $default_failure_message = wfMessage(
-            "mwunit-assert-failure-property-has-value",
-            $property_name,
-            $expected_value,
-            $page->getTitle()->getText()
-        )->plain();;
+		$default_failure_message = wfMessage(
+			"mwunit-assert-failure-property-has-value",
+			$property_name,
+			$expected_value,
+			$page->getTitle()->getText()
+		)->plain();
 
-        $failure_message = $message ?? $default_failure_message;
+		$failure_message = $message ?? $default_failure_message;
 
 		return $property_has_value;
 	}

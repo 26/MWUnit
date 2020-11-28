@@ -46,7 +46,7 @@
   "config": {
     "MWUnitMaxTestExecutionTime": {
       "value": 600,
-      "descriptionmsg": "mwunit-config-max-text-execution-time"
+      "descriptionmsg": "mwunit-config-max-test-execution-time"
     },
     "MWUnitDefaultTestDox": {
       "value": false,
@@ -114,6 +114,12 @@
   "ResourceModules": {
     "ext.mwunit.TestContent.css": {
       "styles": "extensions/MWUnit/resources/styles/TestContent.css"
+    },
+    "ext.mwunit.TestPage.css": {
+      "styles": "extensions/MWUnit/resources/styles/TestPage.css"
+    },
+    "ext.mwunit.InvalidTestPage.css": {
+      "styles": "extensions/MWUnit/resources/styles/InvalidTestPage.css"
     }
   },
   "callback": "MWUnit\\MWUnit::registrationCallback"

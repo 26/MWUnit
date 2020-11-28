@@ -3,10 +3,8 @@
 namespace MWUnit;
 
 use MediaWiki\Logger\LoggerFactory;
-use MediaWiki\MediaWikiServices;
 use MWException;
 use MWUnit\Factory\ParserFunctionFactory;
-use MWUnit\Factory\TagFactory;
 use Parser;
 use Psr\Log\LoggerInterface;
 use Title;
@@ -34,43 +32,43 @@ abstract class MWUnit {
 		$type = $updater->getDB()->getType();
 
 		$tables = [
-		    "mwunit_tests"      => sprintf( "%s/%s/table_mwunit_tests.sql", $directory, $type ),
-            "mwunit_teardown"   => sprintf( "%s/%s/table_mwunit_teardown.sql", $directory, $type ),
-            "mwunit_setup"      => sprintf( "%s/%s/table_mwunit_setup.sql", $directory, $type ),
-            "mwunit_content"    => sprintf( "%s/%s/table_mwunit_content.sql", $directory, $type ),
-            "mwunit_attributes" => sprintf( "%s/%s/table_mwunit_attributes.sql", $directory, $type )
-        ];
+			"mwunit_tests"      => sprintf( "%s/%s/table_mwunit_tests.sql", $directory, $type ),
+			"mwunit_teardown"   => sprintf( "%s/%s/table_mwunit_teardown.sql", $directory, $type ),
+			"mwunit_setup"      => sprintf( "%s/%s/table_mwunit_setup.sql", $directory, $type ),
+			"mwunit_content"    => sprintf( "%s/%s/table_mwunit_content.sql", $directory, $type ),
+			"mwunit_attributes" => sprintf( "%s/%s/table_mwunit_attributes.sql", $directory, $type )
+		];
 
 		foreach ( $tables as $table ) {
-            if ( !file_exists( $table ) ) {
-                throw new MWException( wfMessage( 'mwunit-invalid-dbms', $type )->parse() );
-            }
-        }
+			if ( !file_exists( $table ) ) {
+				throw new MWException( wfMessage( 'mwunit-invalid-dbms', $type )->parse() );
+			}
+		}
 
 		foreach ( $tables as $table_name => $sql_path ) {
-            $updater->addExtensionTable( $table_name, $sql_path );
-        }
+			$updater->addExtensionTable( $table_name, $sql_path );
+		}
 	}
 
-    /**
-     * Allows last minute changes to the output page, e.g. adding of CSS or JavaScript by extensions.
-     *
-     * @see https://www.mediawiki.org/wiki/Manual:Hooks/BeforePageDisplay
-     *
-     * @param \OutputPage $out
-     * @param \Skin $skin
-     */
+	/**
+	 * Allows last minute changes to the output page, e.g. adding of CSS or JavaScript by extensions.
+	 *
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/BeforePageDisplay
+	 *
+	 * @param \OutputPage $out
+	 * @param \Skin $skin
+	 */
 	public static function onBeforePageDisplay( \OutputPage $out, \Skin $skin ) {
-	    if ( $out->getTitle()->getNamespace() < 0 ) {
-	        return;
-        }
+		if ( $out->getTitle()->getNamespace() < 0 ) {
+			return;
+		}
 
-	    if ( $out->getWikiPage()->getContentModel() !== CONTENT_MODEL_TEST ) {
-	        return;
-        }
+		if ( $out->getWikiPage()->getContentModel() !== CONTENT_MODEL_TEST ) {
+			return;
+		}
 
-	    $out->addModuleStyles( [ "ext.mwunit.TestContent.css" ] );
-    }
+		$out->addModuleStyles( [ "ext.mwunit.TestContent.css" ] );
+	}
 
 	/**
 	 * Called at the end of Skin::buildSidebar(). Adds applicable links to the
@@ -83,21 +81,19 @@ abstract class MWUnit {
 	 * @return bool
 	 */
 	public static function onSkinBuildSidebar( \Skin $skin, array &$sidebar ) {
-	    $title = $skin->getTitle();
-	    $namespace = $title->getNamespace();
+		$title = $skin->getTitle();
+		$namespace = $title->getNamespace();
 
 		if ( $namespace === NS_TEMPLATE && self::isTemplateCovered( $title ) ) {
 			$special_title = Title::newFromText( 'UnitTests', NS_SPECIAL );
-			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->parse() ] = [
-				[
-					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->parse(),
-					'href' => $special_title->getFullURL( [
-						'unitTestCoverTemplate' => $skin->getTitle()->getText()
-					] ),
-					'id' => 'mwunit-sb-run',
-					'active' => '',
-					'accesskey' => 'a'
-				]
+			$sidebar[ 'mwunit-sidebar-item' ][] = [
+				'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->parse(),
+				'href' => $special_title->getFullURL( [
+					'unitTestCoverTemplate' => $skin->getTitle()->getText()
+				] ),
+				'id' => 'mwunit-sb-run',
+				'active' => '',
+				'accesskey' => 'a'
 			];
 
 			return true;
@@ -108,51 +104,49 @@ abstract class MWUnit {
 		}
 
 		$special_title = Title::newFromText( 'Special:UnitTests' );
-		$sidebar[ wfMessage( 'mwunit-sidebar-header' )->parse() ] = [
-			[
-				'text' => wfMessage( 'mwunit-sidebar-run-tests' )->parse(),
-				'href' => $special_title->getFullURL( [ 'unitTestPage' => $skin->getTitle()->getFullText() ] ),
-				'id' => 'mwunit-sb-run',
-				'active' => '',
-				'accesskey' => 'a'
-			]
+		$sidebar[ 'mwunit-sidebar-item' ][] = [
+			'text' => wfMessage( 'mwunit-sidebar-run-tests' )->parse(),
+			'href' => $special_title->getFullURL( [ 'unitTestPage' => $skin->getTitle()->getFullText() ] ),
+			'id' => 'mwunit-sb-run',
+			'active' => '',
+			'accesskey' => 'a'
 		];
 
 		return true;
 	}
 
-    /**
-     * Allows extensions to extend core's PHPUnit test suite.
-     *
-     * @param array $paths
-     * @return bool
-     */
+	/**
+	 * Allows extensions to extend core's PHPUnit test suite.
+	 *
+	 * @param array &$paths
+	 * @return bool
+	 */
 	public static function onUnitTestsList( array &$paths ) {
-        $paths[] = __DIR__ . '/../tests/phpunit/';
-        return true;
-    }
+		$paths[] = __DIR__ . '/../tests/phpunit/';
+		return true;
+	}
 
-    /**
-     * Specify whether a page can be moved for technical reasons.
-     *
-     * @param Title $old
-     * @param Title $new
-     * @param \Status $status
-     */
-    public static function onMovePageIsValidMove( Title $old, Title $new, \Status &$status ) {
-        $new_namespace = $new->getNamespace();
-        $new_content_model = $new->getContentModel();
+	/**
+	 * Specify whether a page can be moved for technical reasons.
+	 *
+	 * @param Title $old
+	 * @param Title $new
+	 * @param \Status &$status
+	 */
+	public static function onMovePageIsValidMove( Title $old, Title $new, \Status &$status ) {
+		$new_namespace = $new->getNamespace();
+		$new_content_model = $new->getContentModel();
 
-        if ( $new_namespace === NS_TEST && $new_content_model === CONTENT_MODEL_TEST ) {
-            return;
-        }
+		if ( $new_namespace === NS_TEST && $new_content_model === CONTENT_MODEL_TEST ) {
+			return;
+		}
 
-        if ( $new_namespace !== NS_TEST && $new_content_model !== CONTENT_MODEL_TEST) {
-            return;
-        }
+		if ( $new_namespace !== NS_TEST && $new_content_model !== CONTENT_MODEL_TEST ) {
+			return;
+		}
 
-        $status->fatal( "mwunit-cannot-move" );
-    }
+		$status->fatal( "mwunit-cannot-move" );
+	}
 
 	/**
 	 * Returns a formatted error message.
@@ -178,77 +172,77 @@ abstract class MWUnit {
 		return LoggerFactory::getInstance( self::LOGGING_CHANNEL );
 	}
 
-    /**
-     * Formats the given test name, in either camel case or snake case, into a more
-     * human-readable sentence.
-     *
-     * @param string $test_name The test name
-     * @return string
-     */
-    public static function testNameToSentence( string $test_name ) {
-        $parts = preg_split( '/(?=[A-Z_\-])/', $test_name, -1, PREG_SPLIT_NO_EMPTY );
-        $parts = array_map( function ( $part ): string {
-            return ucfirst( trim( $part, '_- ' ) );
-        }, $parts );
-        $parts = array_filter( $parts, function( $part ): bool {
-            return !empty( $part );
-        } );
+	/**
+	 * Formats the given test name, in either camel case or snake case, into a more
+	 * human-readable sentence.
+	 *
+	 * @param string $test_name The test name
+	 * @return string
+	 */
+	public static function testNameToSentence( string $test_name ) {
+		$parts = preg_split( '/(?=[A-Z_\-])/', $test_name, -1, PREG_SPLIT_NO_EMPTY );
+		$parts = array_map( function ( $part ): string {
+			return ucfirst( trim( $part, '_- ' ) );
+		}, $parts );
+		$parts = array_filter( $parts, function ( $part ): bool {
+			return !empty( $part );
+		} );
 
-        if ( count( $parts ) < 1 ) {
-            return "";
-        }
+		if ( count( $parts ) < 1 ) {
+			return "";
+		}
 
-        if ( count( $parts ) !== 1 && $parts[0] === "Test" ) {
-            unset( $parts[0] );
-        }
+		if ( count( $parts ) !== 1 && $parts[0] === "Test" ) {
+			unset( $parts[0] );
+		}
 
-        return implode( " ", $parts );
-    }
+		return implode( " ", $parts );
+	}
 
-    /**
-     * Called right after MediaWiki processes MWUnit's extension.json file.
-     */
-    public static function registrationCallback() {
-        define( "CONTENT_MODEL_TEST", "test" );
-        define( "CONTENT_FORMAT_TEST", "text/x-wiki-test" );
-    }
+	/**
+	 * Called right after MediaWiki processes MWUnit's extension.json file.
+	 */
+	public static function registrationCallback() {
+		define( "CONTENT_MODEL_TEST", "test" );
+		define( "CONTENT_FORMAT_TEST", "text/x-wiki-test" );
+	}
 
-    /**
-     * @param Title $title
-     * @param $model
-     * @return bool
-     */
-    public static function onContentHandlerDefaultModelFor( Title $title, &$model ) {
-        if ( $title->getNamespace() === NS_TEST ) {
-            $model = CONTENT_MODEL_TEST;
-            return false;
-        }
+	/**
+	 * @param Title $title
+	 * @param &$model
+	 * @return bool
+	 */
+	public static function onContentHandlerDefaultModelFor( Title $title, &$model ) {
+		if ( $title->getNamespace() === NS_TEST ) {
+			$model = CONTENT_MODEL_TEST;
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    /**
-     * Returns true if and only if the given Title object exists, is a template and has tests written for it.
-     *
-     * @param Title $title
-     * @return bool
-     */
-    public static function isTemplateCovered( Title $title ): bool {
-        if ( !$title->exists() ) {
-            return false;
-        }
+	/**
+	 * Returns true if and only if the given Title object exists, is a template and has tests written for it.
+	 *
+	 * @param Title $title
+	 * @return bool
+	 */
+	public static function isTemplateCovered( Title $title ): bool {
+		if ( !$title->exists() ) {
+			return false;
+		}
 
-        if ( $title->getNamespace() !== NS_TEMPLATE ) {
-            return false;
-        }
+		if ( $title->getNamespace() !== NS_TEMPLATE ) {
+			return false;
+		}
 
-        $template_name = $title->getText();
+		$template_name = $title->getText();
 
-        return wfGetDb( DB_REPLICA )->select(
-                'mwunit_tests',
-                [ 'article_id' ],
-                [ 'covers' => $template_name ],
-                __METHOD__
-            )->numRows() > 0;
-    }
+		return wfGetDb( DB_REPLICA )->select(
+				'mwunit_tests',
+				[ 'article_id' ],
+				[ 'covers' => $template_name ],
+				__METHOD__
+			)->numRows() > 0;
+	}
 }

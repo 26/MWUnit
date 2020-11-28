@@ -19,15 +19,15 @@ abstract class TestResult {
 	 */
 	private $test_case;
 
-    /**
-     * TestResult constructor.
-     *
-     * @param TestCase $case
-     */
-	public function __construct(TestCase $case ) {
-	    // TODO: Make TestResults more generic, so other extension can add new TestResult's if they want to
-        // using a hook.
-        $this->test_case = $case;
+	/**
+	 * TestResult constructor.
+	 *
+	 * @param TestCase $case
+	 */
+	public function __construct( TestCase $case ) {
+		// TODO: Make TestResults more generic, so other extension can add new TestResult's if they want to
+		// using a hook.
+		$this->test_case = $case;
 	}
 
 	/**
@@ -46,17 +46,17 @@ abstract class TestResult {
 	 */
 	abstract public function toString(): string;
 
-    /**
-     * Returns the result of the test; either T_SUCCESS, T_FAILED or T_RISKY.
-     *
-     * @return int
-     */
+	/**
+	 * Returns the result of the test; either T_SUCCESS, T_FAILED or T_RISKY.
+	 *
+	 * @return int
+	 */
 	abstract public function getResultConstant(): int;
 
-    /**
-     * Returns the message describing why the test did not succeed.
-     *
-     * @return string
-     */
+	/**
+	 * Returns the message describing why the test did not succeed.
+	 *
+	 * @return string
+	 */
 	abstract public function getMessage(): string;
 }

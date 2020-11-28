@@ -5,8 +5,9 @@ namespace MWUnit;
 use Countable;
 use Exception;
 use Iterator;
-use Title;
 use MWUnit\Exception\MWUnitException;
+use Title;
+use Wikimedia\Rdbms\IResultWrapper;
 
 /**
  * Class TestSuite
@@ -14,214 +15,209 @@ use MWUnit\Exception\MWUnitException;
  * @package MWUnit
  */
 class TestSuite implements Iterator, Countable {
-    /**
-     * @var array
-     */
-    public $test_classes;
+	/**
+	 * @var array
+	 */
+	public $test_classes;
 
-    /**
-     * @var int
-     */
-    private $index = 0;
+	/**
+	 * @var int
+	 */
+	private $index = 0;
 
-    /**
-     * @param string $group
-     * @return TestSuite
-     * @throws Exception
-     */
-    public static function newFromGroup( string $group ): TestSuite {
-        $dbr = wfGetDB( DB_REPLICA );
+	/**
+	 * @param string $group
+	 * @return TestSuite
+	 * @throws MWUnitException
+	 */
+	public static function newFromGroup( string $group ): TestSuite {
+		$dbr = wfGetDB( DB_REPLICA );
 
-        $db_result = $dbr->select(
-            'mwunit_tests',
-            [ 'article_id', 'test_name' ],
-            [ 'test_group' => $group ],
-            __METHOD__,
-            'DISTINCT'
-        );
+		$db_result = $dbr->select(
+			'mwunit_tests',
+			[ 'article_id', 'test_name' ],
+			[ 'test_group' => $group ],
+			__METHOD__,
+			'DISTINCT'
+		);
 
-        if ( !$db_result ) {
-            return self::newEmpty();
-        }
+		if ( !$db_result ) {
+			return self::newEmpty();
+		}
 
-        $grouped_tests = [];
+		return self::newFromDb( $db_result );
+	}
 
-        // Group the database result based on article_id
-        foreach ( $db_result as $item ) {
-            $grouped_tests[$item->article_id][] = $item->test_name;
-        }
+	/**
+	 * Returns a new TestSuite that contains all the test that are
+	 * on the page specified by the given Title object. Returns an
+	 * empty TestSuite if no tests are on the given page.
+	 *
+	 * @param Title $title
+	 * @return TestSuite
+	 * @throws MWUnitException
+	 */
+	public static function newFromTitle( \Title $title ): TestSuite {
+		return new TestSuite( [ TestClass::newFromDb( $title ) ] );
+	}
 
-        $test_classes = [];
+	/**
+	 * Returns a new TestSuite that contains the test case specified
+	 * by the given test name.
+	 *
+	 * @param string $test_name
+	 * @return TestSuite
+	 * @throws MWUnitException When an invalid test name is given
+	 * @throws Exception
+	 */
+	public static function newFromText( string $test_name ): TestSuite {
+		if ( !strpos( $test_name, '::' ) ) {
+			throw new MWUnitException( "mwunit-exception-invalid-test-name" );
+		}
 
-        foreach ( $grouped_tests as $article_id => $tests ) {
-            $title = \Title::newFromID( $article_id );
+		list( $article_text, $test_name ) = explode( "::", $test_name );
 
-            if ( !$title instanceof Title || !$title->exists() ) {
-                throw new Exception( "Invalid article_id in database, please run the rebuildTestsIndex.php maintenance script" );
-            }
+		$title = Title::newFromText( $article_text, NS_TEST );
 
-            $test_classes[] = TestClass::newFromDb( $title, $tests );
-        }
+		if ( !$title instanceof Title || !$title->exists() ) {
+			return self::newEmpty();
+		}
 
-        return new TestSuite( $test_classes );
-    }
+		return new TestSuite( [ TestClass::newFromDb( $title, [ $test_name ] ) ] );
+	}
 
-    /**
-     * Returns a new TestSuite that contains all the test that are
-     * on the page specified by the given Title object. Returns an
-     * empty TestSuite if no tests are on the given page.
-     *
-     * @param Title $title
-     * @return TestSuite
-     * @throws Exception
-     */
-    public static function newFromTitle( \Title $title ): TestSuite {
-        return new TestSuite( [ TestClass::newFromDb( $title ) ] );
-    }
+	/**
+	 * Creates a new TestSuite object from the given database result.
+	 *
+	 * @param IResultWrapper $db_result
+	 * @return TestSuite
+	 * @throws MWUnitException
+	 */
+	public static function newFromDb( IResultWrapper $db_result ) {
+		$grouped_tests = [];
 
-    /**
-     * Returns a new TestSuite that contains the test case specified
-     * by the given test name.
-     *
-     * @param string $test_name
-     * @return TestSuite
-     * @throws MWUnitException When an invalid test name is given
-     * @throws Exception
-     */
-    public static function newFromText( string $test_name ): TestSuite {
-        if ( !strpos( $test_name, '::' ) ) {
-            throw new MWUnitException( "mwunit-exception-invalid-test-name");
-        }
+		// Group the database result based on article_id
+		foreach ( $db_result as $item ) {
+			assert( isset( $item->article_id ) );
+			assert( isset( $item->test_name ) );
 
-        list ( $article_text, $test_name ) = explode( "::", $test_name );
+			$grouped_tests[$item->article_id][] = $item->test_name;
+		}
 
-        $title = Title::newFromText( $article_text, NS_TEST );
+		$test_classes = [];
 
-        if ( !$title instanceof Title || !$title->exists() ) {
-            return self::newEmpty();
-        }
+		foreach ( $grouped_tests as $article_id => $tests ) {
+			$title = \Title::newFromID( $article_id );
 
-        return new TestSuite( [ TestClass::newFromDb( $title, [ $test_name ] ) ] );
-    }
+			if ( !$title instanceof Title || !$title->exists() ) {
+				throw new MWUnitException( "mwunit-invalid-db-article-id" );
+			}
 
-    /**
-     * Returns a new TestSuite that contains all the test cases that cover
-     * the given template name. The template name should be given without
-     * the "Test:" namespace prefix.
-     *
-     * @param string $covers
-     * @return TestSuite
-     * @throws Exception
-     */
-    public static function newFromCovers( string $covers ): TestSuite {
-        $dbr = wfGetDB( DB_REPLICA );
+			$test_classes[] = TestClass::newFromDb( $title, $tests );
+		}
 
-        $db_result = $dbr->select(
-            'mwunit_tests',
-            [ 'article_id', 'test_name' ],
-            [ 'covers' => $covers ],
-            __METHOD__,
-            'DISTINCT'
-        );
+		return new TestSuite( $test_classes );
+	}
 
-        if ( !$db_result ) {
-            return self::newEmpty();
-        }
+	/**
+	 * Returns a new TestSuite that contains all the test cases that cover
+	 * the given template name. The template name should be given without
+	 * the "Test:" namespace prefix.
+	 *
+	 * @param string $covers
+	 * @return TestSuite
+	 * @throws MWUnitException
+	 */
+	public static function newFromCovers( string $covers ): TestSuite {
+		$dbr = wfGetDB( DB_REPLICA );
 
-        $grouped_tests = [];
+		$db_result = $dbr->select(
+			'mwunit_tests',
+			[ 'article_id', 'test_name' ],
+			[ 'covers' => $covers ],
+			__METHOD__,
+			'DISTINCT'
+		);
 
-        // Group the database result based on article_id
-        foreach ( $db_result as $item ) {
-            $grouped_tests[$item->article_id][] = $item->test_name;
-        }
+		if ( !$db_result ) {
+			return self::newEmpty();
+		}
 
-        $test_classes = [];
+		return self::newFromDb( $db_result );
+	}
 
-        foreach ( $grouped_tests as $article_id => $tests ) {
-            $title = \Title::newFromID( $article_id );
+	/**
+	 * Returns a new empty TestSuite.
+	 *
+	 * @return TestSuite
+	 */
+	public static function newEmpty(): TestSuite {
+		return new TestSuite( [] );
+	}
 
-            if ( !$title instanceof Title || !$title->exists() ) {
-                throw new Exception( "Invalid article_id in database, please run the rebuildTestsIndex.php maintenance script" );
-            }
+	/**
+	 * TestSuite constructor.
+	 *
+	 * @param TestClass[] $test_classes
+	 */
+	public function __construct( array $test_classes ) {
+		$this->test_classes = $test_classes;
+	}
 
-            $test_classes[] = TestClass::newFromDb( $title, $tests );
-        }
+	/**
+	 * Merges the given test suite(s) with a new test suite and returns the result.
+	 *
+	 * @param TestSuite ...$test_suites
+	 * @return TestSuite
+	 */
+	public function merge( TestSuite ...$test_suites ): TestSuite {
+		$a = $this->test_classes;
+		$b = array_map( function ( TestSuite $suite ): array {
+			return $suite->test_classes;
+		}, $test_suites );
 
-        return new TestSuite( $test_classes );
-    }
+		$result = array_merge( $a, ...$b );
 
-    /**
-     * Returns a new empty TestSuite.
-     *
-     * @return TestSuite
-     */
-    public static function newEmpty(): TestSuite {
-        return new TestSuite( [] );
-    }
+		return new TestSuite( $result );
+	}
 
-    /**
-     * TestSuite constructor.
-     *
-     * @param TestClass[] $test_classes
-     */
-    public function __construct( array $test_classes ) {
-        $this->test_classes = $test_classes;
-    }
+	/**
+	 * @inheritDoc
+	 * @return TestCase
+	 */
+	public function current() {
+		return $this->test_classes[ $this->index ];
+	}
 
-    /**
-     * Merges the given test suite(s) with a new test suite and returns the result.
-     *
-     * @param TestSuite ...$test_suites
-     * @return TestSuite
-     */
-    public function merge( TestSuite ...$test_suites ): TestSuite {
-        $a = $this->test_classes;
-        $b = array_map( function ( TestSuite $suite ): array {
-            return $suite->test_classes;
-        }, $test_suites );
+	/**
+	 * @inheritDoc
+	 */
+	public function next() {
+		++$this->index;
+	}
 
-        $result = array_merge( $a, ...$b );
+	/**
+	 * @inheritDoc
+	 */
+	public function key() {
+		return $this->index;
+	}
 
-        return new TestSuite( $result );
-    }
+	/**
+	 * @inheritDoc
+	 */
+	public function valid() {
+		return isset( $this->test_classes[ $this->index ] );
+	}
 
-    /**
-     * @inheritDoc
-     * @return TestCase
-     */
-    public function current() {
-        return $this->test_classes[ $this->index ];
-    }
+	/**
+	 * @inheritDoc
+	 */
+	public function rewind() {
+		$this->index = 0;
+	}
 
-    /**
-     * @inheritDoc
-     */
-    public function next() {
-        ++$this->index;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function key() {
-        return $this->index;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function valid() {
-        return isset( $this->test_classes[ $this->index ] );
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function rewind() {
-        $this->index = 0;
-    }
-
-    public function count() {
-        return count( $this->test_classes );
-    }
+	public function count() {
+		return count( $this->test_classes );
+	}
 }

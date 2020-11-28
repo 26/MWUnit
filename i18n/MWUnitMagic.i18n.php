@@ -28,5 +28,5 @@ $magicWords['en'] = [
 
 	'create_mock' 							=> [ 0, 'create_mock' ],
 	'create_parser_mock'                    => [ 0, 'create_parser_mock' ],
-    'var_dump'                              => [ 0, 'var_dump' ]
+	'var_dump'                              => [ 0, 'var_dump' ]
 ];

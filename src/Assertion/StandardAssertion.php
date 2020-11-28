@@ -1,6 +1,5 @@
 <?php
 
-
 namespace MWUnit\Assertion;
 
 /**
@@ -11,10 +10,10 @@ namespace MWUnit\Assertion;
  * @package MWUnit\Assertion
  */
 abstract class StandardAssertion implements Assertion {
-    /**
-     * @inheritDoc
-     */
-    public static function shouldRegister(): bool {
-        return true;
-    }
+	/**
+	 * @inheritDoc
+	 */
+	public static function shouldRegister(): bool {
+		return true;
+	}
 }

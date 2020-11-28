@@ -61,10 +61,10 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 		}
 	}
 
-    /**
-     * @inheritDoc
-     * @throws MWUnitException
-     */
+	/**
+	 * @inheritDoc
+	 * @throws MWUnitException
+	 */
 	public function outputTestResults( TestSuiteRunner $runner ) {
 		$no_tests 		= $runner->getTestCount();
 		$no_assertions	= $runner->getTotalAssertionsCount();
@@ -74,7 +74,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 		print( "\n\n" );
 
-		if ( ($no_risky + $no_failed) === 0 ) {
+		if ( ( $no_risky + $no_failed ) === 0 ) {
 			print( "OK ($no_tests tests, $no_assertions assertions)\n" );
 			return;
 		}
@@ -83,15 +83,15 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 		$failed_runs     = $test_run_store->getFailedRuns();
 		$risky_runs      = $test_run_store->getRiskyRuns();
-		$successful_runs = $test_run_store->getRunsWithResult( TestResult::T_SUCCESS );
+		$successful_runs = $test_run_store->getStoreWithResult( TestResult::T_SUCCESS );
 
 		$failed_count = $failed_runs->count();
 		$risky_count = $risky_runs->count();
 
 		$this->count = 1;
 		foreach ( $successful_runs->getAll() as $run ) {
-		    $this->printRun( $run );
-        }
+			$this->printRun( $run );
+		}
 
 		print( "------\n\n" );
 
@@ -104,7 +104,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 			print( "\n\n" );
 
 			foreach ( $failed_runs->getAll() as $run ) {
-			    $this->printRun( $run );
+				$this->printRun( $run );
 			}
 		}
 
@@ -123,7 +123,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 
 		print( "\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
 			"Assertions: $no_assertions, " .
-            "Risky tests: $risky_count, " .
+			"Risky tests: $risky_count, " .
 			"Failures: $failed_count.\033[0m\n" );
 	}
 
@@ -133,39 +133,39 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 	 * @param TestRun $run
 	 */
 	private function printRun( TestRun $run ) {
-	    $test = $run->getResult();
+		$test = $run->getResult();
 
-	    $message = $test->getMessage();
-	    $output  = $this->formatOutput(
-	        $run->getTestOutputs()
-        );
+		$message = $test->getMessage();
+		$output  = $this->formatOutput(
+			$run->getTestOutputs()
+		);
 
-	    if ( $message || $output ) {
-            print( $this->count . ") " );
-            print( $test->getTestCase() . "\n" );
+		if ( $message || $output ) {
+			print( $this->count . ") " );
+			print( $test->getTestCase() . "\n" );
 
-            if ( $message ) {
-                print( $message );
-            }
+			if ( $message ) {
+				print( $message );
+			}
 
-            if ( !$message && $output ) {
-                print( "\nThis test outputted the following:\n$output" );
-            } else if ( $output ) {
-                print( "\n\nIn addition, the test outputted the following:\n$output" );
-            }
+			if ( !$message && $output ) {
+				print( "\nThis test outputted the following:\n$output" );
+			} elseif ( $output ) {
+				print( "\n\nIn addition, the test outputted the following:\n$output" );
+			}
 
-            print( "\n\n" );
-            $this->count++;
-        }
+			print( "\n\n" );
+			$this->count++;
+		}
 	}
 
-    /**
-     * @param string[] $test_outputs
-     * @return string
-     */
-	private function formatOutput(array $test_outputs ): string {
-        return count( $test_outputs ) === 0 ?
-            '' :
-            implode( "\n", $test_outputs );
-    }
+	/**
+	 * @param string[] $test_outputs
+	 * @return string
+	 */
+	private function formatOutput( array $test_outputs ): string {
+		return count( $test_outputs ) === 0 ?
+			'' :
+			implode( "\n", $test_outputs );
+	}
 }

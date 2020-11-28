@@ -3,9 +3,8 @@
 namespace MWUnit\Maintenance;
 
 use MWUnit\Exception\MWUnitException;
-use MWUnit\Store\TestRunStore;
-use MWUnit\TestCaseRepository;
 use MWUnit\Runner\TestSuiteRunner;
+use MWUnit\TestRunStore;
 use MWUnit\TestSuite;
 
 error_reporting( 0 );
@@ -68,12 +67,12 @@ class RunTests extends \Maintenance {
 	 * @inheritDoc
 	 *
 	 * @throws MWUnitException|\ConfigException
-     */
+	 */
 	public function execute() {
 		$this->outputIntro();
 
 		if ( $this->getOption( 'version' ) === 1 || count( $this->orderedOptions ) < 1 ) {
-		    // The intro already contains the version; exit here
+			// The intro already contains the version; exit here
 			return true;
 		}
 
@@ -230,8 +229,8 @@ class RunTests extends \Maintenance {
 			return TestSuite::newFromGroup( $group );
 		}
 
-        $page = $this->getOption( 'page', false );
-        if ( $page !== false ) {
+		$page = $this->getOption( 'page', false );
+		if ( $page !== false ) {
 			// Run testsuite
 			$title = \Title::newFromText( $page, NS_TEST );
 
@@ -242,7 +241,7 @@ class RunTests extends \Maintenance {
 			return TestSuite::newFromTitle( $title );
 		}
 
-        $covers = $this->getOption( 'covers', false );
+		$covers = $this->getOption( 'covers', false );
 		if ( $covers !== false ) {
 			// Run tests covering template
 			$title = \Title::newFromText( $covers, NS_TEMPLATE );
@@ -254,42 +253,42 @@ class RunTests extends \Maintenance {
 			return TestSuite::newFromCovers( $covers );
 		}
 
-        $test = $this->getOption( 'test', false );
+		$test = $this->getOption( 'test', false );
 		if ( $test !== false ) {
-            if ( strpos( $test, '::' ) === false ) {
-                $this->fatalError( "The test name '$test' is invalid." );
-            }
+			if ( strpos( $test, '::' ) === false ) {
+				$this->fatalError( "The test name '$test' is invalid." );
+			}
 
-            return TestSuite::newFromText( $test );
-        }
+			return TestSuite::newFromText( $test );
+		}
 
 		return TestSuite::newEmpty();
 	}
 
-    /**
-     * Outputs the "intro" text.
-     */
-    private function outputIntro() {
-        $version = \ExtensionRegistry::getInstance()->getAllThings()['MWUnit']['version'] ?? null;
-        $this->output( "MWUnit $version by Marijn van Wezel and contributors.\n" );
-    }
+	/**
+	 * Outputs the "intro" text.
+	 */
+	private function outputIntro() {
+		$version = \ExtensionRegistry::getInstance()->getAllThings()['MWUnit']['version'] ?? null;
+		$this->output( "MWUnit $version by Marijn van Wezel and contributors.\n" );
+	}
 
-    /**
-     * Return the appropriate ResultPrinter for the given CLI arguments.
-     *
-     * @return CommandLineResultPrinter
-     * @throws \ConfigException
-     */
-    private function getResultPrinter() {
-        if ( $this->hasOption( "testdox" ) || $this->getConfig()->get( "MWUnitDefaultTestDox" ) === true ) {
-            return new TestDoxResultPrinter();
-        }
+	/**
+	 * Return the appropriate ResultPrinter for the given CLI arguments.
+	 *
+	 * @return CommandLineResultPrinter
+	 * @throws \ConfigException
+	 */
+	private function getResultPrinter() {
+		if ( $this->hasOption( "testdox" ) || $this->getConfig()->get( "MWUnitDefaultTestDox" ) === true ) {
+			return new TestDoxResultPrinter();
+		}
 
-        return new MWUnitResultPrinter(
-            (int)$this->getOption( 'columns', 16 ),
-            $this->hasOption( 'no-progress' )
-        );
-    }
+		return new MWUnitResultPrinter(
+			(int)$this->getOption( 'columns', 48 ),
+			$this->hasOption( 'no-progress' )
+		);
+	}
 }
 
 $maintClass = RunTests::class;

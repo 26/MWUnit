@@ -10,89 +10,89 @@ namespace MWUnit;
  * @package MWUnit
  */
 class Profiler {
-    /**
-     * @var Profiler
-     */
-    private static $instance;
+	/**
+	 * @var Profiler
+	 */
+	private static $instance;
 
-    /**
-     * @var array
-     */
-    private $flags = [];
+	/**
+	 * @var array
+	 */
+	private $flags = [];
 
-    /**
-     * @var array
-     */
-    private $timings = [];
+	/**
+	 * @var array
+	 */
+	private $timings = [];
 
-    /**
-     * Profiler constructor.
-     */
-    private function __construct() {
-        $this->flag( "{start}" );
-    }
+	/**
+	 * Profiler constructor.
+	 */
+	private function __construct() {
+		$this->flag( "{start}" );
+	}
 
-    /**
-     * Gets the Profiler instance.
-     *
-     * @return Profiler
-     */
-    public static function getInstance() {
-        if ( !isset( self::$instance ) ) {
-            self::$instance = new self();
-        }
+	/**
+	 * Gets the Profiler instance.
+	 *
+	 * @return Profiler
+	 */
+	public static function getInstance() {
+		if ( !isset( self::$instance ) ) {
+			self::$instance = new self();
+		}
 
-        return self::$instance;
-    }
+		return self::$instance;
+	}
 
-    /**
-     * Gets the peak memory usage for the current script.
-     *
-     * @return string
-     */
-    public function getPeakMemoryUse(): string {
-        return memory_get_peak_usage();
-    }
+	/**
+	 * Gets the peak memory usage for the current script.
+	 *
+	 * @return string
+	 */
+	public function getPeakMemoryUse(): string {
+		return memory_get_peak_usage();
+	}
 
-    /**
-     * @param string $flag
-     */
-    public function flag( string $flag ) {
-        $this->flags[]   = $flag;
-        $this->timings[] = microtime( true );
-    }
+	/**
+	 * @param string $flag
+	 */
+	public function flag( string $flag ) {
+		$this->flags[]   = $flag;
+		$this->timings[] = microtime( true );
+	}
 
-    /**
-     * Calculates the total execution between the first and last flag.
-     *
-     * @return float
-     */
-    public function getTotalExecutionTime() {
-        if ( count( $this->timings ) === 0 ) {
-            return 0;
-        }
+	/**
+	 * Calculates the total execution between the first and last flag.
+	 *
+	 * @return float
+	 */
+	public function getTotalExecutionTime() {
+		if ( count( $this->timings ) === 0 ) {
+			return 0;
+		}
 
-        return $this->timings[count($this->timings) - 1] - $this->timings[0];
-    }
+		return $this->timings[count( $this->timings ) - 1] - $this->timings[0];
+	}
 
-    /**
-     * Calculates the execution time for the given flag.
-     *
-     * @param $flag
-     * @return float
-     */
-    public function getFlagExecutionTime( $flag ) {
-        $flag_idx = array_search( $flag, $this->flags );
+	/**
+	 * Calculates the execution time for the given flag.
+	 *
+	 * @param $flag
+	 * @return float
+	 */
+	public function getFlagExecutionTime( $flag ) {
+		$flag_idx = array_search( $flag, $this->flags );
 
-        if ( $flag_idx === 0 ) {
-            return 0;
-        }
+		if ( $flag_idx === 0 ) {
+			return 0;
+		}
 
-        $previous_idx = $flag_idx - 1;
+		$previous_idx = $flag_idx - 1;
 
-        $flag_time     = $this->timings[$flag_idx] ?? 0;
-        $previous_time = $this->timings[$previous_idx] ?? 0;
+		$flag_time     = $this->timings[$flag_idx] ?? 0;
+		$previous_time = $this->timings[$previous_idx] ?? 0;
 
-        return $flag_time - $previous_time;
-    }
+		return $flag_time - $previous_time;
+	}
 }

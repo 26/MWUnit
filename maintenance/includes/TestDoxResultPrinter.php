@@ -19,7 +19,7 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 	 * @inheritDoc
 	 */
 	public function testCompletionCallback( TestResult $result ) {
-	    $title = $result->getTestCase()->getTestPage();
+		$title = $result->getTestCase()->getTestPage();
 		$page = $title->getFullText();
 
 		if ( !isset( $this->current_testsuite ) || $this->current_testsuite !== $page ) {
@@ -62,7 +62,7 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 			print( "\n\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
 				"Assertions: $no_assertions, " .
 				"Risky tests: $risky_count, " .
-                "Failures: $failed_count.\033[0m\n" );
+				"Failures: $failed_count.\033[0m\n" );
 		} else {
 			print( "\nOK ($no_tests tests, $no_assertions assertions)\n" );
 		}
