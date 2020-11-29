@@ -58,10 +58,18 @@
     background-color: #BDE5F8 !important;
 }
 
-.mwunit-no-results {
+.mwunit-message-box {
     padding: 15px;
-    margin-top: 10px;
+    margin: 0 10px;
     border-left: 3px solid #00529B;
     color: #00529B;
     background-color: #BDE5F8;
+}
+
+.mwunit-error-box {
+    padding: 15px;
+    margin: 10px 0;
+    border-left: 3px solid #D8000C;
+    color: #D8000C;
+    background-color: #FFD2D2;
 }

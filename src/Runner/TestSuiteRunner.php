@@ -7,9 +7,9 @@ use MediaWiki\MediaWikiServices;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\ParserFunction\ParserMockParserFunction;
-use MWUnit\TestRunStore;
 use MWUnit\TemplateMockStore;
 use MWUnit\TestClass;
+use MWUnit\TestRunStore;
 use MWUnit\TestSuite;
 use Title;
 use WikiPage;
@@ -162,7 +162,6 @@ class TestSuiteRunner {
 	 * Runs the given test class.
 	 *
 	 * @param TestClass $test_class
-	 * @return void
 	 * @throws MWUnitException
 	 */
 	private function runTestClass( TestClass $test_class ) {

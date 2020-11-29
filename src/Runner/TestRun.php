@@ -2,10 +2,8 @@
 
 namespace MWUnit\Runner;
 
-use FatalError;
 use Hooks;
 use MediaWiki\MediaWikiServices;
-use MWException;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\ParserFunction\AssertionParserFunction;
@@ -38,6 +36,11 @@ class TestRun {
 	 * @var string[]
 	 */
 	public $test_outputs = [];
+
+    /**
+     * @var array Array of templates used in this test run.
+     */
+    public static $templates_used;
 
 	/**
 	 * The name of the template that this test case covers, or false if it does not cover a template.
@@ -80,18 +83,6 @@ class TestRun {
 	 * @var User
 	 */
 	private $user;
-
-	/**
-	 * @var array Array of templates used in this test run.
-	 */
-	private static $templates_used;
-
-	/**
-	 * A clone of the parser right before it encountered the first test case. Used for strict coverage checking.
-	 *
-	 * @var Parser
-	 */
-	private static $initial_parser;
 
 	/**
 	 * Called when the parser fetches a template. Used for strict coverage checking.
@@ -222,17 +213,10 @@ class TestRun {
 	/**
 	 * Runs the test case. A Result object is guaranteed to be available if this function
 	 * finished successfully.
-	 *
-	 * @throws FatalError
-	 * @throws MWException
 	 * @throws MWUnitException
 	 */
 	public function runTest() {
-		// Store a clone of the initial parser, so we can properly perform coverage checks, without
-		// breaking fixtures and global state.
-		if ( !isset( self::$initial_parser ) ) {
-			self::$initial_parser = clone MediaWikiServices::getInstance()->getParser();
-		}
+	    $parser = MediaWikiServices::getInstance()->getParser();
 
 		$this->backupUser();
 		$this->backupGlobals();
@@ -252,7 +236,7 @@ class TestRun {
 			$profiler->flag( md5( rand() ) );
 
 			// Run test case
-			MediaWikiServices::getInstance()->getParser()->parse(
+            $parser->parse(
 				$this->test_case->getContent(),
 				$this->test_case->getTestPage(),
 				ParserOptions::newCanonical( $context ),
@@ -267,6 +251,10 @@ class TestRun {
 
 			$this->restoreGlobals();
 			$this->restoreUser();
+
+			// Reset the parser template DOM cache. Otherwise onParserFetchTemplate is only called
+            // once and coverage check cannot be performed.
+            $parser->mTplDomCache = [];
 
 			if ( !isset( $this->result ) ) {
 				$this->setSuccess();
@@ -349,7 +337,6 @@ class TestRun {
 	 * Serializes the current User from RequestContext and stores the result in a class variable.
 	 */
 	private function backupUser() {
-		// TODO: Profile this, it might be very slow
 		$this->user = serialize( RequestContext::getMain()->getUser() );
 	}
 
@@ -357,7 +344,6 @@ class TestRun {
 	 * Deserializes the backed up User object and restores the User object globally.
 	 */
 	private function restoreUser() {
-		// TODO: Profile this, it might be very slow
 		$this->setUser( unserialize( $this->user ) );
 	}
 

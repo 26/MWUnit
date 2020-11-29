@@ -43,7 +43,9 @@ class SpecialUnitTests extends \SpecialPage {
 	public function execute( $subpage ) {
 		$this->checkPermissions();
 
-		if ( !$this->shouldRun() ) {
+		$test_suite = $this->getTestSuite();
+
+		if ( $test_suite === false ) {
 			$ui = new UI\FormUI( $this->getOutput(), $this->getLinkRenderer() );
 			$ui->execute();
 
@@ -51,12 +53,7 @@ class SpecialUnitTests extends \SpecialPage {
 		}
 
 		try {
-			$result = $this->runTests();
-
-			if ( !$result ) {
-				$ui = new UI\FormUI( $this->getOutput(), $this->getLinkRenderer() );
-				$ui->execute();
-			}
+			$this->runTests( $test_suite );
 		} catch ( MWUnitException $e ) {
 			$ui = new UI\ExceptionUI( $e, $this->getOutput(), $this->getLinkRenderer() );
 			$ui->execute();
@@ -64,59 +61,59 @@ class SpecialUnitTests extends \SpecialPage {
 	}
 
 	/**
-	 * @return bool
+	 * @param TestSuite $suite
 	 * @throws MWUnitException
 	 */
-	private function runTests(): bool {
-		$request = $this->getRequest();
-
-		$covers     = $request->getVal( 'unitTestCoverTemplate' );
-		$individual = $request->getVal( 'unitTestIndividual' );
-
-		$group      = $request->getVal( 'unitTestGroup' );
-		$title      = $request->getVal( 'unitTestPage' );
-
-		if ( !empty( $covers ) ) {
-			$test_suite = TestSuite::newFromCovers( $covers );
-		} elseif ( !empty( $individual ) ) {
-			$test_suite = TestSuite::newFromText( $individual );
-		} elseif ( !empty( $group ) ) {
-			$test_suite = TestSuite::newFromGroup( $group );
-		} elseif ( !empty( $title ) ) {
-			// Run the specified page
-			$title_object = \Title::newFromText( $title );
-
-			if ( !$title_object instanceof \Title ) {
-				return false;
-			}
-
-			$test_suite = TestSuite::newFromTitle( $title_object );
-		} else {
-			return false;
-		}
-
+	private function runTests( TestSuite $suite ) {
 		$test_run_store = new TestRunStore();
 
-		$runner = new TestSuiteRunner( $test_suite, $test_run_store );
+		$runner = new TestSuiteRunner( $suite, $test_run_store );
 		$runner->run();
 
 		$ui = new UI\ResultUI( $runner, $this->getOutput(), $this->getLinkRenderer() );
 		$ui->execute();
-
-		return true;
 	}
 
 	/**
-	 * Returns true if and only if tests should be run.
+	 * Returns the appropriate TestSuite for the request, or false on failure.
 	 *
-	 * @return bool
+	 * @return false|TestSuite
 	 */
-	private function shouldRun() {
+	private function getTestSuite() {
 		$request = $this->getRequest();
 
-		return $request->getVal( "unitTestPage", false ) ||
-			$request->getVal( "unitTestCoverTemplate", false ) ||
-			$request->getVal( "unitTestIndividual", false ) ||
-			$request->getVal( "unitTestGroup", false );
+		$covers     = $request->getVal( 'cover' );
+		$test       = $request->getVal( 'test' );
+		$group      = $request->getVal( 'group' );
+		$title      = $request->getVal( 'page' );
+
+		try {
+			if ( !empty( $covers ) ) {
+				return TestSuite::newFromCovers( $covers );
+			}
+
+			if ( !empty( $test ) ) {
+				return TestSuite::newFromText( $test );
+			}
+
+			if ( !empty( $group ) ) {
+				return TestSuite::newFromGroup( $group );
+			}
+
+			if ( !empty( $title ) ) {
+				// Run the specified page
+				$title_object = \Title::newFromText( $title );
+
+				if ( !$title_object instanceof \Title ) {
+					return false;
+				}
+
+				return TestSuite::newFromTitle( $title_object );
+			}
+		} catch ( MWUnitException $e ) {
+			return false;
+		}
+
+		return false;
 	}
 }

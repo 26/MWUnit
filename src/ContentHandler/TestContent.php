@@ -176,7 +176,7 @@ class TestContent extends \AbstractContent {
 		$test_cases = $test_class->getTestCases();
 
 		if ( !$setup && !$teardown && $test_cases === [] ) {
-			return new Tag( "div", wfMessage( "mwunit-no-results" )->plain(), [ "class" => "mwunit-no-results" ] );
+			return new Tag( "div", wfMessage( "mwunit-no-results" )->plain(), [ "class" => "mwunit-info-box" ] );
 		}
 
 		$table_items = [];
@@ -257,6 +257,23 @@ class TestContent extends \AbstractContent {
 		$output->addModuleStyles( "ext.mwunit.InvalidTestPage.css" );
 
 		$errors = $e->getErrors();
+
+		$errors_count = count( $errors );
+		$max_errors = 512; // TODO: Make this configurable?
+
+		if ( $errors_count > $max_errors ) {
+			$errors = array_slice( $errors, 0, $max_errors );
+
+			// Show a message that there are too many errors to display.
+			$too_many_errors_message = new Tag(
+				"div",
+				wfMessage( "mwunit-too-many-errors", $max_errors, $errors_count )->plain(),
+				[ "class" => "mwunit-error-box" ]
+			);
+		} else {
+			$too_many_errors_message = null;
+		}
+
 		$table_items = [];
 
 		foreach ( $errors as $error ) {
@@ -286,7 +303,7 @@ class TestContent extends \AbstractContent {
 		);
 
 		$container = new Tag(
-			"div", new Document( [ $intro, $table_header, $table ] ), [ "class" => "mwunit-errors" ]
+			"div", new Document( [ $intro, $too_many_errors_message, $table_header, $table ] ), [ "class" => "mwunit-errors" ]
 		);
 
 		$output->setText( $container->__toString() );

@@ -2,8 +2,6 @@
 
 namespace MWUnit\Runner;
 
-use FatalError;
-use MWException;
 use MWUnit\Exception;
 use MWUnit\MWUnit;
 use MWUnit\Runner\Result\TestResult;
@@ -33,10 +31,8 @@ class BaseTestRunner {
 	/**
 	 * Runs the TestCase.
 	 *
-	 * @throws Exception\MWUnitException
-	 * @throws FatalError
-	 * @throws MWException
 	 * @return TestRun
+	 * @throws Exception\MWUnitException
 	 */
 	public function run(): TestRun {
 		MWUnit::getLogger()->debug( "Running test case {testcase}", [

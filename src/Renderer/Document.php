@@ -21,6 +21,10 @@ class Document {
 	 * @param array $tags
 	 */
 	public function __construct( array $tags ) {
+		$tags = array_filter( $tags, function ( $a ): bool {
+			return $a !== null;
+		} );
+
 		// "array_reduce" takes an initial $carry (""), a closure and an array an reduces that array to a single value.
 		// It does this by calling the closure for each element in the array, passing the return value of the previous call
 		// as $carry and passing the current array item as $item.

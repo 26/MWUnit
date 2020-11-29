@@ -45,7 +45,8 @@ class RebuildTestsIndex extends \Maintenance {
 
 	/**
 	 * @inheritDoc
-	 * @throws \MWException|\ConfigException
+	 *
+	 * @throws \MWException
 	 * @throws \MalformedTitleException
 	 */
 	public function execute() {
@@ -80,7 +81,9 @@ class RebuildTestsIndex extends \Maintenance {
 			try {
 				$test_class = TestClass::newFromWikitext( $wikitext, $wikipage->getTitle() );
 			} catch ( InvalidTestPageException $e ) {
-				$this->output( "Skipping page {$wikipage->getTitle()->getArticleID()}, because of invalid tests." );
+				$this->done++;
+				$this->showProgress();
+
 				continue;
 			}
 

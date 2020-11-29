@@ -28,8 +28,8 @@
   "Hooks": {
     "ParserFirstCallInit": "MWUnit\\MWUnit::onParserFirstCallInit",
     "LoadExtensionSchemaUpdates": "MWUnit\\MWUnit::onLoadExtensionSchemaUpdates",
-    "PageContentSaveComplete": "MWUnit\\UpdateHandler::onPageContentSaveComplete",
-    "ArticleDeleteComplete": "MWUnit\\UpdateHandler::onArticleDeleteComplete",
+    "PageContentSaveComplete": "MWUnit\\MWUnit::onPageContentSaveComplete",
+    "ArticleDeleteComplete": "MWUnit\\MWUnit::onArticleDeleteComplete",
     "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
     "ParserFetchTemplate": [
       "MWUnit\\Runner\\TestRun::onParserFetchTemplate",
@@ -75,6 +75,10 @@
     "MWUnitAllowTransclusion": {
       "value": false,
       "descriptionmsg": "mwunit-config-allow-transclusion"
+    },
+    "MWUnitMaxTestCases": {
+      "value": 2048,
+      "descriptionmsg": "mwunit-config-max-test-cases"
     }
   },
   "namespaces": [
@@ -121,6 +125,12 @@
     "ext.mwunit.InvalidTestPage.css": {
       "styles": "extensions/MWUnit/resources/styles/InvalidTestPage.css"
     }
+  },
+  "APIModules": {
+    "rununittests": "MWUnit\\API\\ApiRunUnitTests"
+  },
+  "APIListModules": {
+    "unittests": "MWUnit\\API\\ApiQueryUnitTests"
   },
   "callback": "MWUnit\\MWUnit::registrationCallback"
 }

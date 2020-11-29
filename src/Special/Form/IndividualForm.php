@@ -14,7 +14,7 @@ class IndividualForm extends AbstractForm {
 	public function getDescriptor(): array {
 		return [
 			'test_individual' => [
-				'name' => 'unitTestIndividual',
+				'name' => 'test',
 				'type' => 'select',
 				'label-message' => 'mwunit-special-individual-label',
 				'options' => $this->getOptions()

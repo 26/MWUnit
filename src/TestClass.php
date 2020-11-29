@@ -50,6 +50,13 @@ class TestClass {
 		$teardown_tags = $dom->getElementsByTagName( "teardown" );
 		$test_case_tags = $dom->getElementsByTagName( "testcase" );
 
+		$max_test_cases = MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitMaxTestCases" );
+		$actual_test_cases = count( $test_case_tags );
+
+		if ( $actual_test_cases > $max_test_cases ) {
+			throw new InvalidTestPageException( [ wfMessage( "mwunit-max-test-cases-exceeded", $max_test_cases, $actual_test_cases ) ] );
+		}
+
 		$setup = "";
 
 		if ( count( $setup_tags ) > 1 ) {

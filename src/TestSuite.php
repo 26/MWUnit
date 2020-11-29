@@ -3,7 +3,6 @@
 namespace MWUnit;
 
 use Countable;
-use Exception;
 use Iterator;
 use MWUnit\Exception\MWUnitException;
 use Title;
@@ -68,7 +67,6 @@ class TestSuite implements Iterator, Countable {
 	 * @param string $test_name
 	 * @return TestSuite
 	 * @throws MWUnitException When an invalid test name is given
-	 * @throws Exception
 	 */
 	public static function newFromText( string $test_name ): TestSuite {
 		if ( !strpos( $test_name, '::' ) ) {

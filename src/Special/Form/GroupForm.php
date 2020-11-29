@@ -14,7 +14,7 @@ class GroupForm extends AbstractForm {
 	public function getDescriptor(): array {
 		return [
 			'test_group' => [
-				'name' => 'unitTestGroup',
+				'name' => 'group',
 				'type' => 'select',
 				'label-message' => 'mwunit-special-group-label',
 				'options' => $this->getOptions()

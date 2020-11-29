@@ -4,7 +4,6 @@ namespace MWUnit;
 
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\Runner\TestRun;
-use MWUnit\TestCase;
 
 class TestRunStore implements \Iterator, \Countable {
 	/**
