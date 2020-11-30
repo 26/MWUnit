@@ -43,6 +43,8 @@ class StringContainsIgnoreCaseTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = 0; $i < 100; $i++ ) {
+            $f = "";
+
 			$haystack = md5( rand() );
 
 			$haystack_length = strlen( $haystack );

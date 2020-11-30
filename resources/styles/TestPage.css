@@ -60,9 +60,9 @@
 
 .mwunit-message-box {
     padding: 15px;
-    margin: 0 10px;
     border-left: 3px solid #00529B;
     color: #00529B;
+    margin: 10px 0;
     background-color: #BDE5F8;
 }
 

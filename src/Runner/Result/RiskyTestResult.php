@@ -30,7 +30,7 @@ class RiskyTestResult extends TestResult {
 	 * @inheritDoc
 	 */
 	public function toString(): string {
-		return "\033[43mR\033[0m";
+		return "\033[103mR\033[0m";
 	}
 
 	/**

@@ -79,6 +79,10 @@
     "MWUnitMaxTestCases": {
       "value": 2048,
       "descriptionmsg": "mwunit-config-max-test-cases"
+    },
+    "MWUnitMaxReportedErrors": {
+      "value": 256,
+      "descriptionmsg": "mwunit-config-max-reported-errors"
     }
   },
   "namespaces": [

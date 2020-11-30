@@ -43,6 +43,8 @@ class StringStartsWithTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = 0; $i < 100; $i++ ) {
+            $f = "";
+
 			$haystack = md5( rand() );
 			$needle = substr( $haystack, 0, rand( 1, strlen( $haystack ) ) );
 

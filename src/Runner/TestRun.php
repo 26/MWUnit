@@ -12,6 +12,7 @@ use MWUnit\ParserFunction\VarDumpParserFunction;
 use MWUnit\Profiler;
 use MWUnit\Runner\Result\FailureTestResult;
 use MWUnit\Runner\Result\RiskyTestResult;
+use MWUnit\Runner\Result\SkippedTestResult;
 use MWUnit\Runner\Result\SuccessTestResult;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\TestCase;
@@ -65,11 +66,6 @@ class TestRun {
 	private $result;
 
 	/**
-	 * @var float
-	 */
-	private $execution_time;
-
-	/**
 	 * @var TestCase
 	 */
 	private $test_case;
@@ -83,6 +79,11 @@ class TestRun {
 	 * @var User
 	 */
 	private $user;
+
+    /**
+     * @var float
+     */
+    private $execution_time = 0.0;
 
 	/**
 	 * Called when the parser fetches a template. Used for strict coverage checking.
@@ -120,6 +121,13 @@ class TestRun {
 		VarDumpParserFunction::setTestRun( $this );
 	}
 
+    /**
+     * Increments the assertion count for this run.
+     */
+    public function incrementAssertionCount() {
+        $this->assertion_count++;
+    }
+
 	/**
 	 * Returns true if and only if the test has finished and a result is available.
 	 *
@@ -129,12 +137,23 @@ class TestRun {
 		return isset( $this->result );
 	}
 
-	/**
-	 * Increments the assertion count for this run.
-	 */
-	public function incrementAssertionCount() {
-		$this->assertion_count++;
-	}
+    /**
+     * Sets the result fot his TestRun.
+     *
+     * @param TestResult $result
+     */
+    public function setResult( TestResult $result ) {
+        $this->result = $result;
+    }
+
+    /**
+     * Marks this test run as successful.
+     */
+    public function setSuccess() {
+        $this->result = new SuccessTestResult(
+            $this->test_case
+        );
+    }
 
 	/**
 	 * @param string $message Localised message to use for the "risky" message.
@@ -155,6 +174,16 @@ class TestRun {
 			$this->test_case
 		);
 	}
+
+    /**
+     * @param string $message Localised message to use for the "skipped" message.
+     */
+	public function setSkipped( string $message ) {
+        $this->result = new SkippedTestResult(
+            $message,
+            $this->test_case
+        );
+    }
 
 	/**
 	 * Returns the result of this test run.
@@ -213,6 +242,7 @@ class TestRun {
 	/**
 	 * Runs the test case. A Result object is guaranteed to be available if this function
 	 * finished successfully.
+     *
 	 * @throws MWUnitException
 	 */
 	public function runTest() {
@@ -222,7 +252,6 @@ class TestRun {
 		$this->backupGlobals();
 
 		$profiler = Profiler::getInstance();
-		$profiler_flag = md5( rand() );
 
 		try {
 			$context = $this->getContext();
@@ -231,9 +260,9 @@ class TestRun {
 				return;
 			}
 
-			Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case ] );
+			Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case, &$this, &$context ] );
 
-			$profiler->flag( md5( rand() ) );
+			$profiler->flag();
 
 			// Run test case
             $parser->parse(
@@ -241,20 +270,17 @@ class TestRun {
 				$this->test_case->getTestPage(),
 				ParserOptions::newCanonical( $context ),
 				true,
-				false
+				true
 			);
 
 			$this->checkTemplateCoverage();
 		} finally {
-			$profiler->flag( $profiler_flag );
-			$this->setExecutionTime( $profiler->getFlagExecutionTime( $profiler_flag ) );
+			$profiler->flag();
+			$this->setExecutionTime( $profiler->getFlagExecutionTime() );
 
 			$this->restoreGlobals();
 			$this->restoreUser();
-
-			// Reset the parser template DOM cache. Otherwise onParserFetchTemplate is only called
-            // once and coverage check cannot be performed.
-            $parser->mTplDomCache = [];
+			$this->restoreParser( $parser );
 
 			if ( !isset( $this->result ) ) {
 				$this->setSuccess();
@@ -337,6 +363,7 @@ class TestRun {
 	 * Serializes the current User from RequestContext and stores the result in a class variable.
 	 */
 	private function backupUser() {
+	    // We serialize the user to dereference (deep clone) it
 		$this->user = serialize( RequestContext::getMain()->getUser() );
 	}
 
@@ -347,6 +374,17 @@ class TestRun {
 		$this->setUser( unserialize( $this->user ) );
 	}
 
+    /**
+     * Restores the parser.
+     *
+     * @param Parser $parser
+     */
+    private function restoreParser( Parser $parser ) {
+        // Reset the parser template DOM cache. Otherwise onParserFetchTemplate is only called
+        // once and coverage checks cannot be performed.
+        $parser->mTplDomCache = [];
+    }
+
 	/**
 	 * Sets the User object globally. This is used to mock other users while running a certain test. The $wgUser
 	 * global will and the RequestContext user will be replaced with the given user.
@@ -356,18 +394,9 @@ class TestRun {
 	private function setUser( User $user ) {
 		RequestContext::getMain()->setUser( $user );
 
-		// For extension still using the old $wgUser variable
+		// For extensions still using the old $wgUser variable
 		global $wgUser;
 		$wgUser = $user;
-	}
-
-	/**
-	 * Marks this test run as successful.
-	 */
-	private function setSuccess() {
-		$this->result = new SuccessTestResult(
-			$this->test_case
-		);
 	}
 
 	/**
@@ -420,7 +449,7 @@ class TestRun {
 
 				$context = User::newFromName( $user_option );
 
-				if ( !$context instanceof User ) {
+				if ( !$context instanceof User || $context->isAnon()) {
 					$this->setRisky( wfMessage( 'mwunit-invalid-user' )->parse() );
 					return false;
 				}

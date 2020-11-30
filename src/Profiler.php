@@ -29,7 +29,7 @@ class Profiler {
 	 * Profiler constructor.
 	 */
 	private function __construct() {
-		$this->flag( "{start}" );
+		$this->flag();
 	}
 
 	/**
@@ -55,10 +55,9 @@ class Profiler {
 	}
 
 	/**
-	 * @param string $flag
+	 * Adds a new flag.
 	 */
-	public function flag( string $flag ) {
-		$this->flags[]   = $flag;
+	public function flag() {
 		$this->timings[] = microtime( true );
 	}
 
@@ -76,23 +75,23 @@ class Profiler {
 	}
 
 	/**
-	 * Calculates the execution time for the given flag.
+	 * Calculates the execution time between the current flag and the previous flag.
 	 *
-	 * @param $flag
 	 * @return float
 	 */
-	public function getFlagExecutionTime( $flag ) {
-		$flag_idx = array_search( $flag, $this->flags );
+	public function getFlagExecutionTime() {
+	    $timings_count = count( $this->timings );
 
-		if ( $flag_idx === 0 ) {
-			return 0;
-		}
+		if ( $timings_count < 2 ) {
+		    return 0;
+        }
 
-		$previous_idx = $flag_idx - 1;
+        $idx_current = $timings_count - 1;
+		$idx_previous = $idx_current - 1;
 
-		$flag_time     = $this->timings[$flag_idx] ?? 0;
-		$previous_time = $this->timings[$previous_idx] ?? 0;
+		$current_time = $this->timings[$idx_current] ?? 0;
+		$previous_time = $this->timings[$idx_previous] ?? 0;
 
-		return $flag_time - $previous_time;
+		return $current_time - $previous_time;
 	}
 }

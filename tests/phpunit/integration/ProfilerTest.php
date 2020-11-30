@@ -13,7 +13,6 @@ class ProfilerTest extends MediaWikiTestCase {
 
 	public function setUp() : void {
 		parent::setUp();
-
 		$this->instance = Profiler::getInstance();
 	}
 
@@ -32,8 +31,9 @@ class ProfilerTest extends MediaWikiTestCase {
 	}
 
 	public function testGetExecutionTime() {
+	    $this->instance->flag();
 		usleep( 10 );
-		$this->instance->flag( '{end}' );
+		$this->instance->flag();
 
 		// getExecutionTime must now be AT LEAST 10 microseconds.
 
@@ -42,11 +42,11 @@ class ProfilerTest extends MediaWikiTestCase {
 
 	public function testGetFlagExecutionTime() {
 		for ( $i = 0; $i < 10; $i++ ) {
-			$this->instance->flag( '{start}' );
+			$this->instance->flag();
 			usleep( $i );
-			$this->instance->flag( '{end}' );
+			$this->instance->flag();
 
-			$this->assertGreaterThan( $i, $this->instance->getFlagExecutionTime( '{end}' ) * 1000000 );
+			$this->assertGreaterThan( $i, $this->instance->getFlagExecutionTime() * 1000000 );
 		}
 	}
 }

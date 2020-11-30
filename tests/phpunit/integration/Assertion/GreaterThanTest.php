@@ -44,6 +44,8 @@ class GreaterThanTest extends MediaWikiTestCase {
 
 		for ( $i = 1; $i < 100; $i++ ) {
 			for ( $j = $i + 1; $j < $i + 100; $j++ ) {
+                $f = "";
+
 				$result = GreaterThan::assert(
 					$f,
 					$j,

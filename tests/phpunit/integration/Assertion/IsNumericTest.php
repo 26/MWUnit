@@ -55,6 +55,8 @@ class IsNumericTest extends MediaWikiTestCase {
 		];
 
 		foreach ( $numeric as $num ) {
+            $f = "";
+
 			$this->assertTrue( IsNumeric::assert(
 				$f,
 				$num,
@@ -64,6 +66,8 @@ class IsNumericTest extends MediaWikiTestCase {
 		}
 
 		foreach ( $not_numeric as $not_num ) {
+            $f = "";
+
 			$this->assertFalse( IsNumeric::assert(
 				$f,
 				$not_num,

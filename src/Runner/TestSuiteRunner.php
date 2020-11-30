@@ -138,6 +138,15 @@ class TestSuiteRunner {
 		return $this->test_run_store->getFailedCount();
 	}
 
+    /**
+     * Returns the number of skipped tests.
+     *
+     * @return int
+     */
+	public function getSkippedCount() {
+	    return $this->test_run_store->getSkippedCount();
+    }
+
 	/**
 	 * Called after having run the tests on a page.
 	 *
@@ -184,6 +193,13 @@ class TestSuiteRunner {
 
 		// Run each test case
 		foreach ( $test_class->getTestCases() as $test_case ) {
+		    $result = \Hooks::run( "MWUnitBeforeInitializeBaseTestRunner", [ &$test_case, &$test_class ] );
+
+            if ( $result === false ) {
+                // The hook returned false; skip this test
+                continue;
+            }
+
 			$runner = new BaseTestRunner( $test_case );
 			$result = $runner->run();
 

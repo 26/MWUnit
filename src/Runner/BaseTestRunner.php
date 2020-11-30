@@ -40,6 +40,39 @@ class BaseTestRunner {
 		] );
 
 		$run = new TestRun( $this->test_case );
+
+		\Hooks::run( "MWUnitAfterInitializeTestRun", [ &$run ] );
+
+        if ( $this->test_case->getAttribute( "skip" ) !== false ) {
+            $message = wfMessage( "mwunit-skipped" )->plain();
+            $run->setSkipped( $message );
+            return $run;
+        }
+
+        $requires = $this->test_case->getAttribute( "requires" );
+        if ( $requires !== false ) {
+            $required_extensions = explode( ",", $requires );
+            $required_extensions = array_map( "trim", $required_extensions );
+
+            $extension_registry = \ExtensionRegistry::getInstance();
+
+            $missing_extensions = [];
+
+            foreach ( $required_extensions as $required_extension ) {
+                if ( !$extension_registry->isLoaded( $required_extension ) ) {
+                    $missing_extensions[] = $required_extension;
+                }
+            }
+
+            if ( count( $missing_extensions ) > 0 ) {
+                $missing_extensions = implode( ", ", $missing_extensions );
+                $message = wfMessage( "mwunit-skipped-missing-extensions", $missing_extensions )->plain();
+                $run->setSkipped( $message );
+
+                return $run;
+            }
+        }
+
 		$run->runTest();
 
 		\Hooks::run( 'MWUnitAfterTestComplete', [ &$run ] );
@@ -61,6 +94,11 @@ class BaseTestRunner {
 			// Do not overwrite the result of tests already marked as risky
 			return;
 		}
+
+		if ( $test_result->getResultConstant() === TestResult::T_SKIPPED ) {
+		    // Do not overwrite the result of skipped tests
+            return;
+        }
 
 		if ( $this->test_case->getAttribute( 'doesnotperformassertions' ) !== false ) {
 			// This test is explicitly marked as not performing any assertions

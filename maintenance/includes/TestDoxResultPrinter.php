@@ -13,6 +13,8 @@ require_once "CommandLineResultPrinter.php";
  * @package MWUnit\Maintenance
  */
 class TestDoxResultPrinter implements CommandLineResultPrinter {
+    // TODO: Localize this file
+
 	public $current_testsuite;
 
 	/**

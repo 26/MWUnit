@@ -176,7 +176,7 @@ class TestContent extends \AbstractContent {
 		$test_cases = $test_class->getTestCases();
 
 		if ( !$setup && !$teardown && $test_cases === [] ) {
-			return new Tag( "div", wfMessage( "mwunit-no-results" )->plain(), [ "class" => "mwunit-info-box" ] );
+			return new Tag( "div", wfMessage( "mwunit-no-results" )->plain(), [ "class" => "mwunit-message-box" ] );
 		}
 
 		$table_items = [];
@@ -259,7 +259,7 @@ class TestContent extends \AbstractContent {
 		$errors = $e->getErrors();
 
 		$errors_count = count( $errors );
-		$max_errors = 512; // TODO: Make this configurable?
+		$max_errors = MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitMaxReportedErrors" );
 
 		if ( $errors_count > $max_errors ) {
 			$errors = array_slice( $errors, 0, $max_errors );

@@ -44,6 +44,8 @@ class LessThanOrEqualTest extends MediaWikiTestCase {
 
 		for ( $i = 0; $i < 100; $i++ ) {
 			for ( $j = 0; $j < $i; $j++ ) {
+                $f = "";
+
 				$result = LessThanOrEqual::assert(
 					$f,
 					$j,
@@ -56,6 +58,8 @@ class LessThanOrEqualTest extends MediaWikiTestCase {
 			}
 
 			for ( $j = $i + 1; $j < $i + 101; $j++ ) {
+                $f = "";
+
 				$result = LessThanOrEqual::assert(
 					$f,
 					$j,

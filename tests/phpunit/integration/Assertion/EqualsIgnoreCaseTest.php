@@ -46,6 +46,8 @@ class EqualsIgnoreCaseTest extends MediaWikiTestCase {
 			$a = md5( rand() );
 			$b = md5( rand() );
 
+			$f = "";
+
 			$this->assertTrue( EqualsIgnoreCase::assert(
 				$f,
 				$a,

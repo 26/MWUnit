@@ -30,6 +30,7 @@ class ResultUI extends MWUnitUI {
 	 */
 	public function __construct( TestSuiteRunner $runner, OutputPage $output, LinkRenderer $link_renderer ) {
 		$this->runner = $runner;
+
 		parent::__construct( $output, $link_renderer );
 	}
 
@@ -37,11 +38,14 @@ class ResultUI extends MWUnitUI {
 	 * @inheritDoc
 	 */
 	public function render() {
-		$test_count      = $this->runner->getTestCount();
+        $this->getOutput()->addModuleStyles( "ext.mwunit.TestPage.css" );
+
+	    $test_count      = $this->runner->getTestCount();
 		$assertion_count = $this->runner->getTotalAssertionsCount();
 
 		$risky_count = $this->runner->getRiskyCount();
-		$failure_count  = $this->runner->getFailedCount();
+		$failure_count = $this->runner->getFailedCount();
+		$skipped_count = $this->runner->getSkippedCount();
 
 		$profiler = Profiler::getInstance();
 
@@ -56,7 +60,8 @@ class ResultUI extends MWUnitUI {
 			$test_count,
 			$assertion_count,
 			$risky_count,
-			$failure_count
+			$failure_count,
+            $skipped_count
 		)->plain();
 
 		if ( MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitShowProfilingInfo" ) ) {
@@ -72,9 +77,15 @@ class ResultUI extends MWUnitUI {
 		);
 
 		$store = $this->runner->getTestRunStore();
-		foreach ( $store as $test_run ) {
-			$this->getOutput()->addHTML( $this->renderTest( $test_run ) );
-		}
+
+		if ( count( $store ) === 0 ) {
+		    $no_results = new Tag( "div", wfMessage( "mwunit-no-results" )->plain(), [ "class" => "mwunit-message-box" ] );
+		    $this->getOutput()->addHTML( $no_results );
+        } else {
+            foreach ( $store as $test_run ) {
+                $this->getOutput()->addHTML( $this->renderTest( $test_run ) );
+            }
+        }
 	}
 
 	/**
@@ -115,6 +126,8 @@ class ResultUI extends MWUnitUI {
 				return $this->renderFailedTest( $run )->__toString();
 			case TestResult::T_SUCCESS:
 				return $this->renderSucceededTest( $run )->__toString();
+            case TestResult::T_SKIPPED:
+                return $this->renderSkippedTest( $run )->__toString();
 		}
 
 		throw new \Exception( "Invalid result constant" );
@@ -164,6 +177,21 @@ class ResultUI extends MWUnitUI {
 			"mwunit-test-success"
 		);
 	}
+
+    /**
+     * Renders a risky test.
+     *
+     * @param TestRun $run
+     * @return Tag
+     */
+    private function renderSkippedTest( TestRun $run ): Tag {
+        return $this->renderTestBox(
+            $run,
+            "warningbox",
+            "#ff8c00",
+            "mwunit-test-skipped"
+        );
+    }
 
 	/**
 	 * Renders a generic test result as an HTML box.

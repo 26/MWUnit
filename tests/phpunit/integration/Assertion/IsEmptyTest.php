@@ -44,6 +44,8 @@ class IsEmptyTest extends MediaWikiTestCase {
 		$empty_strings = [ "", " ", "  ", "   " ];
 
 		foreach ( $empty_strings as $empty ) {
+            $f = "";
+
 			$this->assertTrue( IsEmpty::assert(
 				$f,
 				$empty
@@ -51,6 +53,8 @@ class IsEmptyTest extends MediaWikiTestCase {
 		}
 
 		for ( $i = 0; $i < 100; $i++ ) {
+            $f = "";
+
 			$haystack = md5( rand() );
 
 			$this->assertFalse( IsEmpty::assert(

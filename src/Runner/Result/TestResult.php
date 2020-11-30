@@ -13,6 +13,7 @@ abstract class TestResult {
     const T_FAILED  = 0; /* phpcs:ignore */
     const T_RISKY   = 1; /* phpcs:ignore */
 	const T_SUCCESS = 2; /* phpcs:ignore */
+    const T_SKIPPED = 3; /* phpcs:ignore */
 
 	/**
 	 * @var TestCase
@@ -25,8 +26,6 @@ abstract class TestResult {
 	 * @param TestCase $case
 	 */
 	public function __construct( TestCase $case ) {
-		// TODO: Make TestResults more generic, so other extension can add new TestResult's if they want to
-		// using a hook.
 		$this->test_case = $case;
 	}
 

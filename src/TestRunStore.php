@@ -36,7 +36,12 @@ class TestRunStore implements \Iterator, \Countable {
 	 */
 	private $failed_count = 0;
 
-	/**
+    /**
+     * @var int
+     */
+    private $skipped_count = 0;
+
+    /**
 	 * TestRunStore constructor.
 	 *
 	 * @param array $runs
@@ -63,6 +68,9 @@ class TestRunStore implements \Iterator, \Countable {
 			case TestResult::T_FAILED:
 				$this->failed_count++;
 				break;
+            case TestResult::T_SKIPPED:
+                $this->skipped_count++;
+                break;
 		}
 
 		$this->test_cases[] = $run->getTestCase();
@@ -122,6 +130,15 @@ class TestRunStore implements \Iterator, \Countable {
 	public function getFailedCount(): int {
 		return $this->failed_count;
 	}
+
+    /**
+     * Returns the number of tests skipped.
+     *
+     * @return int
+     */
+    public function getSkippedCount(): int {
+        return $this->skipped_count;
+    }
 
 	public function current(): TestRun {
 		return $this->runs[$this->index];

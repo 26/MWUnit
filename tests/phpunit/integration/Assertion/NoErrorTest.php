@@ -47,6 +47,8 @@ class NoErrorTest extends MediaWikiTestCase {
 
 		foreach ( $valid_tags as $tag ) {
 			foreach ( $attributes as $attribute ) {
+                $f = "";
+
 				$error_content = sprintf(
 					'<%s class="error %s">Foobar</%s>',
 					$tag, $attribute, $tag

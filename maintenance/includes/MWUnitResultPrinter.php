@@ -14,6 +14,8 @@ require_once "CommandLineResultPrinter.php";
  * @package MWUnit\Maintenance
  */
 class MWUnitResultPrinter implements CommandLineResultPrinter {
+    // TODO: Localize this file
+
 	/**
 	 * @var int
 	 */
@@ -85,8 +87,9 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 		$risky_runs      = $test_run_store->getRiskyRuns();
 		$successful_runs = $test_run_store->getStoreWithResult( TestResult::T_SUCCESS );
 
-		$failed_count = $failed_runs->count();
-		$risky_count = $risky_runs->count();
+		$failed_count = $test_run_store->getFailedCount();
+		$risky_count = $test_run_store->getRiskyCount();
+		$skipped_count = $test_run_store->getSkippedCount();
 
 		$this->count = 1;
 		foreach ( $successful_runs->getAll() as $run ) {
@@ -124,7 +127,8 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 		print( "\033[41mFAILURES!\e[0m\n\e[41mTests: $no_tests, " .
 			"Assertions: $no_assertions, " .
 			"Risky tests: $risky_count, " .
-			"Failures: $failed_count.\033[0m\n" );
+			"Failures: $failed_count, " .
+            "Skipped: $skipped_count.\033[0m\n" );
 	}
 
 	/**

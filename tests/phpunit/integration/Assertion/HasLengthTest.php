@@ -43,6 +43,8 @@ class HasLengthTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = 1; $i < 25; $i++ ) {
+            $f = "";
+
 			$string = substr( md5( rand() ), 0, $i );
 
 			$this->assertTrue( HasLength::assert(
