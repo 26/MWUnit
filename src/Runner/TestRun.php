@@ -33,15 +33,15 @@ use User;
  * @package MWUnit
  */
 class TestRun {
-	/**
-	 * @var string[]
-	 */
-	public $test_outputs = [];
-
     /**
      * @var array Array of templates used in this test run.
      */
     public static $templates_used;
+
+	/**
+	 * @var string[]
+	 */
+	public $test_outputs = [];
 
 	/**
 	 * The name of the template that this test case covers, or false if it does not cover a template.
@@ -56,11 +56,6 @@ class TestRun {
 	private $assertion_count = 0;
 
 	/**
-	 * @var string The canonical name of this test.
-	 */
-	private $test_name;
-
-	/**
 	 * @var TestResult The result of this test run.
 	 */
 	private $result;
@@ -71,21 +66,11 @@ class TestRun {
 	private $test_case;
 
 	/**
-	 * @var array
+	 * @var float
 	 */
-	private $globals;
-
-	/**
-	 * @var User
-	 */
-	private $user;
+	private $execution_time = 0.0;
 
     /**
-     * @var float
-     */
-    private $execution_time = 0.0;
-
-	/**
 	 * Called when the parser fetches a template. Used for strict coverage checking.
 	 *
 	 * @param Parser|bool $parser
@@ -111,7 +96,6 @@ class TestRun {
 	 */
 	public function __construct( TestCase $test_case ) {
 		$this->test_case = $test_case;
-		$this->covered   = strtolower( $test_case->getCovers() );
 
 		self::$templates_used = [];
 
@@ -121,12 +105,12 @@ class TestRun {
 		VarDumpParserFunction::setTestRun( $this );
 	}
 
-    /**
-     * Increments the assertion count for this run.
-     */
-    public function incrementAssertionCount() {
-        $this->assertion_count++;
-    }
+	/**
+	 * Increments the assertion count for this run.
+	 */
+	public function incrementAssertionCount() {
+		$this->assertion_count++;
+	}
 
 	/**
 	 * Returns true if and only if the test has finished and a result is available.
@@ -137,25 +121,27 @@ class TestRun {
 		return isset( $this->result );
 	}
 
-    /**
-     * Sets the result fot his TestRun.
-     *
-     * @param TestResult $result
-     */
-    public function setResult( TestResult $result ) {
-        $this->result = $result;
-    }
-
-    /**
-     * Marks this test run as successful.
-     */
-    public function setSuccess() {
-        $this->result = new SuccessTestResult(
-            $this->test_case
-        );
-    }
+	/**
+	 * Sets the result fot his TestRun.
+	 *
+	 * @param TestResult $result
+	 */
+	public function setResult( TestResult $result ) {
+		$this->result = $result;
+	}
 
 	/**
+     * Sets the result of this test run to "Success".
+	 */
+	public function setSuccess() {
+		$this->result = new SuccessTestResult(
+			$this->test_case
+		);
+	}
+
+	/**
+     * Sets the result of this test run to "Risky".
+     *
 	 * @param string $message Localised message to use for the "risky" message.
 	 */
 	public function setRisky( string $message ) {
@@ -166,6 +152,8 @@ class TestRun {
 	}
 
 	/**
+     * Sets the result of this test run to "Failure".
+     *
 	 * @param string $message Localised message to use for the "failure" message.
 	 */
 	public function setFailure( string $message ) {
@@ -175,15 +163,17 @@ class TestRun {
 		);
 	}
 
-    /**
-     * @param string $message Localised message to use for the "skipped" message.
-     */
+	/**
+     * Sets the result of this test run to "Skipped".
+     *
+	 * @param string $message Localised message to use for the "skipped" message.
+	 */
 	public function setSkipped( string $message ) {
-        $this->result = new SkippedTestResult(
-            $message,
-            $this->test_case
-        );
-    }
+		$this->result = new SkippedTestResult(
+			$message,
+			$this->test_case
+		);
+	}
 
 	/**
 	 * Returns the result of this test run.
@@ -201,15 +191,6 @@ class TestRun {
 	 */
 	public function getTestOutputs(): array {
 		return $this->test_outputs;
-	}
-
-	/**
-	 * Returns the value of the "covers" annotation, or false if no "covers" annotation is given.
-	 *
-	 * @return string|false
-	 */
-	public function getCovered() {
-		return $this->covered;
 	}
 
 	/**
@@ -239,231 +220,57 @@ class TestRun {
 		return $this->execution_time;
 	}
 
-	/**
-	 * Runs the test case. A Result object is guaranteed to be available if this function
-	 * finished successfully.
+    /**
+     * Runs the test case. A Result object is guaranteed to be available if this function
+     * finished successfully.
      *
-	 * @throws MWUnitException
-	 */
-	public function runTest() {
-	    $parser = MediaWikiServices::getInstance()->getParser();
+     * @param Parser $parser
+     * @param string|User|null $context The context in which to run the test case.
+     */
+	public function runTest( Parser $parser, $context ) {
+        $profiler = Profiler::getInstance();
 
-		$this->backupUser();
-		$this->backupGlobals();
+        try {
+            // Avoid PHP 7.1 warning when passing $this as reference
+            $test_run = $this;
+            $result = Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case, &$test_run, &$context ] );
 
-		$profiler = Profiler::getInstance();
+            if ( $result === false ) {
+                return;
+            }
+        } catch ( \Exception $e ) {
+            MWUnit::getLogger()->error(
+                "Exception while running hook MWUnitBeforeRunTestCase: {e}",
+                [ "e" => $e->getMessage() ]
+            );
+        }
 
 		try {
-			$context = $this->getContext();
+            $profiler->flag();
 
-			if ( $context === false ) {
-				return;
-			}
-
-			Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case, &$this, &$context ] );
-
-			$profiler->flag();
-
-			// Run test case
             $parser->parse(
 				$this->test_case->getContent(),
 				$this->test_case->getTestPage(),
 				ParserOptions::newCanonical( $context ),
 				true,
-				true
+				false
 			);
-
-			$this->checkTemplateCoverage();
 		} finally {
-			$profiler->flag();
-			$this->setExecutionTime( $profiler->getFlagExecutionTime() );
+            $profiler->flag();
+            $this->execution_time = $profiler->getFlagExecutionTime();
 
-			$this->restoreGlobals();
-			$this->restoreUser();
-			$this->restoreParser( $parser );
-
-			if ( !isset( $this->result ) ) {
-				$this->setSuccess();
-			}
+            if ( !isset( $this->result ) ) {
+                $this->setSuccess();
+            }
 		}
-	}
-
-	/**
-	 * Backs up globals.
-	 */
-	private function backupGlobals() {
-		$option = MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
-
-		if ( $option ) {
-			MWUnit::getLogger()->debug( "Backing up globals" );
-
-			$this->globals[ 'GLOBALS' ] 	= $GLOBALS;
-			$this->globals[ '_SERVER' ] 	= $_SERVER;
-			$this->globals[ '_GET' ]    	= $_GET; // phpcs:ignore
-			$this->globals[ '_POST' ]   	= $_POST; // phpcs:ignore
-			$this->globals[ '_FILES' ]  	= $_FILES;
-			$this->globals[ '_COOKIE' ] 	= $_COOKIE;
-			$this->globals[ '_REQUEST' ]	= $_REQUEST;
-			$this->globals[ '_ENV' ]    	= $_ENV;
-		}
-	}
-
-	/**
-	 * Restores globals backed up previously. This function should not be called before backupGlobals() is called.
-	 *
-	 * @throws MWUnitException
-	 */
-	private function restoreGlobals() {
-		$option = MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
-
-		if ( $option ) {
-			if ( !isset( $this->globals ) ) {
-				MWUnit::getLogger()->emergency( "Unable to restore globals because they are not available" );
-				throw new MWUnitException( 'mwunit-globals-restored-before-backup' );
-			}
-
-			MWUnit::getLogger()->debug( "Restoring globals" );
-
-			$GLOBALS  	= $this->globals[ 'GLOBALS' ];
-			$_SERVER  	= $this->globals[ '_SERVER' ];
-			$_GET	  	= $this->globals[ '_GET' ]; // phpcs:ignore
-			$_POST    	= $this->globals[ '_POST' ]; // phpcs:ignore
-			$_FILES   	= $this->globals[ '_FILES' ];
-			$_COOKIE  	= $this->globals[ '_COOKIE' ];
-			$_REQUEST 	= $this->globals[ '_REQUEST' ];
-			$_ENV 	  	= $this->globals[ '_ENV' ];
-		}
-	}
-
-	/**
-	 * Checks if the template specified in "covers" is covered and marks $test_result accordingly.
-	 */
-	private function checkTemplateCoverage() {
-		if ( !$this->covered ) {
-			// This test case does not have a "covers" annotation
-			return;
-		}
-
-		if ( !MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitStrictCoverage' ) ) {
-			// Strict coverage is not enforced
-			return;
-		}
-
-		if ( $this->test_case->getAttribute( 'ignorestrictcoverage' ) !== false ) {
-			// Strict coverage is explicitly ignored
-			return;
-		}
-
-		if ( !in_array( $this->covered, self::$templates_used ) ) {
-			$this->setRisky( wfMessage( 'mwunit-strict-coverage-violation' )->parse() );
-		}
-	}
-
-	/**
-	 * Serializes the current User from RequestContext and stores the result in a class variable.
-	 */
-	private function backupUser() {
-	    // We serialize the user to dereference (deep clone) it
-		$this->user = serialize( RequestContext::getMain()->getUser() );
-	}
-
-	/**
-	 * Deserializes the backed up User object and restores the User object globally.
-	 */
-	private function restoreUser() {
-		$this->setUser( unserialize( $this->user ) );
 	}
 
     /**
-     * Restores the parser.
+     * Returns an array of templates used in this test run.
      *
-     * @param Parser $parser
+     * @return array
      */
-    private function restoreParser( Parser $parser ) {
-        // Reset the parser template DOM cache. Otherwise onParserFetchTemplate is only called
-        // once and coverage checks cannot be performed.
-        $parser->mTplDomCache = [];
+	public function getUsedTemplates() {
+	    return array_unique( self::$templates_used );
     }
-
-	/**
-	 * Sets the User object globally. This is used to mock other users while running a certain test. The $wgUser
-	 * global will and the RequestContext user will be replaced with the given user.
-	 *
-	 * @param User $user
-	 */
-	private function setUser( User $user ) {
-		RequestContext::getMain()->setUser( $user );
-
-		// For extensions still using the old $wgUser variable
-		global $wgUser;
-		$wgUser = $user;
-	}
-
-	/**
-	 * Sets the execution time of this test.
-	 *
-	 * @param float $execution_time
-	 */
-	private function setExecutionTime( float $execution_time ) {
-		$this->execution_time = $execution_time;
-	}
-
-	/**
-	 * Returns true if and only if the current logged in user is allowed to mock other
-	 * users while running a test.
-	 *
-	 * @return bool
-	 */
-	private function canMockUsers(): bool {
-		if ( !MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitAllowRunningTestAsOtherUser' ) ) {
-			// Mocking users is disabled
-			return false;
-		}
-
-		return in_array( 'mwunit-mock-user', RequestContext::getMain()->getUser()->getRights() );
-	}
-
-	/**
-	 * Returns the context to use, or false on failure.
-	 *
-	 * @return string|User|null|false
-	 */
-	private function getContext() {
-		$context_option = $this->test_case->getAttribute( 'context' );
-		$user_option    = $this->test_case->getAttribute( 'user' );
-
-		switch ( $context_option ) {
-			case 'canonical':
-			case false:
-				global $wgVersion;
-				return version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
-			case 'user':
-				if ( !$user_option ) {
-					return RequestContext::getMain()->getUser();
-				}
-
-				if ( !$this->canMockUsers() ) {
-					$this->setRisky( wfMessage( 'mwunit-missing-permissions-mock-user' )->parse() );
-					return false;
-				}
-
-				$context = User::newFromName( $user_option );
-
-				if ( !$context instanceof User || $context->isAnon()) {
-					$this->setRisky( wfMessage( 'mwunit-invalid-user' )->parse() );
-					return false;
-				}
-
-				$this->setUser( $context );
-				return $context;
-			default:
-				MWUnit::getLogger()->debug( "Invalid context on {context} on {test}", [
-					'context' => $context_option,
-					'test'    => $this->test_name
-				] );
-
-				$this->setRisky( wfMessage( 'mwunit-invalid-context' )->parse() );
-				return false;
-		}
-	}
 }

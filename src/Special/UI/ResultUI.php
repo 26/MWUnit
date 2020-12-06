@@ -38,9 +38,9 @@ class ResultUI extends MWUnitUI {
 	 * @inheritDoc
 	 */
 	public function render() {
-        $this->getOutput()->addModuleStyles( "ext.mwunit.TestPage.css" );
+		$this->getOutput()->addModuleStyles( "ext.mwunit.TestPage.css" );
 
-	    $test_count      = $this->runner->getTestCount();
+		$test_count      = $this->runner->getTestCount();
 		$assertion_count = $this->runner->getTotalAssertionsCount();
 
 		$risky_count = $this->runner->getRiskyCount();
@@ -61,7 +61,7 @@ class ResultUI extends MWUnitUI {
 			$assertion_count,
 			$risky_count,
 			$failure_count,
-            $skipped_count
+			$skipped_count
 		)->plain();
 
 		if ( MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitShowProfilingInfo" ) ) {
@@ -79,13 +79,13 @@ class ResultUI extends MWUnitUI {
 		$store = $this->runner->getTestRunStore();
 
 		if ( count( $store ) === 0 ) {
-		    $no_results = new Tag( "div", wfMessage( "mwunit-no-results" )->plain(), [ "class" => "mwunit-message-box" ] );
-		    $this->getOutput()->addHTML( $no_results );
-        } else {
-            foreach ( $store as $test_run ) {
-                $this->getOutput()->addHTML( $this->renderTest( $test_run ) );
-            }
-        }
+			$no_results = new Tag( "div", wfMessage( "mwunit-no-results" )->plain(), [ "class" => "mwunit-message-box" ] );
+			$this->getOutput()->addHTML( $no_results );
+		} else {
+			foreach ( $store as $test_run ) {
+				$this->getOutput()->addHTML( $this->renderTest( $test_run ) );
+			}
+		}
 	}
 
 	/**
@@ -126,8 +126,8 @@ class ResultUI extends MWUnitUI {
 				return $this->renderFailedTest( $run )->__toString();
 			case TestResult::T_SUCCESS:
 				return $this->renderSucceededTest( $run )->__toString();
-            case TestResult::T_SKIPPED:
-                return $this->renderSkippedTest( $run )->__toString();
+			case TestResult::T_SKIPPED:
+				return $this->renderSkippedTest( $run )->__toString();
 		}
 
 		throw new \Exception( "Invalid result constant" );
@@ -178,20 +178,20 @@ class ResultUI extends MWUnitUI {
 		);
 	}
 
-    /**
-     * Renders a risky test.
-     *
-     * @param TestRun $run
-     * @return Tag
-     */
-    private function renderSkippedTest( TestRun $run ): Tag {
-        return $this->renderTestBox(
-            $run,
-            "warningbox",
-            "#ff8c00",
-            "mwunit-test-skipped"
-        );
-    }
+	/**
+	 * Renders a risky test.
+	 *
+	 * @param TestRun $run
+	 * @return Tag
+	 */
+	private function renderSkippedTest( TestRun $run ): Tag {
+		return $this->renderTestBox(
+			$run,
+			"warningbox",
+			"#ff8c00",
+			"mwunit-test-skipped"
+		);
+	}
 
 	/**
 	 * Renders a generic test result as an HTML box.

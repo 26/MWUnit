@@ -96,19 +96,18 @@ class RunTests extends \Maintenance {
 			return true;
 		}
 
-		$tests = $this->getTests();
+		$test_suite = $this->getTests();
 
-		if ( count( $tests ) === 0 ) {
+		if ( count( $test_suite ) === 0 ) {
 			$this->fatalError( 'No tests to run.' );
 		}
 
 		$result_printer = $this->getResultPrinter();
-		$test_run_store = new TestRunStore();
 
-		$unit_test_runner = new TestSuiteRunner( $tests, $test_run_store, [ $result_printer, "testCompletionCallback" ] );
-		$unit_test_runner->run();
+		$test_runner = TestSuiteRunner::newFromTestSuite( $test_suite, [ $result_printer, "testCompletionCallback" ] );
+        $test_runner->run();
 
-		$result_printer->outputTestResults( $unit_test_runner );
+		$result_printer->outputTestResults( $test_runner );
 
 		return true;
 	}

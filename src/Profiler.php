@@ -18,11 +18,6 @@ class Profiler {
 	/**
 	 * @var array
 	 */
-	private $flags = [];
-
-	/**
-	 * @var array
-	 */
 	private $timings = [];
 
 	/**
@@ -80,13 +75,13 @@ class Profiler {
 	 * @return float
 	 */
 	public function getFlagExecutionTime() {
-	    $timings_count = count( $this->timings );
+		$timings_count = count( $this->timings );
 
 		if ( $timings_count < 2 ) {
-		    return 0;
-        }
+			return 0;
+		}
 
-        $idx_current = $timings_count - 1;
+		$idx_current = $timings_count - 1;
 		$idx_previous = $idx_current - 1;
 
 		$current_time = $this->timings[$idx_current] ?? 0;

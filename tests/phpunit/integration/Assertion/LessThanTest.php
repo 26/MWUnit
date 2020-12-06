@@ -44,7 +44,7 @@ class LessThanTest extends MediaWikiTestCase {
 
 		for ( $i = 1; $i < 100; $i++ ) {
 			for ( $j = 0; $j < $i; $j++ ) {
-                $f = "";
+				$f = "";
 
 				$result = LessThan::assert(
 					$f,
@@ -58,7 +58,7 @@ class LessThanTest extends MediaWikiTestCase {
 			}
 
 			for ( $j = $i; $j < $i + 100; $j++ ) {
-                $f = "";
+				$f = "";
 
 				$result = LessThan::assert(
 					$f,
@@ -72,7 +72,7 @@ class LessThanTest extends MediaWikiTestCase {
 			}
 		}
 
-        $f = "";
+		$f = "";
 
 		$this->assertNull( LessThan::assert(
 			$f,

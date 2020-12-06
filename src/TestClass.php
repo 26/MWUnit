@@ -2,9 +2,7 @@
 
 namespace MWUnit;
 
-use DOMDocument;
 use DOMNode;
-use Exception;
 use MediaWiki\MediaWikiServices;
 use MWUnit\Exception\InvalidTestPageException;
 use MWUnit\Exception\MWUnitException;
@@ -43,17 +41,23 @@ class TestClass {
 	public static function newFromWikitext( string $wikitext, Title $title ): TestClass {
 		$errors = [];
 
-		$dom = new DOMDocument();
-		@$dom->loadHTML( $wikitext );
+		$parser = new TestPageParser();
+		$tag_sets = $parser->parse( $wikitext );
 
-		$setup_tags = $dom->getElementsByTagName( "setup" );
-		$teardown_tags = $dom->getElementsByTagName( "teardown" );
-		$test_case_tags = $dom->getElementsByTagName( "testcase" );
+		$setup_tags = $tag_sets["setup"] ?? [];
+		$teardown_tags = $tag_sets["teardown"] ?? [];
+		$test_case_tags = $tag_sets["testcase"] ?? [];
 
-		$max_test_cases = MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitMaxTestCases" );
+		try {
+			$max_test_cases = MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitMaxTestCases" );
+		} catch ( \ConfigException $e ) {
+			$max_test_cases = 2048;
+		}
+
 		$actual_test_cases = count( $test_case_tags );
 
 		if ( $actual_test_cases > $max_test_cases ) {
+			// This page exceeded the maximum number of test cases
 			throw new InvalidTestPageException( [ wfMessage( "mwunit-max-test-cases-exceeded", $max_test_cases, $actual_test_cases ) ] );
 		}
 
@@ -119,7 +123,7 @@ class TestClass {
 
 			try {
 				$force_covers = MediaWikiServices::getInstance()->getMainConfig()->get( "MWUnitForceCoversAnnotation" );
-			} catch ( Exception $e ) {
+			} catch ( \ConfigException $e ) {
 				$force_covers = false;
 			}
 

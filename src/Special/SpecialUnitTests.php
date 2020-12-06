@@ -65,9 +65,7 @@ class SpecialUnitTests extends \SpecialPage {
 	 * @throws MWUnitException
 	 */
 	private function runTests( TestSuite $suite ) {
-		$test_run_store = new TestRunStore();
-
-		$runner = new TestSuiteRunner( $suite, $test_run_store );
+		$runner = TestSuiteRunner::newFromTestSuite( $suite );
 		$runner->run();
 
 		$ui = new UI\ResultUI( $runner, $this->getOutput(), $this->getLinkRenderer() );

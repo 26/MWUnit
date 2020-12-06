@@ -5,6 +5,7 @@ namespace MWUnit\Factory;
 use MWUnit\Assertion\Equals;
 use MWUnit\Assertion\EqualsIgnoreCase;
 use MWUnit\Assertion\Error;
+use MWUnit\Assertion\Expressions\Expression;
 use MWUnit\Assertion\GreaterThan;
 use MWUnit\Assertion\GreaterThanOrEqual;
 use MWUnit\Assertion\HasLength;
@@ -74,7 +75,8 @@ class AssertionFactory extends ParserFunctionFactory {
 			StringStartsWith::class,
 			That::class,
 			HasProperty::class,
-			PropertyHasValue::class
+			PropertyHasValue::class,
+			Expression::class
 		];
 
 		try {

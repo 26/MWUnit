@@ -14,7 +14,7 @@ require_once "CommandLineResultPrinter.php";
  * @package MWUnit\Maintenance
  */
 class MWUnitResultPrinter implements CommandLineResultPrinter {
-    // TODO: Localize this file
+	// TODO: Localize this file
 
 	/**
 	 * @var int
@@ -128,7 +128,7 @@ class MWUnitResultPrinter implements CommandLineResultPrinter {
 			"Assertions: $no_assertions, " .
 			"Risky tests: $risky_count, " .
 			"Failures: $failed_count, " .
-            "Skipped: $skipped_count.\033[0m\n" );
+			"Skipped: $skipped_count.\033[0m\n" );
 	}
 
 	/**

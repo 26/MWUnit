@@ -19,8 +19,7 @@ class ApiRunUnitTests extends \ApiBase {
 		$this->checkUserRightsAny( 'mwunit-runtests' );
 
 		$test_suite = $this->getTestSuite();
-		$test_run_store = new TestRunStore();
-		$runner = new TestSuiteRunner( $test_suite, $test_run_store );
+		$runner = TestSuiteRunner::newFromTestSuite( $test_suite );
 
 		try {
 			$runner->run();
@@ -37,7 +36,7 @@ class ApiRunUnitTests extends \ApiBase {
 			$result     = $test_run->getResult();
 			$output     = $test_run->getTestOutputs();
 			$test_case  = $test_run->getTestCase();
-			$covered    = $test_run->getCovered();
+			$covered    = $test_run->getTestCase()->getCovers();
 			$assertions = $test_run->getAssertionCount();
 
 			$result_path = [ $id, "result" ];

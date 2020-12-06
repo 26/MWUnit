@@ -25,6 +25,7 @@ $magicWords['en'] = [
 	'assert_not_empty' 						=> [ 0, 'assert_not_empty' ],
 	'assert_has_property' 					=> [ 0, 'assert_has_property' ],
 	'assert_property_has_value' 			=> [ 0, 'assert_property_has_value' ],
+	'assert_expression'                     => [ 0, 'assert_expression' ],
 
 	'create_mock' 							=> [ 0, 'create_mock' ],
 	'create_parser_mock'                    => [ 0, 'create_parser_mock' ],

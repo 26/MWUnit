@@ -49,8 +49,20 @@ class TestSuiteRunner {
 	 */
 	private $test_run_store;
 
+    /**
+     * Creates a new TestSuiteRunner object from the given TestSuite.
+     *
+     * @param TestSuite $test_suite
+     * @param callable|null $callback Callback function that gets called after every completed test
+     *
+     * @return TestSuiteRunner
+     */
+	public static function newFromTestSuite( TestSuite $test_suite, callable $callback = null ): TestSuiteRunner {
+	    return new self( $test_suite, new TestRunStore(), $callback );
+    }
+
 	/**
-	 * UnitTestRunner constructor.
+	 * TestSuiteRunner constructor.
 	 *
 	 * @param TestSuite $test_suite The TestSuite to run
 	 * @param TestRunStore $test_run_store
@@ -68,11 +80,18 @@ class TestSuiteRunner {
 	 * @throws MWUnitException
 	 */
 	public function run() {
-		if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [ &$pages ] ) ) {
-			return;
-		}
+        try {
+            if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [&$pages] ) ) {
+                return;
+            }
+        } catch (\Exception $e) {
+            MWUnit::getLogger()->error(
+                "Exception while running hook MWUnitBeforeFirstTest: {e}",
+                [ "e" => $e->getMessage() ]
+            );
+        }
 
-		foreach ( $this->test_suite as $test_class ) {
+        foreach ( $this->test_suite as $test_class ) {
 			$this->runTestClass( $test_class );
 			$this->cleanupAfterFixture( $test_class->getTitle() );
 		}
@@ -80,17 +99,11 @@ class TestSuiteRunner {
 		try {
 			\Hooks::run( 'MWUnitAfterTests', [ &$this->test_run_store ] );
 		} catch ( Exception $e ) {
-			throw new MWUnitException( 'mwunit-generic-error-description' );
+            MWUnit::getLogger()->error(
+                "Exception while running hook MWUnitAfterTests: {e}",
+                [ "e" => $e->getMessage() ]
+            );
 		}
-	}
-
-	/**
-	 * Returns the callback function called after each test result.
-	 *
-	 * @return callable
-	 */
-	public function getCallback() {
-		return $this->callback;
 	}
 
 	/**
@@ -138,14 +151,14 @@ class TestSuiteRunner {
 		return $this->test_run_store->getFailedCount();
 	}
 
-    /**
-     * Returns the number of skipped tests.
-     *
-     * @return int
-     */
+	/**
+	 * Returns the number of skipped tests.
+	 *
+	 * @return int
+	 */
 	public function getSkippedCount() {
-	    return $this->test_run_store->getSkippedCount();
-    }
+		return $this->test_run_store->getSkippedCount();
+	}
 
 	/**
 	 * Called after having run the tests on a page.
@@ -175,8 +188,6 @@ class TestSuiteRunner {
 	 */
 	private function runTestClass( TestClass $test_class ) {
 		$parser = MediaWikiServices::getInstance()->getParser();
-		$parser = $parser->getFreshParser();
-
 		$title = $test_class->getTitle();
 
 		try {
@@ -193,27 +204,45 @@ class TestSuiteRunner {
 
 		// Run each test case
 		foreach ( $test_class->getTestCases() as $test_case ) {
-		    $result = \Hooks::run( "MWUnitBeforeInitializeBaseTestRunner", [ &$test_case, &$test_class ] );
+		    try {
+                $result = \Hooks::run( "MWUnitBeforeInitializeBaseTestRunner", [ &$test_case, &$test_class ] );
 
-            if ( $result === false ) {
-                // The hook returned false; skip this test
+                if ( $result === false ) {
+                    // The hook returned false; skip this test
+                    continue;
+                }
+		    } catch ( \Exception $e ) {
+                MWUnit::getLogger()->error(
+                    "Exception while running hook MWUnitBeforeInitializeBaseTestRunner: {e}",
+                    [ "e" => $e->getMessage() ]
+                );
+
                 continue;
             }
 
 			$runner = new BaseTestRunner( $test_case );
-			$result = $runner->run();
+			$runner->run();
 
-			$this->total_assertions_count += $result->getAssertionCount();
+			$run = $runner->getRun();
+
+			if ( !$run->resultAvailable() ) {
+			    continue;
+            }
+
+			$this->total_assertions_count += $run->getAssertionCount();
 			$this->test_count += 1;
 
 			if ( isset( $this->callback ) ) {
-				call_user_func( $this->callback, $result->getResult() );
+				call_user_func( $this->callback, $run->getResult() );
 			}
 
-			$this->test_run_store->append( $result );
+			$this->test_run_store->append( $run );
 		}
 
 		// Run the "teardown" tag
 		$parser->parse( $test_class->getTearDown(), $title, $parser_options );
+
+		// Clear the parser's state after each TestClass
+		$parser->clearState();
 	}
 }

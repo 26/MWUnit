@@ -163,23 +163,6 @@ class TestSuite implements Iterator, Countable {
 	}
 
 	/**
-	 * Merges the given test suite(s) with a new test suite and returns the result.
-	 *
-	 * @param TestSuite ...$test_suites
-	 * @return TestSuite
-	 */
-	public function merge( TestSuite ...$test_suites ): TestSuite {
-		$a = $this->test_classes;
-		$b = array_map( function ( TestSuite $suite ): array {
-			return $suite->test_classes;
-		}, $test_suites );
-
-		$result = array_merge( $a, ...$b );
-
-		return new TestSuite( $result );
-	}
-
-	/**
 	 * @inheritDoc
 	 * @return TestCase
 	 */
@@ -215,6 +198,9 @@ class TestSuite implements Iterator, Countable {
 		$this->index = 0;
 	}
 
+    /**
+     * @inheritDoc
+     */
 	public function count() {
 		return count( $this->test_classes );
 	}

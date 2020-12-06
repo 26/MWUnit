@@ -43,7 +43,7 @@ class IsIntegerTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = -100; $i < 100; $i++ ) {
-            $f = "";
+			$f = "";
 
 			$integer = (string)$i;
 			$non_integer = md5( rand() );

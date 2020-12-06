@@ -43,7 +43,7 @@ class StringEndsWithTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = 0; $i < 100; $i++ ) {
-            $f = "";
+			$f = "";
 
 			$haystack = md5( rand() );
 

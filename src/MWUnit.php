@@ -3,6 +3,7 @@
 namespace MWUnit;
 
 use Content;
+use DatabaseUpdater;
 use LogEntry;
 use MediaWiki\Logger\LoggerFactory;
 use MWException;
@@ -19,11 +20,11 @@ use WikiPage;
 abstract class MWUnit {
 	const LOGGING_CHANNEL = "MWUnit"; // phpcs:ignore
 
-	/**
-	 * Called when the parser initializes for the first time.
-	 *
-	 * @param Parser $parser
-	 */
+    /**
+     * Called when the parser initializes for the first time.
+     *
+     * @param Parser $parser
+     */
 	public static function onParserFirstCallInit( Parser $parser ) {
 		ParserFunctionFactory::newFromParser( $parser )->registerFunctionHandlers();
 	}
@@ -31,10 +32,10 @@ abstract class MWUnit {
 	/**
 	 * Called whenever schema updates are required. Updates the database schema.
 	 *
-	 * @param \DatabaseUpdater $updater
+	 * @param DatabaseUpdater $updater
 	 * @throws MWException
 	 */
-	public static function onLoadExtensionSchemaUpdates( \DatabaseUpdater $updater ) {
+	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
 		$directory = $GLOBALS['wgExtensionDirectory'] . '/MWUnit/sql';
 		$type = $updater->getDB()->getType();
 
@@ -243,21 +244,12 @@ abstract class MWUnit {
 			return false;
 		}
 
-		$template_name = $title->getText();
-
-		$test = wfGetDb( DB_REPLICA )->select(
-            'mwunit_tests',
-            [ 'article_id' ],
-            [ 'covers' => $template_name ],
-            __METHOD__
-        )->numRows();
-
 		return wfGetDb( DB_REPLICA )->select(
-            'mwunit_tests',
-            [ 'article_id' ],
-            [ 'covers' => $template_name ],
-            __METHOD__
-        )->numRows() > 0;
+			'mwunit_tests',
+			[ 'article_id' ],
+			[ 'covers' => $title->getText() ],
+			__METHOD__
+		)->numRows() > 0;
 	}
 
 	/**
@@ -300,11 +292,11 @@ abstract class MWUnit {
 
 		$article_id = $wikiPage->getTitle()->getArticleID();
 
-		self::getLogger()->debug( 'Deregistering tests for article {id} because the page got updated', [
+		self::getLogger()->debug( 'De-registering tests for article {id} because the page got updated', [
 			'id' => $article_id
 		] );
 
-		// Deregister all tests on the page and let the parser re-register them.
+		// De-register all tests on the page and let the parser re-register them.
 		self::deregisterTestsOnPage( $article_id );
 
 		try {
@@ -354,7 +346,7 @@ abstract class MWUnit {
 
 		$deleted_id = $article->getId();
 
-		self::getLogger()->debug( 'Deregistering tests for article {id} because the page got deleted', [
+		self::getLogger()->debug( 'De-registering tests for article {id} because the page got deleted', [
 			'id' => $deleted_id
 		] );
 
@@ -366,7 +358,7 @@ abstract class MWUnit {
 	/**
 	 * Removes all test cases on a page from the database.
 	 *
-	 * @param int $article_id The article ID of the page from which the tests should be deregistered.
+	 * @param int $article_id The article ID of the page from which the tests should be de-registered.
 	 */
 	private static function deregisterTestsOnPage( int $article_id ) {
 		$database = wfGetDb( DB_MASTER );

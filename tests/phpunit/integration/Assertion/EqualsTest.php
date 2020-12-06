@@ -46,7 +46,7 @@ class EqualsTest extends MediaWikiTestCase {
 			$a = md5( rand() );
 			$b = md5( rand() );
 
-            $f = "";
+			$f = "";
 
 			$this->assertTrue( Equals::assert(
 				$f,

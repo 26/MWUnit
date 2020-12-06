@@ -31,7 +31,7 @@ class ProfilerTest extends MediaWikiTestCase {
 	}
 
 	public function testGetExecutionTime() {
-	    $this->instance->flag();
+		$this->instance->flag();
 		usleep( 10 );
 		$this->instance->flag();
 

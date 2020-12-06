@@ -44,7 +44,7 @@ class GreaterThanOrEqualTest extends MediaWikiTestCase {
 
 		for ( $i = 1; $i < 100; $i++ ) {
 			for ( $j = $i; $j < $i + 100; $j++ ) {
-                $f = "";
+				$f = "";
 
 				$result = GreaterThanOrEqual::assert(
 					$f,

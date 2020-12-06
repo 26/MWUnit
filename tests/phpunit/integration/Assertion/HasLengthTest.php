@@ -43,7 +43,7 @@ class HasLengthTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = 1; $i < 25; $i++ ) {
-            $f = "";
+			$f = "";
 
 			$string = substr( md5( rand() ), 0, $i );
 

@@ -20,7 +20,7 @@ class ParserData implements Iterator {
 	private $data;
 
 	/**
-	 * @var Parser
+	 * @var TestPageParser
 	 */
 	private $parser;
 
@@ -49,13 +49,13 @@ class ParserData implements Iterator {
 	 */
 	private $input = '';
 
-	/**
-	 * ParserData constructor.
-	 *
-	 * @param Parser $parser
-	 * @param PPFrame $frame
-	 * @param array $data
-	 */
+    /**
+     * ParserData constructor.
+     *
+     * @param Parser $parser
+     * @param PPFrame $frame
+     * @param array $data
+     */
 	public function __construct( Parser $parser, PPFrame $frame, array $data ) {
 		$this->parser   = $parser;
 		$this->frame    = $frame;
@@ -99,11 +99,11 @@ class ParserData implements Iterator {
 		return $this->flags;
 	}
 
-	/**
-	 * Gets the Parser object.
-	 *
-	 * @return Parser
-	 */
+    /**
+     * Gets the Parser object.
+     *
+     * @return Parser
+     */
 	public function getParser(): Parser {
 		return $this->parser;
 	}
