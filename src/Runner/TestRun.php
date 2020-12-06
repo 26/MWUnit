@@ -3,8 +3,6 @@
 namespace MWUnit\Runner;
 
 use Hooks;
-use MediaWiki\MediaWikiServices;
-use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\ParserFunction\AssertionParserFunction;
 use MWUnit\ParserFunction\TemplateMockParserFunction;
@@ -18,7 +16,6 @@ use MWUnit\Runner\Result\TestResult;
 use MWUnit\TestCase;
 use Parser;
 use ParserOptions;
-use RequestContext;
 use Revision;
 use Title;
 use User;
@@ -33,10 +30,10 @@ use User;
  * @package MWUnit
  */
 class TestRun {
-    /**
-     * @var array Array of templates used in this test run.
-     */
-    public static $templates_used;
+	/**
+	 * @var array Array of templates used in this test run.
+	 */
+	public static $templates_used;
 
 	/**
 	 * @var string[]
@@ -70,7 +67,7 @@ class TestRun {
 	 */
 	private $execution_time = 0.0;
 
-    /**
+	/**
 	 * Called when the parser fetches a template. Used for strict coverage checking.
 	 *
 	 * @param Parser|bool $parser
@@ -131,7 +128,7 @@ class TestRun {
 	}
 
 	/**
-     * Sets the result of this test run to "Success".
+	 * Sets the result of this test run to "Success".
 	 */
 	public function setSuccess() {
 		$this->result = new SuccessTestResult(
@@ -140,8 +137,8 @@ class TestRun {
 	}
 
 	/**
-     * Sets the result of this test run to "Risky".
-     *
+	 * Sets the result of this test run to "Risky".
+	 *
 	 * @param string $message Localised message to use for the "risky" message.
 	 */
 	public function setRisky( string $message ) {
@@ -152,8 +149,8 @@ class TestRun {
 	}
 
 	/**
-     * Sets the result of this test run to "Failure".
-     *
+	 * Sets the result of this test run to "Failure".
+	 *
 	 * @param string $message Localised message to use for the "failure" message.
 	 */
 	public function setFailure( string $message ) {
@@ -164,8 +161,8 @@ class TestRun {
 	}
 
 	/**
-     * Sets the result of this test run to "Skipped".
-     *
+	 * Sets the result of this test run to "Skipped".
+	 *
 	 * @param string $message Localised message to use for the "skipped" message.
 	 */
 	public function setSkipped( string $message ) {
@@ -220,35 +217,35 @@ class TestRun {
 		return $this->execution_time;
 	}
 
-    /**
-     * Runs the test case. A Result object is guaranteed to be available if this function
-     * finished successfully.
-     *
-     * @param Parser $parser
-     * @param string|User|null $context The context in which to run the test case.
-     */
+	/**
+	 * Runs the test case. A Result object is guaranteed to be available if this function
+	 * finished successfully.
+	 *
+	 * @param Parser $parser
+	 * @param string|User|null $context The context in which to run the test case.
+	 */
 	public function runTest( Parser $parser, $context ) {
-        $profiler = Profiler::getInstance();
-
-        try {
-            // Avoid PHP 7.1 warning when passing $this as reference
-            $test_run = $this;
-            $result = Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case, &$test_run, &$context ] );
-
-            if ( $result === false ) {
-                return;
-            }
-        } catch ( \Exception $e ) {
-            MWUnit::getLogger()->error(
-                "Exception while running hook MWUnitBeforeRunTestCase: {e}",
-                [ "e" => $e->getMessage() ]
-            );
-        }
+		$profiler = Profiler::getInstance();
 
 		try {
-            $profiler->flag();
+			// Avoid PHP 7.1 warning when passing $this as reference
+			$test_run = $this;
+			$result = Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case, &$test_run, &$context ] );
 
-            $parser->parse(
+			if ( $result === false ) {
+				return;
+			}
+		} catch ( \Exception $e ) {
+			MWUnit::getLogger()->error(
+				"Exception while running hook MWUnitBeforeRunTestCase: {e}",
+				[ "e" => $e->getMessage() ]
+			);
+		}
+
+		try {
+			$profiler->flag();
+
+			$parser->parse(
 				$this->test_case->getContent(),
 				$this->test_case->getTestPage(),
 				ParserOptions::newCanonical( $context ),
@@ -256,21 +253,21 @@ class TestRun {
 				false
 			);
 		} finally {
-            $profiler->flag();
-            $this->execution_time = $profiler->getFlagExecutionTime();
+			$profiler->flag();
+			$this->execution_time = $profiler->getFlagExecutionTime();
 
-            if ( !isset( $this->result ) ) {
-                $this->setSuccess();
-            }
+			if ( !isset( $this->result ) ) {
+				$this->setSuccess();
+			}
 		}
 	}
 
-    /**
-     * Returns an array of templates used in this test run.
-     *
-     * @return array
-     */
+	/**
+	 * Returns an array of templates used in this test run.
+	 *
+	 * @return array
+	 */
 	public function getUsedTemplates() {
-	    return array_unique( self::$templates_used );
-    }
+		return array_unique( self::$templates_used );
+	}
 }

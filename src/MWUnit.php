@@ -20,11 +20,11 @@ use WikiPage;
 abstract class MWUnit {
 	const LOGGING_CHANNEL = "MWUnit"; // phpcs:ignore
 
-    /**
-     * Called when the parser initializes for the first time.
-     *
-     * @param Parser $parser
-     */
+	/**
+	 * Called when the parser initializes for the first time.
+	 *
+	 * @param Parser $parser
+	 */
 	public static function onParserFirstCallInit( Parser $parser ) {
 		ParserFunctionFactory::newFromParser( $parser )->registerFunctionHandlers();
 	}

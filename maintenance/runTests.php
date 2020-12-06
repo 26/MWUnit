@@ -4,7 +4,6 @@ namespace MWUnit\Maintenance;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Runner\TestSuiteRunner;
-use MWUnit\TestRunStore;
 use MWUnit\TestSuite;
 
 error_reporting( 0 );
@@ -105,7 +104,7 @@ class RunTests extends \Maintenance {
 		$result_printer = $this->getResultPrinter();
 
 		$test_runner = TestSuiteRunner::newFromTestSuite( $test_suite, [ $result_printer, "testCompletionCallback" ] );
-        $test_runner->run();
+		$test_runner->run();
 
 		$result_printer->outputTestResults( $test_runner );
 

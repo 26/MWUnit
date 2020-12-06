@@ -198,9 +198,9 @@ class TestSuite implements Iterator, Countable {
 		$this->index = 0;
 	}
 
-    /**
-     * @inheritDoc
-     */
+	/**
+	 * @inheritDoc
+	 */
 	public function count() {
 		return count( $this->test_classes );
 	}

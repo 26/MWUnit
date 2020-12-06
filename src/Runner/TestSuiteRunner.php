@@ -49,17 +49,17 @@ class TestSuiteRunner {
 	 */
 	private $test_run_store;
 
-    /**
-     * Creates a new TestSuiteRunner object from the given TestSuite.
-     *
-     * @param TestSuite $test_suite
-     * @param callable|null $callback Callback function that gets called after every completed test
-     *
-     * @return TestSuiteRunner
-     */
+	/**
+	 * Creates a new TestSuiteRunner object from the given TestSuite.
+	 *
+	 * @param TestSuite $test_suite
+	 * @param callable|null $callback Callback function that gets called after every completed test
+	 *
+	 * @return TestSuiteRunner
+	 */
 	public static function newFromTestSuite( TestSuite $test_suite, callable $callback = null ): TestSuiteRunner {
-	    return new self( $test_suite, new TestRunStore(), $callback );
-    }
+		return new self( $test_suite, new TestRunStore(), $callback );
+	}
 
 	/**
 	 * TestSuiteRunner constructor.
@@ -80,18 +80,18 @@ class TestSuiteRunner {
 	 * @throws MWUnitException
 	 */
 	public function run() {
-        try {
-            if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [&$pages] ) ) {
-                return;
-            }
-        } catch (\Exception $e) {
-            MWUnit::getLogger()->error(
-                "Exception while running hook MWUnitBeforeFirstTest: {e}",
-                [ "e" => $e->getMessage() ]
-            );
-        }
+		try {
+			if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [ &$pages ] ) ) {
+				return;
+			}
+		} catch ( \Exception $e ) {
+			MWUnit::getLogger()->error(
+				"Exception while running hook MWUnitBeforeFirstTest: {e}",
+				[ "e" => $e->getMessage() ]
+			);
+		}
 
-        foreach ( $this->test_suite as $test_class ) {
+		foreach ( $this->test_suite as $test_class ) {
 			$this->runTestClass( $test_class );
 			$this->cleanupAfterFixture( $test_class->getTitle() );
 		}
@@ -99,10 +99,10 @@ class TestSuiteRunner {
 		try {
 			\Hooks::run( 'MWUnitAfterTests', [ &$this->test_run_store ] );
 		} catch ( Exception $e ) {
-            MWUnit::getLogger()->error(
-                "Exception while running hook MWUnitAfterTests: {e}",
-                [ "e" => $e->getMessage() ]
-            );
+			MWUnit::getLogger()->error(
+				"Exception while running hook MWUnitAfterTests: {e}",
+				[ "e" => $e->getMessage() ]
+			);
 		}
 	}
 
@@ -204,21 +204,21 @@ class TestSuiteRunner {
 
 		// Run each test case
 		foreach ( $test_class->getTestCases() as $test_case ) {
-		    try {
-                $result = \Hooks::run( "MWUnitBeforeInitializeBaseTestRunner", [ &$test_case, &$test_class ] );
+			try {
+				$result = \Hooks::run( "MWUnitBeforeInitializeBaseTestRunner", [ &$test_case, &$test_class ] );
 
-                if ( $result === false ) {
-                    // The hook returned false; skip this test
-                    continue;
-                }
-		    } catch ( \Exception $e ) {
-                MWUnit::getLogger()->error(
-                    "Exception while running hook MWUnitBeforeInitializeBaseTestRunner: {e}",
-                    [ "e" => $e->getMessage() ]
-                );
+				if ( $result === false ) {
+					// The hook returned false; skip this test
+					continue;
+				}
+			} catch ( \Exception $e ) {
+				MWUnit::getLogger()->error(
+					"Exception while running hook MWUnitBeforeInitializeBaseTestRunner: {e}",
+					[ "e" => $e->getMessage() ]
+				);
 
-                continue;
-            }
+				continue;
+			}
 
 			$runner = new BaseTestRunner( $test_case );
 			$runner->run();
@@ -226,8 +226,8 @@ class TestSuiteRunner {
 			$run = $runner->getRun();
 
 			if ( !$run->resultAvailable() ) {
-			    continue;
-            }
+				continue;
+			}
 
 			$this->total_assertions_count += $run->getAssertionCount();
 			$this->test_count += 1;

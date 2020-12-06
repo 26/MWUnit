@@ -4,7 +4,6 @@ namespace MWUnit\Special;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Runner\TestSuiteRunner;
-use MWUnit\TestRunStore;
 use MWUnit\TestSuite;
 use PermissionsError;
 

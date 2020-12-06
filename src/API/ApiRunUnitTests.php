@@ -6,7 +6,6 @@ use ApiBase;
 use ApiUsageException;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\Runner\TestSuiteRunner;
-use MWUnit\TestRunStore;
 use MWUnit\TestSuite;
 
 class ApiRunUnitTests extends \ApiBase {

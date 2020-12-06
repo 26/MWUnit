@@ -76,7 +76,7 @@ class ParserMockParserFunction implements ParserFunction {
 		$functions = [
 			'create_mock',
 			'create_parser_mock',
-            'var_dump',
+			'var_dump',
 			'assert_string_contains',
 			'assert_string_contains_ignore_case',
 			'assert_has_length',
@@ -100,7 +100,7 @@ class ParserMockParserFunction implements ParserFunction {
 			'assert_not_empty',
 			'assert_has_property',
 			'assert_property_has_value',
-            'assert_expression'
+			'assert_expression'
 		];
 
 		try {
