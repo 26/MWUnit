@@ -49,7 +49,7 @@
   "mwunit-sidebar-run-tests": "Run unit tests",
   "mwunit-sidebar-run-tests-for-template": "Run associated unit tests",
   "mwunit-no-assertions": "This test is marked as risky, because it contains 0 assertions.",
-  "mwunit-invalid-context": "This test was skipped, because the given context is invalid. The context annotation must either be <i>empty</i>, 'canonical' or 'user'.",
+  "mwunit-invalid-context": "This test was skipped, because the given context is invalid. The context annotation must either be empty, 'canonical' or 'user'.",
   "mwunit-invalid-user": "This test was skipped, because the mocked user does not exist.",
   "mwunit-invalid-assertion": "This test is marked as risky because at least one assertion has one or more invalid parameters.",
   "mwunit-mocked-cover-template": "This test is marked as risky because the template specified in the covers annotation of this test is mocked.",

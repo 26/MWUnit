@@ -233,6 +233,8 @@ class TestRun {
 			$result = Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case, &$test_run, &$context ] );
 
 			if ( $result === false ) {
+			    // The hook returned false, therefore another extension asked MWUnit to skip this
+                // test
 				return;
 			}
 		} catch ( \Exception $e ) {
@@ -244,7 +246,6 @@ class TestRun {
 
 		try {
 			$profiler->flag();
-
 			$parser->parse(
 				$this->test_case->getContent(),
 				$this->test_case->getTestPage(),
@@ -253,12 +254,12 @@ class TestRun {
 				false
 			);
 		} finally {
+            if ( !isset( $this->result ) ) {
+                $this->setSuccess();
+            }
+
 			$profiler->flag();
 			$this->execution_time = $profiler->getFlagExecutionTime();
-
-			if ( !isset( $this->result ) ) {
-				$this->setSuccess();
-			}
 		}
 	}
 

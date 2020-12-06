@@ -65,7 +65,7 @@
       "descriptionmsg": "mwunit-config-force-covers-annotation"
     },
     "MWUnitAllowRunningTestAsOtherUser": {
-      "value": false,
+      "value": true,
       "descriptionmsg": "mwunit-config-allow-running-test-as-other-user"
     },
     "MWUnitShowProfilingInfo": {

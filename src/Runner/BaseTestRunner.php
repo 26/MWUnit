@@ -6,7 +6,9 @@ use Hooks;
 use MediaWiki\MediaWikiServices;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
+use MWUnit\ParserFunction\ParserMockParserFunction;
 use MWUnit\Runner\Result\TestResult;
+use MWUnit\TemplateMockStore;
 use MWUnit\TestCase;
 use Parser;
 use RequestContext;
@@ -42,12 +44,32 @@ class BaseTestRunner {
 	 */
 	private $test_run = false;
 
-	/**
-	 * TestCaseRunner constructor.
-	 * @param TestCase $test_case
-	 */
-	public function __construct( TestCase $test_case ) {
+    /**
+     * @var Parser
+     */
+    private $parser;
+
+    /**
+     * TestCaseRunner constructor.
+     *
+     * @param TestCase $test_case
+     * @param Parser $parser
+     */
+	public function __construct( TestCase $test_case, Parser $parser ) {
 		$this->test_case = $test_case;
+        $this->parser = $parser;
+
+        $test_run = new TestRun( $test_case );
+
+        try {
+            \Hooks::run( "MWUnitAfterInitializeTestRun", [ &$test_run ] );
+        } catch ( \Exception $e ) {
+            MWUnit::getLogger()->debug( "Exception while running hook MWUnitAfterInitializeTestRun: {e}", [
+                'e' => $e->getMessage()
+            ] );
+        }
+
+        $this->test_run = $test_run;
 	}
 
 	/**
@@ -70,62 +92,35 @@ class BaseTestRunner {
 			'testcase' => $this->test_case->getCanonicalName()
 		] );
 
-		$this->initializeTestRun();
-
-		if ( $this->shouldSkip( $message ) ) {
+		if ( $this->shouldSkipTest( $message ) ) {
 			$this->test_run->setSkipped( $message );
 			return;
 		}
 
-		$this->executeTestRun();
+		$this->runTest();
 
-		if ( $this->doAssertionCheck() ) {
-			$this->test_run->setRisky( wfMessage( 'mwunit-no-assertions' )->parse() );
-		}
-
-		if ( $this->doCoversCheck() ) {
-			$this->test_run->setRisky( wfMessage( 'mwunit-strict-coverage-violation' )->parse() );
-		}
+		if ( $this->shouldMarkRisky( $message ) ) {
+		    $this->test_run->setRisky( $message );
+        }
 	}
 
 	/**
 	 * Executes the TestRun object in this class.
 	 */
-	private function executeTestRun() {
-		$parser = $this->getParser();
-
+	private function runTest() {
 		$this->backupUser();
 		$this->backupGlobals();
 
+        $context = $this->getContext();
+
+        if ( $context === false ) {
+            return;
+        }
+
 		try {
-			$context = $this->getContext();
-
-			if ( $context === false ) {
-				return;
-			}
-
-			$this->test_run->runTest( $parser, $context );
+			$this->test_run->runTest( $this->parser, $context );
 		} finally {
-			try {
-				$this->restoreGlobals();
-			} catch ( MWUnitException $e ) {
-				MWUnit::getLogger()->emergency( "Unable to restore globals because they are not available" );
-			}
-
-			$this->restoreUser();
-
-			try {
-				Hooks::run( "MWUnitRestore", [ &$this ] );
-			} catch ( \Exception $e ) {
-				MWUnit::getLogger()->error(
-					"Exception while running hook MWUnitRestore: {e}",
-					[ "e" => $e->getMessage() ]
-				);
-			}
-
-			// Reset the parser template DOM cache. Otherwise onParserFetchTemplate is only called
-			// once and coverage checks cannot be performed.
-			$parser->mTplDomCache = [];
+		    $this->restore();
 		}
 
 		try {
@@ -137,20 +132,36 @@ class BaseTestRunner {
 		}
 	}
 
-	/**
-	 * Initializes the TestRun object.
-	 */
-	private function initializeTestRun() {
-		$this->test_run = new TestRun( $this->test_case );
+    /**
+     * Run's the test class's teardown method, resets the parser and restores changed global
+     * state.
+     */
+	private function restore() {
+        try {
+            $this->restoreGlobals();
+        } catch ( MWUnitException $e ) {
+            MWUnit::getLogger()->emergency( "Unable to restore globals because they are not available" );
+        }
 
-		try {
-			\Hooks::run( "MWUnitAfterInitializeTestRun", [ &$this->test_run ] );
-		} catch ( \Exception $e ) {
-			MWUnit::getLogger()->debug( "Exception while running hook MWUnitAfterInitializeTestRun: {e}", [
-				'e' => $e->getMessage()
-			] );
-		}
-	}
+        $this->restoreUser();
+
+        try {
+            Hooks::run( "MWUnitRestore", [ &$this ] );
+        } catch ( \Exception $e ) {
+            MWUnit::getLogger()->error(
+                "Exception while running hook MWUnitRestore: {e}",
+                [ "e" => $e->getMessage() ]
+            );
+        }
+
+        TemplateMockStore::getInstance()->reset();
+
+        try {
+            ParserMockParserFunction::restoreAndReset();
+        } catch ( MWUnitException $e ) {
+            MWUnit::getLogger()->emergency( "Unable to restore parser mocks: {e}", [ "e" => $e->getMessage() ] );
+        }
+    }
 
 	/**
 	 * Returns true if and only if the current test run should be skipped (i.e. has @skip or invalid @requires).
@@ -158,7 +169,7 @@ class BaseTestRunner {
 	 * @param string &$message
 	 * @return bool
 	 */
-	private function shouldSkip( &$message ): bool {
+	private function shouldSkipTest(&$message ): bool {
 		if ( $this->doSkipAnnotationCheck( $message ) ) {
 			return true;
 		}
@@ -174,15 +185,43 @@ class BaseTestRunner {
 		$skip = false;
 
 		try {
-			\Hooks::run( "MWUnitOnShouldSkip", [ &$skip, &$message ] );
+			\Hooks::run( "MWUnitShouldSkipTest", [ &$skip, &$message ] );
 		} catch ( \Exception $e ) {
-			MWUnit::getLogger()->debug( "Exception while running hook MWUnitOnShouldSkip: {e}", [
+			MWUnit::getLogger()->debug( "Exception while running hook MWUnitShouldSkipTest: {e}", [
 				'e' => $e->getMessage()
 			] );
 		}
 
 		return $skip;
 	}
+
+    /**
+     * Returns true if and only if the test should be marked as risky.
+     *
+     * @param string|null $message The "risky" message if the test was deemed risky, null otherwise
+     * @return bool
+     */
+	private function shouldMarkRisky( &$message ): bool {
+        if ( $this->doAssertionCheck( $message ) ) {
+            return true;
+        }
+
+        if ( $this->doCoversCheck( $message ) ) {
+            return true;
+        }
+
+        $skip = false;
+
+        try {
+            \Hooks::run( "MWUnitShouldMarkRisky", [ &$skip, &$message ] );
+        } catch ( \Exception $e ) {
+            MWUnit::getLogger()->debug( "Exception while running hook MWUnitShouldMarkRisky: {e}", [
+                'e' => $e->getMessage()
+            ] );
+        }
+
+        return $skip;
+    }
 
 	/**
 	 * Checks if all extensions required through the "requires" annotation are loaded. Returns
@@ -273,11 +312,14 @@ class BaseTestRunner {
 		return false;
 	}
 
-	/**
-	 * Checks if the template specified in "covers" is covered and returns true if the test should
-	 * be marked as risky, false otherwise.
-	 */
-	private function doCoversCheck(): bool {
+    /**
+     * Returns true if and only if the test should be marked as risky because it did not conform
+     * to "strict coverage".
+     *
+     * @param string|null $message The "risky" message if the test was deemed risky, null otherwise
+     * @return bool
+     */
+	private function doCoversCheck( &$message ): bool {
 		if ( !$this->test_case->getCovers() ) {
 			// This test case does not have a "covers" annotation
 			return false;
@@ -299,7 +341,13 @@ class BaseTestRunner {
 			return false;
 		}
 
-		return !in_array( strtolower( $this->test_case->getCovers() ), $this->test_run->getUsedTemplates() );
+		if ( in_array( strtolower( $this->test_case->getCovers() ), $this->test_run->getUsedTemplates() ) ) {
+		    return false;
+        }
+
+        $message = wfMessage( 'mwunit-strict-coverage-violation' )->parse();
+
+		return true;
 	}
 
 	/**
@@ -377,10 +425,7 @@ class BaseTestRunner {
 	 */
 	private function setUser( User $user ) {
 		RequestContext::getMain()->setUser( $user );
-		MediaWikiServices::getInstance()->getParser()->setUser( $user );
-
-		global $wgParser;
-		$wgParser->setUser( $user );
+		$this->parser->setUser( $user );
 
 		// For extensions still using the old $wgUser variable
 		global $wgUser;
@@ -454,13 +499,14 @@ class BaseTestRunner {
 		}
 	}
 
-	/**
-	 * Checks whether or not the test case performed any assertions. Returns true if and only if
-	 * the test should be marked as Risky for not contains any assertions.
-	 *
-	 * @return bool
-	 */
-	private function doAssertionCheck() {
+    /**
+     * Returns true if and only if the test should be marked as risky because it failed to perform
+     * any assertions.
+     *
+     * @param string|null $message The "risky" message if the test was deemed risky, null otherwise
+     * @return bool
+     */
+	private function doAssertionCheck( &$message ) {
 		$test_result = $this->test_run->getResult();
 
 		if ( $test_result->getResultConstant() === TestResult::T_RISKY ) {
@@ -478,41 +524,12 @@ class BaseTestRunner {
 			return false;
 		}
 
-		return $this->test_run->getAssertionCount() === 0;
-	}
+		if ( $this->test_run->getAssertionCount() !== 0 ) {
+            return false;
+        }
 
-	/**
-	 * Returns the parser object that needs to be used for parsing. This function takes
-	 * the parser from MediaWikiServices and resets most of the state in the parser, but
-	 * keeps loaded parser hooks intact (otherwise "setup" would break).
-	 *
-	 * @return Parser
-	 */
-	private function getParser(): Parser {
-		$parser = MediaWikiServices::getInstance()->getParser();
+        $message = wfMessage( 'mwunit-no-assertions' )->parse();
 
-		$parser->mAutonumber                = 0;
-		$parser->mIncludeCount              = [];
-		$parser->mRevisionObject            = null;
-		$parser->mRevisionTimestamp         = null;
-		$parser->mRevisionId                = null;
-		$parser->mRevisionUser              = null;
-		$parser->mRevisionSize              = null;
-		$parser->mVarCache                  = [];
-		$parser->mUser                      = null;
-		$parser->mLangLinkLanguages         = [];
-		$parser->currentRevisionCache       = null;
-		$parser->mTplRedirCache             = null;
-		$parser->mTplDomCache               = [];
-		$parser->mIncludeSizes              = [ 'post-expand' => 0, 'arg' => 0 ];
-		$parser->mPPNodeCount               = 0;
-		$parser->mGeneratedPPNodeCount      = 0;
-		$parser->mHighestExpansionDepth     = 0;
-		$parser->mDefaultSort               = false;
-		$parser->mHeadings                  = [];
-		$parser->mDoubleUnderscores         = [];
-		$parser->mExpensiveFunctionCount    = 0;
-
-		return $parser;
+		return true;
 	}
 }

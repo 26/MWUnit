@@ -4,6 +4,7 @@ namespace MWUnit\Runner;
 
 use Exception;
 use MediaWiki\MediaWikiServices;
+use MWException;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\ParserFunction\ParserMockParserFunction;
@@ -77,8 +78,8 @@ class TestSuiteRunner {
 	/**
 	 * Runs all tests in the group specified in the constructor.
 	 *
-	 * @throws MWUnitException
-	 */
+	 * @throws MWUnitException|MWException
+     */
 	public function run() {
 		try {
 			if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [ &$pages ] ) ) {
@@ -93,7 +94,6 @@ class TestSuiteRunner {
 
 		foreach ( $this->test_suite as $test_class ) {
 			$this->runTestClass( $test_class );
-			$this->cleanupAfterFixture( $test_class->getTitle() );
 		}
 
 		try {
@@ -160,89 +160,17 @@ class TestSuiteRunner {
 		return $this->test_run_store->getSkippedCount();
 	}
 
-	/**
-	 * Called after having run the tests on a page.
-	 *
-	 * @param $page Title The article ID of the page
-	 * @return bool Returns false on failure, true otherwise
-	 * @throws MWUnitException
-	 */
-	private function cleanupAfterFixture( Title $page ) {
-		try {
-			\Hooks::run( 'MWUnitCleanupAfterPage', [ $page ] );
-		} catch ( Exception $e ) {
-			return false;
-		}
-
-		TemplateMockStore::getInstance()->reset();
-		ParserMockParserFunction::restoreAndReset();
-
-		return true;
-	}
-
-	/**
-	 * Runs the given test class.
-	 *
-	 * @param TestClass $test_class
-	 * @throws MWUnitException
-	 */
+    /**
+     * Runs the given test class.
+     *
+     * @param TestClass $test_class
+     * @throws MWException
+     */
 	private function runTestClass( TestClass $test_class ) {
-		$parser = MediaWikiServices::getInstance()->getParser();
-		$title = $test_class->getTitle();
+	    $runner = new TestClassRunner( $test_class, $this->test_run_store );
+	    $runner->run();
 
-		try {
-			$wiki_page = WikiPage::factory( $title );
-		} catch ( Exception $e ) {
-			MWUnit::getLogger()->error( "Unable to create WikiPage object." );
-			throw new MWUnitException();
-		}
-
-		$parser_options = $wiki_page->makeParserOptions( "canonical" );
-
-		// Run the "setup" tag
-		$parser->parse( $test_class->getSetUp(), $title, $parser_options );
-
-		// Run each test case
-		foreach ( $test_class->getTestCases() as $test_case ) {
-			try {
-				$result = \Hooks::run( "MWUnitBeforeInitializeBaseTestRunner", [ &$test_case, &$test_class ] );
-
-				if ( $result === false ) {
-					// The hook returned false; skip this test
-					continue;
-				}
-			} catch ( \Exception $e ) {
-				MWUnit::getLogger()->error(
-					"Exception while running hook MWUnitBeforeInitializeBaseTestRunner: {e}",
-					[ "e" => $e->getMessage() ]
-				);
-
-				continue;
-			}
-
-			$runner = new BaseTestRunner( $test_case );
-			$runner->run();
-
-			$run = $runner->getRun();
-
-			if ( !$run->resultAvailable() ) {
-				continue;
-			}
-
-			$this->total_assertions_count += $run->getAssertionCount();
-			$this->test_count += 1;
-
-			if ( isset( $this->callback ) ) {
-				call_user_func( $this->callback, $run->getResult() );
-			}
-
-			$this->test_run_store->append( $run );
-		}
-
-		// Run the "teardown" tag
-		$parser->parse( $test_class->getTearDown(), $title, $parser_options );
-
-		// Clear the parser's state after each TestClass
-		$parser->clearState();
+	    $this->total_assertions_count += $runner->getAssertionCount();
+	    $this->test_count += $runner->getRunTestCount();
 	}
 }
