@@ -86,13 +86,7 @@ class TestContent extends \AbstractContent {
 	 * @return bool
 	 */
 	public function isValid() {
-		$title = \RequestContext::getMain()->getTitle();
-
-		if ( $title instanceof Title ) {
-			return \RequestContext::getMain()->getTitle()->getNamespace() === NS_TEST;
-		}
-
-		return false;
+	    return true;
 	}
 
 	/**
