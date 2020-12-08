@@ -2,16 +2,14 @@
 
 namespace MWUnit\Runner;
 
-use LinkHolderArray;
 use MediaWiki\MediaWikiServices;
 use MWException;
 use MWUnit\MWUnit;
+use MWUnit\Runner\Result\TestResult;
 use MWUnit\TestCase;
 use MWUnit\TestClass;
 use MWUnit\TestRunStore;
 use Parser;
-use ParserOutput;
-use StripState;
 
 class TestClassRunner {
     /**
@@ -50,6 +48,11 @@ class TestClassRunner {
     private $run_test_count = 0;
 
     /**
+     * @var callable|null
+     */
+    private $callback;
+
+    /**
      * Creates a new TestClassRunner from the given TestClass object.
      *
      * @param TestClass $test_class
@@ -65,10 +68,11 @@ class TestClassRunner {
      *
      * @param TestClass $test_class
      * @param TestRunStore $test_run_store
+     * @param callable|null $callback
      *
      * @throws MWException
      */
-    public function __construct( TestClass $test_class, TestRunStore $test_run_store ) {
+    public function __construct( TestClass $test_class, TestRunStore $test_run_store, callable $callback = null ) {
         $this->test_class = $test_class;
 
         $title = $test_class->getTitle();
@@ -86,6 +90,7 @@ class TestClassRunner {
         $this->title = $title;
 
         $this->test_run_store = $test_run_store;
+        $this->callback = $callback;
     }
 
     /**
@@ -125,6 +130,17 @@ class TestClassRunner {
     }
 
     /**
+     * Executes the callback if it is available with the given TestResult.
+     *
+     * @param TestResult $test_result
+     */
+    public function callback( TestResult $test_result ) {
+        if ( isset( $this->callback ) ) {
+            call_user_func( $this->callback, $test_result );
+        }
+    }
+
+    /**
      * Runs the given test case.
      *
      * @param TestCase $test_case
@@ -146,7 +162,7 @@ class TestClassRunner {
             return;
         }
 
-        $runner = new BaseTestRunner( $test_case, $this->parser );
+        $runner = new BaseTestRunner( $test_case, $this->parser, \RequestContext::getMain() );
         $runner->run();
 
         $run = $runner->getRun();
@@ -154,9 +170,7 @@ class TestClassRunner {
         $this->total_assertions_count += $run->getAssertionCount();
         $this->run_test_count         += 1;
 
-        if ( isset( $this->callback ) ) {
-            call_user_func( $this->callback, $run->getResult() );
-        }
+        $this->callback( $run->getResult() );
 
         $this->test_run_store->append( $run );
     }

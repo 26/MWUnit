@@ -213,6 +213,9 @@ abstract class MWUnit {
 	public static function registrationCallback() {
 		define( "CONTENT_MODEL_TEST", "test" );
 		define( "CONTENT_FORMAT_TEST", "text/x-wiki-test" );
+
+		// Instantiate the template mock store as early as possible
+		TemplateMockStore::instantiate();
 	}
 
 	/**

@@ -7,6 +7,7 @@ use MWUnit\MWUnit;
 use MWUnit\ParserData;
 use MWUnit\Runner\TestRun;
 use MWUnit\TemplateMockStore;
+use MWUnit\TemplateMockStoreInjector;
 use MWUnit\TestRunInjector;
 use Parser;
 use PPFrame;
@@ -17,20 +18,32 @@ use Title;
  * Class TemplateMockController
  * @package MWUnit\Controller
  */
-class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
+class TemplateMockParserFunction implements ParserFunction, TestRunInjector, TemplateMockStoreInjector {
 	/**
 	 * @var TestRun
 	 */
 	private static $run;
 
-	/**
+    /**
+     * @var TemplateMockStore
+     */
+    private static $template_mock_store;
+
+    /**
 	 * @inheritDoc
 	 */
 	public static function setTestRun( TestRun $run ) {
 		self::$run = $run;
 	}
 
-	/**
+    /**
+     * @inheritDoc
+     */
+	public static function setTemplateMockStore( TemplateMockStore $store ) {
+        self::$template_mock_store = $store;
+    }
+
+    /**
 	 * Called when the parser fetches a template. Used to replace the template with
 	 * a mock.
 	 *
@@ -39,18 +52,15 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
 	 * @param Revision $revision
 	 * @param string|false|null &$text
 	 * @param array &$deps
-	 * @throws MWUnitException
 	 */
 	public static function onParserFetchTemplate(
-		Parser $parser,
+		$parser,
 		Title $title,
-		Revision $revision,
+		$revision,
 		&$text,
 		array &$deps
 	) {
-		$registry = TemplateMockStore::getInstance();
-
-		if ( !$registry->exists( $title ) ) {
+		if ( !self::$template_mock_store->exists( $title ) ) {
 			return;
 		}
 
@@ -58,13 +68,15 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
 			return;
 		}
 
-		if ( $title->getNamespace() === NS_TEMPLATE &&
-			strtolower( $title->getText() ) === strtolower( self::$run->getTestCase()->getCovers() ) ) {
+		$title_lower = strtolower( $title->getText() );
+		$covers_lower = strtolower( self::$run->getTestCase()->getCovers() );
+
+		if ( $title->getNamespace() === NS_TEMPLATE && $title_lower === $covers_lower ) {
 			self::$run->setRisky( wfMessage( "mwunit-mocked-cover-template" )->parse() );
 			return;
 		}
 
-		$text = $registry->get( $title );
+		$text = self::$template_mock_store->get( $title ) ?? "";
 	}
 
 	/**
@@ -83,10 +95,7 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
 			);
 		}
 
-		// Interpret page title without namespace prefix as a template.
-		$title = strpos( $page, ":" ) === false ?
-			Title::newFromText( $page, NS_TEMPLATE ) :
-			Title::newFromText( $page );
+		$title = $this->getTitleFromPage( $page );
 
 		if ( !$title instanceof Title || !$title->exists() ) {
 			return MWUnit::error( "mwunit-create-mock-bad-title" );
@@ -102,9 +111,22 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector {
 			);
 		}
 
-		$mock_registry = TemplateMockStore::getInstance();
-		$mock_registry->register( $title, $content );
+		self::$template_mock_store->register( $title, $content );
 
 		return '';
 	}
+
+    /**
+     * Returns a new Title object from the given page title. This function should return
+     * a Title object in the Template namespace when no explicit namespace is given.
+     *
+     * @param string $page_text
+     * @return Title
+     */
+	public function getTitleFromPage( string $page_text ): Title {
+        // Interpret page title without namespace prefix as a template.
+        return strpos( $page_text, ":" ) === false ?
+            Title::newFromText( $page_text, NS_TEMPLATE ) :
+            Title::newFromText( $page_text );
+    }
 }

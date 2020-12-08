@@ -2,6 +2,7 @@
 
 namespace MWUnit\Factory;
 
+use MWUnit\Assertion\Assertion;
 use MWUnit\Assertion\Equals;
 use MWUnit\Assertion\EqualsIgnoreCase;
 use MWUnit\Assertion\Error;
@@ -37,7 +38,32 @@ use PPFrame;
  * @package MWUnit
  */
 class AssertionFactory extends ParserFunctionFactory {
-	/**
+    public static $classes = [
+        Equals::class,
+        EqualsIgnoreCase::class,
+        Error::class,
+        GreaterThan::class,
+        GreaterThanOrEqual::class,
+        HasLength::class,
+        IsEmpty::class,
+        IsInteger::class,
+        IsNumeric::class,
+        LessThan::class,
+        LessThanOrEqual::class,
+        NoError::class,
+        NotEmpty::class,
+        PageExists::class,
+        StringContains::class,
+        StringContainsIgnoreCase::class,
+        StringEndsWith::class,
+        StringStartsWith::class,
+        That::class,
+        HasProperty::class,
+        PropertyHasValue::class,
+        Expression::class
+    ];
+
+    /**
 	 * Convenience instantiation of the ParserFunctionFactory class.
 	 *
 	 * @param Parser $parser
@@ -48,46 +74,34 @@ class AssertionFactory extends ParserFunctionFactory {
 		return new self( $parser );
 	}
 
-	/**
+    /**
+     * Filters the given array of Assertion class names and
+     * returns only the Assertions class names that are enabled.
+     *
+     * @param string[] $classes
+     * @return string[]
+     */
+    public static function filterEnabledAssertions( array $classes ) {
+        return array_filter( $classes, function ( $class ): bool {
+            return $class::shouldRegister();
+        } );
+    }
+
+    /**
 	 * Returns all assertion classes as an array.
 	 *
 	 * @return string[] Array of Assertion class names
 	 */
 	public static function getAssertionClasses(): array {
-		$classes = [
-			Equals::class,
-			EqualsIgnoreCase::class,
-			Error::class,
-			GreaterThan::class,
-			GreaterThanOrEqual::class,
-			HasLength::class,
-			IsEmpty::class,
-			IsInteger::class,
-			IsNumeric::class,
-			LessThan::class,
-			LessThanOrEqual::class,
-			NoError::class,
-			NotEmpty::class,
-			PageExists::class,
-			StringContains::class,
-			StringContainsIgnoreCase::class,
-			StringEndsWith::class,
-			StringStartsWith::class,
-			That::class,
-			HasProperty::class,
-			PropertyHasValue::class,
-			Expression::class
-		];
-
-		try {
-			\Hooks::run( "MWUnitGetAssertionClasses", [ &$classes ] );
+	    try {
+			\Hooks::run( "MWUnitGetAssertionClasses", [ &self::$classes ] );
 		} catch ( \Exception $e ) {
 			MWUnit::getLogger()->error( "MWUnitGetAssertionClasses hook failed: {failure}", [
 				'failure' => $e->getMessage()
 			] );
 		}
 
-		return $classes;
+		return self::$classes;
 	}
 
 	/**
@@ -95,9 +109,7 @@ class AssertionFactory extends ParserFunctionFactory {
 	 */
 	public function registerFunctionHandlers() {
 		$classes = self::getAssertionClasses();
-		$register_assertions = array_filter( $classes, function ( $class ): bool {
-			return $class::shouldRegister();
-		} );
+		$register_assertions = self::filterEnabledAssertions( $classes );
 
 		foreach ( $register_assertions as $class ) {
 			$this->registerAssertionClass( $class );
@@ -109,7 +121,7 @@ class AssertionFactory extends ParserFunctionFactory {
 	 *
 	 * @param string $assertion The assertion class name
 	 */
-	private function registerAssertionClass( $assertion ) {
+	public function registerAssertionClass( string $assertion ) {
 		MWUnit::getLogger()->notice( "Registering assertion {assertion}", [
 			"assertion" => $assertion::getName()
 		] );
@@ -129,7 +141,7 @@ class AssertionFactory extends ParserFunctionFactory {
 	 * @param string $assertion
 	 * @return array
 	 */
-	private function getAssertionFunctionDefinition( string $assertion ) {
+    public function getAssertionFunctionDefinition( string $assertion ) {
 		$definition = function ( Parser $parser, PPFrame $frame, $args ) use ( $assertion ) {
 			if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
 				return MWUnit::error( "mwunit-outside-test-namespace" );

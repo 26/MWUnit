@@ -3,15 +3,18 @@
 namespace MWUnit\Runner;
 
 use Hooks;
-use MediaWiki\MediaWikiServices;
 use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\ParserFunction\ParserMockParserFunction;
+use MWUnit\Profiler;
 use MWUnit\Runner\Result\TestResult;
 use MWUnit\TemplateMockStore;
+use MWUnit\TemplateMockStoreInjector;
 use MWUnit\TestCase;
 use Parser;
+use ParserOptions;
 use RequestContext;
+use Title;
 use User;
 
 /**
@@ -23,8 +26,13 @@ use User;
  *
  * @package MWUnit
  */
-class BaseTestRunner {
-	/**
+class BaseTestRunner implements TemplateMockStoreInjector {
+    /**
+     * @var TemplateMockStore
+     */
+    private static $template_mock_store;
+
+    /**
 	 * @var TestCase The test case
 	 */
 	private $test_case;
@@ -37,12 +45,7 @@ class BaseTestRunner {
 	/**
 	 * @var User
 	 */
-	private $user;
-
-	/**
-	 * @var TestRun|false The test run
-	 */
-	private $test_run = false;
+	private $user_serialized;
 
     /**
      * @var Parser
@@ -50,14 +53,33 @@ class BaseTestRunner {
     private $parser;
 
     /**
+     * @var TestRun|false The test run
+     */
+    private $test_run = false;
+
+    /**
+     * @var RequestContext
+     */
+    private $request_context;
+
+    /**
+     * @inheritDoc
+     */
+    public static function setTemplateMockStore( TemplateMockStore $store ) {
+        self::$template_mock_store = $store;
+    }
+
+    /**
      * TestCaseRunner constructor.
      *
      * @param TestCase $test_case
      * @param Parser $parser
+     * @param RequestContext $request_context
      */
-	public function __construct( TestCase $test_case, Parser $parser ) {
+	public function __construct( TestCase $test_case, Parser $parser, RequestContext $request_context) {
 		$this->test_case = $test_case;
         $this->parser = $parser;
+        $this->request_context = $request_context;
 
         $test_run = new TestRun( $test_case );
 
@@ -107,7 +129,7 @@ class BaseTestRunner {
 	/**
 	 * Executes the TestRun object in this class.
 	 */
-	private function runTest() {
+	public function runTest() {
 		$this->backupUser();
 		$this->backupGlobals();
 
@@ -118,7 +140,7 @@ class BaseTestRunner {
         }
 
 		try {
-			$this->test_run->runTest( $this->parser, $context );
+			$this->test_run->runTest( $this->parser, ParserOptions::newCanonical( $context ), Profiler::getInstance() );
 		} finally {
 		    $this->restore();
 		}
@@ -136,7 +158,7 @@ class BaseTestRunner {
      * Run's the test class's teardown method, resets the parser and restores changed global
      * state.
      */
-	private function restore() {
+	public function restore() {
         try {
             $this->restoreGlobals();
         } catch ( MWUnitException $e ) {
@@ -154,7 +176,7 @@ class BaseTestRunner {
             );
         }
 
-        TemplateMockStore::getInstance()->reset();
+        self::$template_mock_store->reset();
 
         try {
             ParserMockParserFunction::restoreAndReset();
@@ -169,16 +191,18 @@ class BaseTestRunner {
 	 * @param string &$message
 	 * @return bool
 	 */
-	private function shouldSkipTest(&$message ): bool {
+	public function shouldSkipTest( &$message ): bool {
 		if ( $this->doSkipAnnotationCheck( $message ) ) {
 			return true;
 		}
 
-		if ( $this->doMissingRequiresCheck( $message ) ) {
+		if ( $this->doMissingRequiresCheck( $message, \ExtensionRegistry::getInstance() ) ) {
 			return true;
 		}
 
-		if ( $this->doInvalidCoversCheck( $message ) ) {
+        $title = \Title::newFromText( $this->test_case->getCovers(), NS_TEMPLATE );
+
+        if ( $this->doInvalidCoversCheck( $message, $title ) ) {
 			return true;
 		}
 
@@ -201,7 +225,7 @@ class BaseTestRunner {
      * @param string|null $message The "risky" message if the test was deemed risky, null otherwise
      * @return bool
      */
-	private function shouldMarkRisky( &$message ): bool {
+	public function shouldMarkRisky( &$message ): bool {
         if ( $this->doAssertionCheck( $message ) ) {
             return true;
         }
@@ -223,14 +247,15 @@ class BaseTestRunner {
         return $skip;
     }
 
-	/**
-	 * Checks if all extensions required through the "requires" annotation are loaded. Returns
-	 * true if one or more extensions are NOT loaded, false otherwise.
-	 *
-	 * @param string &$message
-	 * @return bool
-	 */
-	private function doMissingRequiresCheck( &$message ): bool {
+    /**
+     * Checks if all extensions required through the "requires" annotation are loaded. Returns
+     * true if one or more extensions are NOT loaded, false otherwise.
+     *
+     * @param string &$message
+     * @param \ExtensionRegistry $extension_registry
+     * @return bool
+     */
+	public function doMissingRequiresCheck( &$message, \ExtensionRegistry $extension_registry ): bool {
 		$requires = $this->test_case->getAttribute( "requires" );
 
 		if ( $requires === false ) {
@@ -248,11 +273,9 @@ class BaseTestRunner {
 			return !empty( $item );
 		} );
 
-		$er = \ExtensionRegistry::getInstance();
-
 		// Filter out all installed extensions
-		$missing_extensions = array_filter( $required_extensions, function ( string $item ) use ( $er ): bool {
-			return !$er->isLoaded( $item );
+		$missing_extensions = array_filter( $required_extensions, function ( string $item ) use ( $extension_registry ): bool {
+			return !$extension_registry->isLoaded( $item );
 		} );
 
 		$num_missing_extensions = count( $missing_extensions );
@@ -277,7 +300,7 @@ class BaseTestRunner {
 	 * @param &$message
 	 * @return bool
 	 */
-	private function doSkipAnnotationCheck( &$message ): bool {
+	public function doSkipAnnotationCheck( &$message ): bool {
 		$skip = $this->test_case->getAttribute( "skip" );
 
 		if ( $skip === false ) {
@@ -289,20 +312,19 @@ class BaseTestRunner {
 		return true;
 	}
 
-	/**
-	 * Checks if the test should be skipped because of an invalid "@covers" annotation. Returns true if
-	 * and only if the test should be skipped.
-	 *
-	 * @param &$message
-	 * @return bool
-	 */
-	private function doInvalidCoversCheck( &$message ): bool {
+    /**
+     * Checks if the test should be skipped because of an invalid "@covers" annotation. Returns true if
+     * and only if the test should be skipped.
+     *
+     * @param string &$message Message that will be set iff the covers check fails
+     * @param Title $title The Title object to check for validity
+     * @return bool
+     */
+    public function doInvalidCoversCheck( &$message, Title $title ): bool {
 		if ( !$this->test_case->getCovers() ) {
 			// This test case does not have a "covers" annotation
 			return false;
 		}
-
-		$title = \Title::newFromText( $this->test_case->getCovers(), NS_TEMPLATE );
 
 		if ( !$title instanceof \Title || !$title->exists() ) {
 			$message = wfMessage( "mwunit-invalid-covers-annotation" )->plain();
@@ -319,17 +341,17 @@ class BaseTestRunner {
      * @param string|null $message The "risky" message if the test was deemed risky, null otherwise
      * @return bool
      */
-	private function doCoversCheck( &$message ): bool {
+	public function doCoversCheck( &$message ): bool {
 		if ( !$this->test_case->getCovers() ) {
 			// This test case does not have a "covers" annotation
 			return false;
 		}
 
-		try {
-			$strict_coverage = MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitStrictCoverage' );
-		} catch ( \Exception $e ) {
-			$strict_coverage = false;
-		}
+        try {
+            $strict_coverage = $this->request_context->getConfig()->get( 'MWUnitStrictCoverage' );
+        } catch ( \Exception $e ) {
+            $strict_coverage = false;
+        }
 
 		if ( !$strict_coverage ) {
 			// Strict coverage is not enforced
@@ -354,7 +376,7 @@ class BaseTestRunner {
 	 * Backs up globals.
 	 */
 	private function backupGlobals() {
-		$option = MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
+		$option = $this->request_context->getConfig()->get( 'MWUnitBackupGlobals' );
 
 		if ( $option ) {
 			MWUnit::getLogger()->debug( "Backing up globals" );
@@ -377,7 +399,7 @@ class BaseTestRunner {
 	 */
 	private function restoreGlobals() {
 		try {
-			$option = MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitBackupGlobals' );
+			$option = $this->request_context->getConfig()->get( 'MWUnitBackupGlobals' );
 		} catch ( \ConfigException $e ) {
 			$option = true;
 		}
@@ -407,14 +429,14 @@ class BaseTestRunner {
 	 */
 	private function backupUser() {
 		// We serialize the user to dereference (deep clone) it
-		$this->user = serialize( RequestContext::getMain()->getUser() );
+		$this->user_serialized = serialize( $this->request_context->getUser() );
 	}
 
 	/**
 	 * Deserializes the backed up User object and restores the User object globally.
 	 */
 	private function restoreUser() {
-		$this->setUser( unserialize( $this->user ) );
+		$this->setUser( unserialize( $this->user_serialized ) );
 	}
 
 	/**
@@ -424,7 +446,7 @@ class BaseTestRunner {
 	 * @param User $user
 	 */
 	private function setUser( User $user ) {
-		RequestContext::getMain()->setUser( $user );
+		$this->request_context->setUser( $user );
 		$this->parser->setUser( $user );
 
 		// For extensions still using the old $wgUser variable
@@ -432,25 +454,25 @@ class BaseTestRunner {
 		$wgUser = $user;
 	}
 
-	/**
-	 * Returns true if and only if the current logged in user is allowed to mock other
-	 * users while running a test.
-	 *
-	 * @return bool
-	 */
+    /**
+     * Returns true if and only if the current user is allowed to mock other
+     * users while running a test.
+     *
+     * @return bool
+     */
 	private function canMockUsers(): bool {
-		try {
-			$mocking_allowed = MediaWikiServices::getInstance()->getMainConfig()->get( 'MWUnitAllowRunningTestAsOtherUser' );
-		} catch ( \ConfigException $e ) {
-			$mocking_allowed = false;
-		}
+        try {
+            $mocking_allowed = $this->request_context->getConfig()->get( 'MWUnitAllowRunningTestAsOtherUser' );
+        } catch ( \ConfigException $e ) {
+            $mocking_allowed = false;
+        }
 
 		if ( !$mocking_allowed ) {
 			// Mocking users is disabled
 			return false;
 		}
 
-		return in_array( 'mwunit-mock-user', RequestContext::getMain()->getUser()->getRights() );
+		return in_array( 'mwunit-mock-user', $this->request_context->getUser()->getRights() );
 	}
 
 	/**
@@ -458,7 +480,7 @@ class BaseTestRunner {
 	 *
 	 * @return string|User|false|null
 	 */
-	private function getContext() {
+	public function getContext() {
 		$context_option = $this->test_case->getAttribute( 'context' );
 		$user_option    = $this->test_case->getAttribute( 'user' );
 
@@ -470,7 +492,7 @@ class BaseTestRunner {
 				return version_compare( $wgVersion, '1.32', '<' ) ? null : 'canonical';
 			case 'user':
 				if ( !$user_option ) {
-					return RequestContext::getMain()->getUser();
+					return $this->request_context->getUser();
 				}
 
 				if ( !$this->canMockUsers() ) {
@@ -506,7 +528,7 @@ class BaseTestRunner {
      * @param string|null $message The "risky" message if the test was deemed risky, null otherwise
      * @return bool
      */
-	private function doAssertionCheck( &$message ) {
+	public function doAssertionCheck( &$message ) {
 		$test_result = $this->test_run->getResult();
 
 		if ( $test_result->getResultConstant() === TestResult::T_RISKY ) {

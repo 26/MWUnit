@@ -2,17 +2,26 @@
 
 namespace MWUnit\ParserFunction;
 
-use MWUnit\Exception\MWUnitException;
 use MWUnit\ParserData;
 use MWUnit\Runner\TestRun;
 use MWUnit\TestRunInjector;
 
+/**
+ * Class VarDumpParserFunction
+ *
+ * The class for the "var_dump" ParserFunction.
+ *
+ * @package MWUnit\ParserFunction
+ */
 class VarDumpParserFunction implements ParserFunction, TestRunInjector {
 	/**
 	 * @var TestRun
 	 */
 	private static $run;
 
+    /**
+     * @inheritDoc
+     */
 	public static function setTestRun( TestRun $run ) {
 		self::$run = $run;
 	}
@@ -22,49 +31,41 @@ class VarDumpParserFunction implements ParserFunction, TestRunInjector {
 	 *
 	 * @param ParserData $data
 	 * @return string
-	 * @throws MWUnitException
-	 */
+     */
 	public function execute( ParserData $data ) {
-		if ( !self::$run ) {
-			return '';
+		if ( self::$run ) {
+            $value = $data->getArgument( 0 );
+            $formatted_value = $this->formatDump( $value );
+
+            self::$run->test_outputs[] = $formatted_value;
 		}
-
-		$value = $data->getArgument( 0 );
-		$formatted_value = $this->formatDump( $value );
-
-		self::$run->test_outputs[] = $formatted_value;
 
 		return '';
 	}
 
+    /**
+     * Formats the given variable into a "var_dump" format.
+     *
+     * @param string $variable
+     * @return string
+     */
 	public function formatDump( string $variable ): string {
-		$type = $this->determineVariableType( $variable );
+	    if ( empty( $variable ) ) {
+	        return "NULL";
+        }
 
-		switch ( $type ) {
-			case "empty":
-				return "NULL";
-			case "int":
-			case "float":
-				return sprintf( '%s(%d)', $type, $variable );
-			default:
-				$length = strlen( $variable );
-				return sprintf( '%s(%d) "%s"', $type, $length, $variable );
-		}
-	}
+	    if ( ctype_digit( $variable ) ) {
+	        return sprintf( "int(%d)", $variable );
+        }
 
-	public function determineVariableType( string $variable ): string {
-		if ( empty( $variable ) ) {
-			return "empty";
-		}
+	    if ( is_numeric( $variable ) ) {
+	        return sprintf( "float(%s)", $variable );
+        }
 
-		if ( ctype_digit( $variable ) ) {
-			return "int";
-		}
+	    if ( preg_match( "/^\d+(,)\d+$/", $variable ) ) {
+	        return sprintf( "float(%s)", (float)str_replace( ",", ".", $variable ) );
+        }
 
-		if ( is_numeric( $variable ) ) {
-			return "float";
-		}
-
-		return "string";
+	    return sprintf( "string(%d) \"%s\"", strlen( $variable ), $variable );
 	}
 }

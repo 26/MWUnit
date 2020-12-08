@@ -79,9 +79,9 @@ class TestRun {
 	public static function onParserFetchTemplate(
 		$parser,
 		Title $title,
-		Revision $revision,
+        $revision,
 		&$text,
-		array &$deps
+        &$deps
 	) {
 		self::$templates_used[] = strtolower( $title->getText() );
 	}
@@ -217,16 +217,15 @@ class TestRun {
 		return $this->execution_time;
 	}
 
-	/**
-	 * Runs the test case. A Result object is guaranteed to be available if this function
-	 * finished successfully.
-	 *
-	 * @param Parser $parser
-	 * @param string|User|null $context The context in which to run the test case.
-	 */
-	public function runTest( Parser $parser, $context ) {
-		$profiler = Profiler::getInstance();
-
+    /**
+     * Runs the test case. A Result object is guaranteed to be available if this function
+     * finished successfully.
+     *
+     * @param Parser $parser The parser to use for running the tests
+     * @param ParserOptions $options The parser options which which to initialize the parsing
+     * @param Profiler $profiler
+     */
+	public function runTest( Parser $parser, ParserOptions $options, Profiler $profiler ) {
 		try {
 			// Avoid PHP 7.1 warning when passing $this as reference
 			$test_run = $this;
@@ -249,7 +248,7 @@ class TestRun {
 			$parser->parse(
 				$this->test_case->getContent(),
 				$this->test_case->getTestPage(),
-				ParserOptions::newCanonical( $context ),
+				$options,
 				true,
 				false
 			);

@@ -78,11 +78,11 @@ class TestSuiteRunner {
 	/**
 	 * Runs all tests in the group specified in the constructor.
 	 *
-	 * @throws MWUnitException|MWException
+	 * @throws MWException
      */
 	public function run() {
 		try {
-			if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [ &$pages ] ) ) {
+			if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [] ) ) {
 				return;
 			}
 		} catch ( \Exception $e ) {
@@ -92,9 +92,7 @@ class TestSuiteRunner {
 			);
 		}
 
-		foreach ( $this->test_suite as $test_class ) {
-			$this->runTestClass( $test_class );
-		}
+		$this->runTestClasses();
 
 		try {
 			\Hooks::run( 'MWUnitAfterTests', [ &$this->test_run_store ] );
@@ -161,16 +159,27 @@ class TestSuiteRunner {
 	}
 
     /**
+     * Runs all the test classes in this test suite.
+     *
+     * @throws MWException
+     */
+    public function runTestClasses() {
+        foreach ( $this->test_suite as $test_class ) {
+            $this->runTestClass( $test_class );
+        }
+    }
+
+    /**
      * Runs the given test class.
      *
      * @param TestClass $test_class
      * @throws MWException
      */
 	private function runTestClass( TestClass $test_class ) {
-	    $runner = new TestClassRunner( $test_class, $this->test_run_store );
+	    $runner = new TestClassRunner( $test_class, $this->test_run_store, $this->callback );
 	    $runner->run();
 
 	    $this->total_assertions_count += $runner->getAssertionCount();
-	    $this->test_count += $runner->getRunTestCount();
+	    $this->test_count             += $runner->getRunTestCount();
 	}
 }
