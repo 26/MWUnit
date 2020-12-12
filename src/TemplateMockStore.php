@@ -4,6 +4,7 @@ namespace MWUnit;
 
 use MWUnit\Exception\MWUnitException;
 use MWUnit\ParserFunction\TemplateMockParserFunction;
+use MWUnit\Runner\BaseTestRunner;
 use Title;
 
 class TemplateMockStore {
@@ -27,6 +28,7 @@ class TemplateMockStore {
      */
 	private function __construct() {
 	    TemplateMockParserFunction::setTemplateMockStore( $this );
+	    BaseTestRunner::setTemplateMockStore( $this );
 	}
 
 	/**

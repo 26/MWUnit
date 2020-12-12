@@ -63,6 +63,11 @@ class BaseTestRunner implements TemplateMockStoreInjector {
     private $request_context;
 
     /**
+     * @var Profiler
+     */
+    private $profiler;
+
+    /**
      * @inheritDoc
      */
     public static function setTemplateMockStore( TemplateMockStore $store ) {
@@ -75,8 +80,9 @@ class BaseTestRunner implements TemplateMockStoreInjector {
      * @param TestCase $test_case
      * @param Parser $parser
      * @param RequestContext $request_context
+     * @param Profiler|null $profiler Optional profiler class for profiling test runs
      */
-	public function __construct( TestCase $test_case, Parser $parser, RequestContext $request_context) {
+	public function __construct( TestCase $test_case, Parser $parser, RequestContext $request_context, Profiler $profiler = null ) {
 		$this->test_case = $test_case;
         $this->parser = $parser;
         $this->request_context = $request_context;
@@ -92,13 +98,13 @@ class BaseTestRunner implements TemplateMockStoreInjector {
         }
 
         $this->test_run = $test_run;
+        $this->profiler = Profiler::getInstance() ?? $profiler;
 	}
 
 	/**
-	 * Returns the TestRun object gained from running the TestCase, or false if
-	 * the TestCase was not run (yet).
+	 * Returns the TestRun object gained from running the TestCase.
 	 *
-	 * @return TestRun|false
+	 * @return TestRun
 	 */
 	public function getRun() {
 		return $this->test_run;
@@ -126,9 +132,9 @@ class BaseTestRunner implements TemplateMockStoreInjector {
         }
 	}
 
-	/**
-	 * Executes the TestRun object in this class.
-	 */
+    /**
+     * Executes the TestRun object in this class.
+     */
 	public function runTest() {
 		$this->backupUser();
 		$this->backupGlobals();
@@ -140,7 +146,7 @@ class BaseTestRunner implements TemplateMockStoreInjector {
         }
 
 		try {
-			$this->test_run->runTest( $this->parser, ParserOptions::newCanonical( $context ), Profiler::getInstance() );
+			$this->test_run->runTest( $this->parser, ParserOptions::newCanonical( $context ), $this->profiler );
 		} finally {
 		    $this->restore();
 		}
@@ -317,10 +323,10 @@ class BaseTestRunner implements TemplateMockStoreInjector {
      * and only if the test should be skipped.
      *
      * @param string &$message Message that will be set iff the covers check fails
-     * @param Title $title The Title object to check for validity
+     * @param Title|null $title The Title object to check for validity
      * @return bool
      */
-    public function doInvalidCoversCheck( &$message, Title $title ): bool {
+    public function doInvalidCoversCheck( &$message, $title ): bool {
 		if ( !$this->test_case->getCovers() ) {
 			// This test case does not have a "covers" annotation
 			return false;
@@ -363,7 +369,9 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 			return false;
 		}
 
-		if ( in_array( strtolower( $this->test_case->getCovers() ), $this->test_run->getUsedTemplates() ) ) {
+		$covers = strtolower( $this->test_case->getCovers() );
+
+		if ( in_array( $covers, $this->test_run->getUsedTemplates() ) ) {
 		    return false;
         }
 
@@ -497,6 +505,7 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 
 				if ( !$this->canMockUsers() ) {
 					$this->test_run->setSkipped( wfMessage( 'mwunit-missing-permissions-mock-user' )->parse() );
+
 					return false;
 				}
 
@@ -504,6 +513,7 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 
 				if ( !$mock_user instanceof User || $mock_user->isAnon() ) {
 					$this->test_run->setSkipped( wfMessage( 'mwunit-invalid-user' )->parse() );
+
 					return false;
 				}
 
@@ -517,6 +527,7 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 				] );
 
 				$this->test_run->setSkipped( wfMessage( 'mwunit-invalid-context' )->parse() );
+
 				return false;
 		}
 	}

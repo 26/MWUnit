@@ -41,13 +41,6 @@ class TestRun {
 	public $test_outputs = [];
 
 	/**
-	 * The name of the template that this test case covers, or false if it does not cover a template.
-	 *
-	 * @var bool|string
-	 */
-	private $covered;
-
-	/**
 	 * @var int Number of assertions used in this test run.
 	 */
 	private $assertion_count = 0;
@@ -55,7 +48,7 @@ class TestRun {
 	/**
 	 * @var TestResult The result of this test run.
 	 */
-	private $result;
+	private $result = null;
 
 	/**
 	 * @var TestCase
@@ -176,9 +169,14 @@ class TestRun {
 	 * Returns the result of this test run.
 	 *
 	 * @return TestResult
+     * @throws \LogicException If the function is called before a result is available
 	 */
 	public function getResult(): TestResult {
-		return $this->result;
+        if ( !isset( $this->result ) || $this->result === null ) {
+            throw new \LogicException( __METHOD__ . " called before the initialization of result" );
+        }
+
+	    return $this->result;
 	}
 
 	/**
@@ -223,9 +221,9 @@ class TestRun {
      *
      * @param Parser $parser The parser to use for running the tests
      * @param ParserOptions $options The parser options which which to initialize the parsing
-     * @param Profiler $profiler
+     * @param Profiler|null $profiler Optional profiler to profile this test class
      */
-	public function runTest( Parser $parser, ParserOptions $options, Profiler $profiler ) {
+	public function runTest( Parser $parser, ParserOptions $options, Profiler $profiler = null ) {
 		try {
 			// Avoid PHP 7.1 warning when passing $this as reference
 			$test_run = $this;
@@ -244,7 +242,10 @@ class TestRun {
 		}
 
 		try {
-			$profiler->flag();
+		    if ( isset( $profiler ) ) {
+                $profiler->flag();
+            }
+
 			$parser->parse(
 				$this->test_case->getContent(),
 				$this->test_case->getTestPage(),
@@ -257,8 +258,10 @@ class TestRun {
                 $this->setSuccess();
             }
 
-			$profiler->flag();
-			$this->execution_time = $profiler->getFlagExecutionTime();
+            if ( isset( $profiler ) ) {
+                $profiler->flag();
+                $this->execution_time = $profiler->getFlagExecutionTime();
+            }
 		}
 	}
 

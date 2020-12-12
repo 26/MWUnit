@@ -27,7 +27,6 @@ class TestSuite implements Iterator, Countable {
 	/**
 	 * @param string $group
 	 * @return TestSuite
-	 * @throws MWUnitException
 	 */
 	public static function newFromGroup( string $group ): TestSuite {
 		$dbr = wfGetDB( DB_REPLICA );
@@ -44,7 +43,11 @@ class TestSuite implements Iterator, Countable {
 			return self::newEmpty();
 		}
 
-		return self::newFromDb( $db_result );
+		try {
+            return self::newFromDb( $db_result );
+        } catch ( MWUnitException $e ) {
+		    return self::newEmpty();
+        }
 	}
 
 	/**

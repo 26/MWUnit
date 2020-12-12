@@ -32,7 +32,7 @@ class TestCase {
 	private $content;
 
 	/**
-	 * @var Title|null
+	 * @var string|null
 	 */
 	private $covers;
 
@@ -97,7 +97,7 @@ class TestCase {
 	 * @param Title $test_page
 	 * @param array $attributes
 	 * @param string $content
-	 * @param Title|null $covers
+	 * @param string|null $covers
 	 */
 	public function __construct( string $name, string $group, Title $test_page, array $attributes, string $content, $covers = null ) {
 		$this->name = $name;
@@ -154,7 +154,7 @@ class TestCase {
 	}
 
 	/**
-	 * @return Title|null
+	 * @return string|null
 	 */
 	public function getCovers() {
 		return $this->covers;

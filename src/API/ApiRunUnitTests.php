@@ -9,22 +9,18 @@ use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestSuite;
 
 class ApiRunUnitTests extends \ApiBase {
-	/**
-	 * @inheritDoc
-	 * @throws ApiUsageException
-	 * @throws MWUnitException
-	 */
+    /**
+     * @inheritDoc
+     * @throws ApiUsageException
+     * @throws \MWException
+     */
 	public function execute() {
 		$this->checkUserRightsAny( 'mwunit-runtests' );
 
 		$test_suite = $this->getTestSuite();
 		$runner = TestSuiteRunner::newFromTestSuite( $test_suite );
 
-		try {
-			$runner->run();
-		} catch ( MWUnitException $e ) {
-			$this->dieWithException( $e );
-		}
+		$runner->run();
 
 		$test_run_store = $runner->getTestRunStore();
 		$api_result     = $this->getResult();
@@ -32,7 +28,8 @@ class ApiRunUnitTests extends \ApiBase {
 		foreach ( $test_run_store->getAll() as $idx => $test_run ) {
 			$id = $test_run->getTestCase()->getCanonicalName();
 
-			$result     = $test_run->getResult();
+			$result = $test_run->getResult();
+
 			$output     = $test_run->getTestOutputs();
 			$test_case  = $test_run->getTestCase();
 			$covered    = $test_run->getTestCase()->getCovers();
@@ -87,7 +84,6 @@ class ApiRunUnitTests extends \ApiBase {
 	 * Returns the appropriate TestSuite based on the API request.
 	 *
 	 * @return TestSuite
-	 * @throws MWUnitException|ApiUsageException
 	 */
 	private function getTestSuite(): TestSuite {
 		// Require at most AND at least one of the following parameters

@@ -10,6 +10,8 @@ use MWUnit\TestCase;
 use MWUnit\TestClass;
 use MWUnit\TestRunStore;
 use Parser;
+use RequestContext;
+use WikiPage;
 
 class TestClassRunner {
     /**
@@ -53,11 +55,15 @@ class TestClassRunner {
     private $callback;
 
     /**
+     * @var RequestContext
+     */
+    private $request_content;
+
+    /**
      * Creates a new TestClassRunner from the given TestClass object.
      *
      * @param TestClass $test_class
      * @return TestClassRunner
-     * @throws MWException
      */
     public static function newFromTestClass( TestClass $test_class ): TestClassRunner {
         return new self( $test_class, new TestRunStore() );
@@ -66,24 +72,30 @@ class TestClassRunner {
     /**
      * TestClassRunner constructor.
      *
-     * @param TestClass $test_class
-     * @param TestRunStore $test_run_store
-     * @param callable|null $callback
-     *
-     * @throws MWException
+     * @param TestClass $test_class The TestClass object to run
+     * @param TestRunStore $test_run_store The TestRunStore object to add the results to
+     * @param callable|null $callback An optional callback to call after each TestRun
+     * @param Parser|null $parser Optionally the parser to use for parsing, otherwise the parser service will be used
+     * @param RequestContext|null $request_content Optionally the request context to use
      */
-    public function __construct( TestClass $test_class, TestRunStore $test_run_store, callable $callback = null ) {
+    public function __construct( TestClass $test_class, TestRunStore $test_run_store, callable $callback = null, Parser $parser = null, RequestContext $request_content = null ) {
         $this->test_class = $test_class;
 
         $title = $test_class->getTitle();
-        $wikipage = \WikiPage::factory( $title );
+        $wikipage = new WikiPage( $title );
         $parser_options = $wikipage->makeParserOptions( "canonical" );
 
-        $parser = MediaWikiServices::getInstance()->getParser();
-        $parser->setTitle( $title );
-        $parser->mOptions = $parser_options;
-        $parser->setOutputType( Parser::OT_HTML );
-        $parser->clearState();
+        if ( !isset( $parser ) ) {
+            $parser = MediaWikiServices::getInstance()->getParser();
+            $parser->setTitle( $title );
+            $parser->mOptions = $parser_options;
+            $parser->setOutputType( Parser::OT_HTML );
+            $parser->clearState();
+        }
+
+        if ( !isset( $request_content ) ) {
+            $this->request_content = RequestContext::getMain();
+        }
 
         $this->parser = $parser;
         $this->parser_options = $parser_options;
@@ -103,7 +115,7 @@ class TestClassRunner {
         foreach ( $test_cases as $test_case ) {
             $this->runSetUp();
 
-            // Clear the parser's magic word cache (so we can override it later)
+            // Clear the parser's magic word cache (so we can override magic words)
             $this->parser->mVarCache = [];
 
             $this->runTestCase( $test_case );
@@ -162,7 +174,7 @@ class TestClassRunner {
             return;
         }
 
-        $runner = new BaseTestRunner( $test_case, $this->parser, \RequestContext::getMain() );
+        $runner = new BaseTestRunner( $test_case, $this->parser, $this->request_content );
         $runner->run();
 
         $run = $runner->getRun();

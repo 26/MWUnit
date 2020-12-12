@@ -58,7 +58,7 @@ class TemplateMockParserFunctionTest extends \MediaWikiTestCase {
 
         $store = $this->template_mock_store_mock;
 
-        // Set the store such that page names are ignored (i.e. all pages exist and have the content "foo")
+        // Set the store such that page names are ignored (all pages are mocked and have the content "foo")
         $store->method( "exists" )->willReturn( true );
         $store->method( "get" )->willReturn( "foo" );
 
@@ -113,6 +113,36 @@ class TemplateMockParserFunctionTest extends \MediaWikiTestCase {
     }
 
     public function testRiskyWhenCoverMocked() {
+        $store = $this->template_mock_store_mock;
 
+        // Set the store such that page names are ignored (all pages are mocked and have the content "foo")
+        $store->method( "exists" )->willReturn( true );
+        $store->method( "get" )->willReturn( "foo" );
+
+        // Create the Title object for page "Test:Foobar"
+        $title_mock = $this->title_mock;
+        $title_mock->method( "getText" )->willReturn( "Foobar" );
+        $title_mock->method( "getNamespace" )->willReturn( NS_TEMPLATE );
+
+        // Set "Test:Foobar" as the covers for the TestCase
+        $test_case_mock = $this->createMock( TestCase::class );
+        $test_case_mock->method( "getCovers" )->willReturn( "Foobar" );
+
+        // Inject our "TestCase" in the TestRun mock
+        $test_run_mock = $this->test_run_mock;
+        $test_run_mock->method( "getTestCase" )->willReturn( $test_case_mock );
+
+        // Assert the "setRisky" method is called at least once (since its cover gets mocked, it must be marked risky)
+        $test_run_mock->expects($this->once())->method( "setRisky" );
+
+        $text = null;
+        $deps = [];
+
+        // Inject our mocks
+        TemplateMockParserFunction::setTemplateMockStore( $store );
+        TemplateMockParserFunction::setTestRun( $test_run_mock );
+
+        // Simulate "onParserFetchTemplate"
+        TemplateMockParserFunction::onParserFetchTemplate( $this->parser_mock, $title_mock, $this->revision_mock, $text, $deps );
     }
 }

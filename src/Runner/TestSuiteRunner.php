@@ -3,17 +3,10 @@
 namespace MWUnit\Runner;
 
 use Exception;
-use MediaWiki\MediaWikiServices;
-use MWException;
-use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
-use MWUnit\ParserFunction\ParserMockParserFunction;
-use MWUnit\TemplateMockStore;
 use MWUnit\TestClass;
 use MWUnit\TestRunStore;
 use MWUnit\TestSuite;
-use Title;
-use WikiPage;
 
 /**
  * Class TestSuiteRunner
@@ -77,8 +70,6 @@ class TestSuiteRunner {
 
 	/**
 	 * Runs all tests in the group specified in the constructor.
-	 *
-	 * @throws MWException
      */
 	public function run() {
 		try {
@@ -160,8 +151,6 @@ class TestSuiteRunner {
 
     /**
      * Runs all the test classes in this test suite.
-     *
-     * @throws MWException
      */
     public function runTestClasses() {
         foreach ( $this->test_suite as $test_class ) {
@@ -173,7 +162,6 @@ class TestSuiteRunner {
      * Runs the given test class.
      *
      * @param TestClass $test_class
-     * @throws MWException
      */
 	private function runTestClass( TestClass $test_class ) {
 	    $runner = new TestClassRunner( $test_class, $this->test_run_store, $this->callback );

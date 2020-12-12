@@ -61,7 +61,7 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector, Tem
 		array &$deps
 	) {
 		if ( !self::$template_mock_store->exists( $title ) ) {
-			return;
+		    return;
 		}
 
 		if ( !self::$run ) {
