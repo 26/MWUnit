@@ -114,8 +114,11 @@ class TestClassRunner {
 		foreach ( $test_cases as $test_case ) {
 			$this->runSetUp();
 
-			// Clear the parser's magic word cache (so we can override magic words)
-			$this->parser->mVarCache = [];
+			if ( version_compare( $GLOBALS["wgVersion"], "1.35.0" ) < 0 ) {
+				// Clear the parser's magic word cache (so we can override magic words)
+				// In MediaWiki 1.35, the mVarCache class attribute is private :(
+				$this->parser->mVarCache = [];
+			}
 
 			$this->runTestCase( $test_case );
 			$this->runTearDown();

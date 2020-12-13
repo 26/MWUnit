@@ -9,6 +9,7 @@ use MediaWiki\Logger\LoggerFactory;
 use MWException;
 use MWUnit\Exception\InvalidTestPageException;
 use MWUnit\Factory\ParserFunctionFactory;
+use MWUnit\Runner\TestSuiteRunner;
 use Parser;
 use Psr\Log\LoggerInterface;
 use Revision;
@@ -303,7 +304,6 @@ abstract class MWUnit {
 		self::deregisterTestsOnPage( $article_id );
 
 		try {
-			$content = $wikiPage->getContent( Revision::FOR_THIS_USER );
 			$wikitext = $wikiPage->getContentHandler()->serializeContent( $content );
 
 			$test_class = TestClass::newFromWikitext( $wikitext, $wikiPage->getTitle() );
@@ -390,5 +390,22 @@ abstract class MWUnit {
 			'mwunit_content',
 			[ 'article_id' => $article_id ]
 		);
+	}
+
+	/**
+	 * Use this to change the value of the variable cache or return false to not use it.
+	 *
+	 * @param Parser $parser
+	 * @param array $varCache
+	 * @return bool
+	 */
+	public static function onParserGetVariableValueVarCache( Parser $parser, array $varCache ) {
+		if ( TestSuiteRunner::$running === true ) {
+			// Do not use mVarCache when running test cases.
+			// TODO: Find a way to clear the var cache from the BaseTestRunner instead of through this hook
+			return false;
+		}
+
+		return true;
 	}
 }
