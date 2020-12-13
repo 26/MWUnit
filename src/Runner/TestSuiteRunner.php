@@ -19,6 +19,11 @@ use MWUnit\TestSuite;
  */
 class TestSuiteRunner {
 	/**
+	 * @var bool
+	 */
+	public static $running = false;
+
+	/**
 	 * @var int The total number of assertions for the current run.
 	 */
 	private $total_assertions_count = 0;
@@ -66,6 +71,8 @@ class TestSuiteRunner {
 		$this->test_suite       = $test_suite;
 		$this->test_run_store   = $test_run_store;
 		$this->callback         = $callback;
+
+		self::$running = true;
 	}
 
 	/**

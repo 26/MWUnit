@@ -61,7 +61,6 @@ class SpecialUnitTests extends \SpecialPage {
 
 	/**
 	 * @param TestSuite $suite
-	 * @throws MWUnitException
 	 */
 	private function runTests( TestSuite $suite ) {
 		$runner = TestSuiteRunner::newFromTestSuite( $suite );

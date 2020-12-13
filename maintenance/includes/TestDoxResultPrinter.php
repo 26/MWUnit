@@ -43,10 +43,10 @@ class TestDoxResultPrinter implements CommandLineResultPrinter {
 				print( "  \e[0;33m✘\e[0m " . $sentence . "\n" );
 				$this->printFailureReason( $result->getMessage() );
 				break;
-            case TestResult::T_SKIPPED:
-                print( "  \e[0;37m✘\e[0m " . $sentence . "\n" );
-                $this->printFailureReason( $result->getMessage() );
-                break;
+			case TestResult::T_SKIPPED:
+				print( "  \e[0;37m✘\e[0m " . $sentence . "\n" );
+				$this->printFailureReason( $result->getMessage() );
+				break;
 			case TestResult::T_FAILED:
 				print( "  \e[0;31m✘\e[0m " . $sentence . "\n" );
 				$this->printFailureReason( $result->getMessage() );
