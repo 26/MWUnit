@@ -89,6 +89,13 @@ class TestContent extends \AbstractContent {
 		return true;
 	}
 
+    /**
+     * @inheritDoc
+     */
+    public function getText() {
+        return $this->text;
+    }
+
 	/**
 	 * @inheritDoc
 	 */
