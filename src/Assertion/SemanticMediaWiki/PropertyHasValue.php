@@ -2,9 +2,9 @@
 
 namespace MWUnit\Assertion\SemanticMediaWiki;
 
-use MWUnit\Assertion\Assertion;
+use Title;
 
-class PropertyHasValue implements Assertion {
+class PropertyHasValue extends SMWAssertion {
 	/**
 	 * @inheritDoc
 	 */
@@ -15,13 +15,6 @@ class PropertyHasValue implements Assertion {
 	/**
 	 * @inheritDoc
 	 */
-	public static function shouldRegister(): bool {
-		return \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' );
-	}
-
-		/**
-		 * @inheritDoc
-		 */
 	public static function getRequiredArgumentCount(): int {
 		return 3;
 	}
@@ -37,31 +30,47 @@ class PropertyHasValue implements Assertion {
 	 * @param string|null $message
 	 * @return bool|null
 	 */
-	public static function assert( &$failure_message, $page_title, $property_name, $expected_value, $message = null ) {
-		$title = \Title::newFromText( $page_title );
+	public static function assert( string &$failure_message, string $page_title, string $property_name, string $expected_value, $message = null ) {
+		$title = Title::newFromText( $page_title );
 
-		if ( $title === null || $title === false || !$title->exists() ) {
+		// Title doesn't exist
+		if ( !$title instanceof Title || !$title->exists() ) {
 			$failure_message = wfMessage( "mwunit-invalid-assertion" )->plain();
 			return null;
 		}
 
+		// Create a new SMW WikiPage from $title
 		$page = \SMWDIWikiPage::newFromTitle( $title );
+
+		// Get the Store singleton
 		$store = \SMW\StoreFactory::getStore();
+
+		// Get all data associated with the previously mentioned page
 		$data = $store->getSemanticData( $page );
+
+		// Create a new SMW property object from $property_name
 		$property = \SMWDIProperty::newFromUserLabel( $property_name );
+
+		// Get the values from the property
 		$values = $data->getPropertyValues( $property );
 
-		$failure_message = $message ??
-			sprintf(
-				wfMessage( "mwunit-assert-failure-property-has-value",
-					$property_name,
-					$expected_value,
-					$page->getTitle()->getText()
-				)->plain()
-			);
-
-		return count( array_filter( $values, function ( $value ) use ( $expected_value ) {
+		// Filter out all the properties that do not equal the expected value
+		$valid_properties = array_filter( $values, function ( $value ) use ( $expected_value ) {
 			return $value->getSortKey() === $expected_value;
-		} ) ) > 0;
+		} );
+
+		// Check if there are any properties left that did met the expected value
+		$property_has_value = count( $valid_properties ) > 0;
+
+		$default_failure_message = wfMessage(
+			"mwunit-assert-failure-property-has-value",
+			$property_name,
+			$expected_value,
+			$page->getTitle()->getText()
+		)->plain();
+
+		$failure_message = $message ?? $default_failure_message;
+
+		return $property_has_value;
 	}
 }

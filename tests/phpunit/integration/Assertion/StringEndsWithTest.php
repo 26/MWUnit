@@ -13,7 +13,7 @@ use MWUnit\Assertion\StringEndsWith;
  * @covers \MWUnit\Assertion\StringEndsWith
  */
 class StringEndsWithTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\StringEndsWith::shouldRegister
@@ -43,6 +43,8 @@ class StringEndsWithTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = 0; $i < 100; $i++ ) {
+			$f = "";
+
 			$haystack = md5( rand() );
 
 			$needle_length = rand( 1, strlen( $haystack ) );

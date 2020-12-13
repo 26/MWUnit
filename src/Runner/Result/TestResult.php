@@ -13,19 +13,20 @@ abstract class TestResult {
     const T_FAILED  = 0; /* phpcs:ignore */
     const T_RISKY   = 1; /* phpcs:ignore */
 	const T_SUCCESS = 2; /* phpcs:ignore */
+    const T_SKIPPED = 3; /* phpcs:ignore */
 
 	/**
 	 * @var TestCase
 	 */
 	private $test_case;
 
-    /**
-     * TestResult constructor.
-     *
-     * @param TestCase $case
-     */
+	/**
+	 * TestResult constructor.
+	 *
+	 * @param TestCase $case
+	 */
 	public function __construct( TestCase $case ) {
-        $this->test_case = $case;
+		$this->test_case = $case;
 	}
 
 	/**
@@ -44,17 +45,17 @@ abstract class TestResult {
 	 */
 	abstract public function toString(): string;
 
-    /**
-     * Returns the result of the test; either T_SUCCESS, T_FAILED or T_RISKY.
-     *
-     * @return int
-     */
+	/**
+	 * Returns the result of the test; either T_SUCCESS, T_FAILED or T_RISKY.
+	 *
+	 * @return int
+	 */
 	abstract public function getResultConstant(): int;
 
-    /**
-     * Returns the message describing why the test did not succeed.
-     *
-     * @return string
-     */
+	/**
+	 * Returns the message describing why the test did not succeed.
+	 *
+	 * @return string
+	 */
 	abstract public function getMessage(): string;
 }

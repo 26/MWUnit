@@ -2,14 +2,20 @@
 
 namespace MWUnit;
 
+use Content;
+use DatabaseUpdater;
+use LogEntry;
 use MediaWiki\Logger\LoggerFactory;
-use MediaWiki\MediaWikiServices;
 use MWException;
+use MWUnit\Exception\InvalidTestPageException;
 use MWUnit\Factory\ParserFunctionFactory;
-use MWUnit\Factory\TagFactory;
 use Parser;
 use Psr\Log\LoggerInterface;
+use Revision;
+use Status;
 use Title;
+use User;
+use WikiPage;
 
 abstract class MWUnit {
 	const LOGGING_CHANNEL = "MWUnit"; // phpcs:ignore
@@ -20,50 +26,57 @@ abstract class MWUnit {
 	 * @param Parser $parser
 	 */
 	public static function onParserFirstCallInit( Parser $parser ) {
-		$tag_factory                = TagFactory::newFromParser( $parser );
-		$parser_function_factory    = ParserFunctionFactory::newFromParser( $parser );
-
-        $tag_factory->registerFunctionHandlers();
-		$parser_function_factory->registerFunctionHandlers();
+		ParserFunctionFactory::newFromParser( $parser )->registerFunctionHandlers();
 	}
 
 	/**
 	 * Called whenever schema updates are required. Updates the database schema.
 	 *
-	 * @param \DatabaseUpdater $updater
+	 * @param DatabaseUpdater $updater
 	 * @throws MWException
 	 */
-	public static function onLoadExtensionSchemaUpdates( \DatabaseUpdater $updater ) {
+	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
 		$directory = $GLOBALS['wgExtensionDirectory'] . '/MWUnit/sql';
 		$type = $updater->getDB()->getType();
-		$mwunit_tests_sql = sprintf( "%s/%s/table_mwunit_tests.sql", $directory, $type );
 
-		if ( !file_exists( $mwunit_tests_sql ) ) {
-			throw new MWException( wfMessage( 'mwunit-invalid-dbms', $type )->parse() );
+		$tables = [
+			"mwunit_tests"      => sprintf( "%s/%s/table_mwunit_tests.sql", $directory, $type ),
+			"mwunit_teardown"   => sprintf( "%s/%s/table_mwunit_teardown.sql", $directory, $type ),
+			"mwunit_setup"      => sprintf( "%s/%s/table_mwunit_setup.sql", $directory, $type ),
+			"mwunit_content"    => sprintf( "%s/%s/table_mwunit_content.sql", $directory, $type ),
+			"mwunit_attributes" => sprintf( "%s/%s/table_mwunit_attributes.sql", $directory, $type )
+		];
+
+		foreach ( $tables as $table ) {
+			if ( !file_exists( $table ) ) {
+				throw new MWException( wfMessage( 'mwunit-invalid-dbms', $type )->parse() );
+			}
 		}
 
-		$updater->addExtensionTable( 'mwunit_tests', $mwunit_tests_sql );
+		foreach ( $tables as $table_name => $sql_path ) {
+			$updater->addExtensionTable( $table_name, $sql_path );
+		}
 	}
 
-    /**
-     * Allows last minute changes to the output page, e.g. adding of CSS or JavaScript by extensions.
-     *
-     * @see https://www.mediawiki.org/wiki/Manual:Hooks/BeforePageDisplay
-     *
-     * @param \OutputPage $out
-     * @param \Skin $skin
-     */
+	/**
+	 * Allows last minute changes to the output page, e.g. adding of CSS or JavaScript by extensions.
+	 *
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/BeforePageDisplay
+	 *
+	 * @param \OutputPage $out
+	 * @param \Skin $skin
+	 */
 	public static function onBeforePageDisplay( \OutputPage $out, \Skin $skin ) {
-	    if ( $out->getTitle()->getNamespace() < 0 ) {
-	        return;
-        }
+		if ( $out->getTitle()->getNamespace() < 0 ) {
+			return;
+		}
 
-	    if ( $out->getWikiPage()->getContentModel() !== CONTENT_MODEL_TEST ) {
-	        return;
-        }
+		if ( $out->getWikiPage()->getContentModel() !== CONTENT_MODEL_TEST ) {
+			return;
+		}
 
-	    $out->addModuleStyles( [ "ext.mwunit.TestContent.css" ] );
-    }
+		$out->addModuleStyles( [ "ext.mwunit.TestContent.css" ] );
+	}
 
 	/**
 	 * Called at the end of Skin::buildSidebar(). Adds applicable links to the
@@ -76,19 +89,19 @@ abstract class MWUnit {
 	 * @return bool
 	 */
 	public static function onSkinBuildSidebar( \Skin $skin, array &$sidebar ) {
-		if ( $skin->getTitle()->getNamespace() === NS_TEMPLATE &&
-            TestCaseRepository::getInstance()->isTemplateCovered( $skin->getTitle() ) ) {
-			$special_title = Title::newFromText( 'Special:MWUnit' );
-			$sidebar[ wfMessage( 'mwunit-sidebar-header' )->parse() ] = [
-				[
-					'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->parse(),
-					'href' => $special_title->getFullURL( [
-						'unitTestCoverTemplate' => $skin->getTitle()->getText()
-					] ),
-					'id' => 'mwunit-sb-run',
-					'active' => '',
-					'accesskey' => 'a'
-				]
+		$title = $skin->getTitle();
+		$namespace = $title->getNamespace();
+
+		if ( $namespace === NS_TEMPLATE && self::isTemplateCovered( $title ) ) {
+			$special_title = Title::newFromText( 'UnitTests', NS_SPECIAL );
+			$sidebar[ 'mwunit-sidebar-item' ][] = [
+				'text' => wfMessage( 'mwunit-sidebar-run-tests-for-template' )->parse(),
+				'href' => $special_title->getFullURL( [
+					'cover' => $skin->getTitle()->getText()
+				] ),
+				'id' => 'mwunit-sb-run',
+				'active' => '',
+				'accesskey' => 'a'
 			];
 
 			return true;
@@ -98,52 +111,50 @@ abstract class MWUnit {
 			return true;
 		}
 
-		$special_title = Title::newFromText( 'Special:MWUnit' );
-		$sidebar[ wfMessage( 'mwunit-sidebar-header' )->parse() ] = [
-			[
-				'text' => wfMessage( 'mwunit-sidebar-run-tests' )->parse(),
-				'href' => $special_title->getFullURL( [ 'unitTestPage' => $skin->getTitle()->getFullText() ] ),
-				'id' => 'mwunit-sb-run',
-				'active' => '',
-				'accesskey' => 'a'
-			]
+		$special_title = Title::newFromText( 'Special:UnitTests' );
+		$sidebar[ 'mwunit-sidebar-item' ][] = [
+			'text' => wfMessage( 'mwunit-sidebar-run-tests' )->parse(),
+			'href' => $special_title->getFullURL( [ 'page' => $skin->getTitle()->getFullText() ] ),
+			'id' => 'mwunit-sb-run',
+			'active' => '',
+			'accesskey' => 'a'
 		];
 
 		return true;
 	}
 
-    /**
-     * Allows extensions to extend core's PHPUnit test suite.
-     *
-     * @param array $paths
-     * @return bool
-     */
+	/**
+	 * Allows extensions to extend core's PHPUnit test suite.
+	 *
+	 * @param array &$paths
+	 * @return bool
+	 */
 	public static function onUnitTestsList( array &$paths ) {
-        $paths[] = __DIR__ . '/../tests/phpunit/';
-        return true;
-    }
+		$paths[] = __DIR__ . '/../tests/phpunit/';
+		return true;
+	}
 
-    /**
-     * Specify whether a page can be moved for technical reasons.
-     *
-     * @param Title $old
-     * @param Title $new
-     * @param \Status $status
-     */
-    public static function onMovePageIsValidMove( Title $old, Title $new, \Status &$status ) {
-        $new_namespace = $new->getNamespace();
-        $new_content_model = $new->getContentModel();
+	/**
+	 * Specify whether a page can be moved for technical reasons.
+	 *
+	 * @param Title $old
+	 * @param Title $new
+	 * @param \Status &$status
+	 */
+	public static function onMovePageIsValidMove( Title $old, Title $new, \Status &$status ) {
+		$new_namespace = $new->getNamespace();
+		$new_content_model = $new->getContentModel();
 
-        if ( $new_namespace === NS_TEST && $new_content_model === CONTENT_MODEL_TEST ) {
-            return;
-        }
+		if ( $new_namespace === NS_TEST && $new_content_model === CONTENT_MODEL_TEST ) {
+			return;
+		}
 
-        if ( $new_namespace !== NS_TEST && $new_content_model !== CONTENT_MODEL_TEST) {
-            return;
-        }
+		if ( $new_namespace !== NS_TEST && $new_content_model !== CONTENT_MODEL_TEST ) {
+			return;
+		}
 
-        $status->fatal( "mwunit-cannot-move" );
-    }
+		$status->fatal( "mwunit-cannot-move" );
+	}
 
 	/**
 	 * Returns a formatted error message.
@@ -169,89 +180,215 @@ abstract class MWUnit {
 		return LoggerFactory::getInstance( self::LOGGING_CHANNEL );
 	}
 
-    /**
-     * Formats the given test name, in either camel case or snake case, into a more
-     * human-readable sentence.
-     *
-     * @param string $test_name The test name
-     * @return string
-     */
-    public static function testNameToSentence( string $test_name ) {
-        $parts = preg_split( '/(?=[A-Z_\-])/', $test_name, -1, PREG_SPLIT_NO_EMPTY );
-        $parts = array_map( function ( $part ): string {
-            return ucfirst( trim( $part, '_- ' ) );
-        }, $parts );
-        $parts = array_filter( $parts, function( $part ): bool {
-            return !empty( $part );
-        } );
+	/**
+	 * Formats the given test name, in either camel case or snake case, into a more
+	 * human-readable sentence.
+	 *
+	 * @param string $test_name The test name
+	 * @return string
+	 */
+	public static function testNameToSentence( string $test_name ) {
+		$parts = preg_split( '/(?=[A-Z_\-])/', $test_name, -1, PREG_SPLIT_NO_EMPTY );
+		$parts = array_map( function ( $part ): string {
+			return ucfirst( trim( $part, '_- ' ) );
+		}, $parts );
+		$parts = array_filter( $parts, function ( $part ): bool {
+			return !empty( $part );
+		} );
 
-        if ( count( $parts ) < 1 ) {
-            return "";
-        }
+		if ( count( $parts ) < 1 ) {
+			return "";
+		}
 
-        if ( $parts[0] === "Test" ) {
-            unset( $parts[0] );
-        }
+		if ( count( $parts ) !== 1 && $parts[0] === "Test" ) {
+			unset( $parts[0] );
+		}
 
-        return implode( " ", $parts );
-    }
+		return implode( " ", $parts );
+	}
 
-    /**
-     * Called right after MediaWiki processes MWUnit's extension.json file.
-     */
-    public static function registrationCallback() {
-        define( "CONTENT_MODEL_TEST", "test" );
-        define( "CONTENT_FORMAT_TEST", "text/x-wiki-test" );
-    }
+	/**
+	 * Called right after MediaWiki processes MWUnit's extension.json file.
+	 */
+	public static function registrationCallback() {
+		define( "CONTENT_MODEL_TEST", "test" );
+		define( "CONTENT_FORMAT_TEST", "text/x-wiki-test" );
 
-    /**
-     * @param Title $title
-     * @param $model
-     * @return bool
-     */
-    public static function onContentHandlerDefaultModelFor( Title $title, &$model ) {
-        if ( $title->getNamespace() === NS_TEST ) {
-            $model = CONTENT_MODEL_TEST;
-            return false;
-        }
+		// Instantiate the template mock store as early as possible
+		TemplateMockStore::instantiate();
+	}
 
-        return true;
-    }
+	/**
+	 * @param Title $title
+	 * @param &$model
+	 * @return bool
+	 */
+	public static function onContentHandlerDefaultModelFor( Title $title, &$model ) {
+		if ( $title->getNamespace() === NS_TEST ) {
+			$model = CONTENT_MODEL_TEST;
+			return false;
+		}
 
-    /**
-     * Checks if the given attributes are valid, and return true if and only if all given
-     * attributes are valid. It fills the second parameter with an array of errors.
-     *
-     * @param array $tag_arguments
-     * @param array &$errors
-     * @return bool
-     * @throws \ConfigException
-     */
-    public static function areAttributesValid( array $tag_arguments, array &$errors = [] ): bool {
-        $errors = [];
+		return true;
+	}
 
-        if ( !isset( $tag_arguments[ 'name' ] ) ) {
-            // The "name" argument is required.
-            $errors[] = wfMessage( 'mwunit-missing-test-name' )->parse();
-        } else if ( strlen( $tag_arguments['name'] ) > 255 || preg_match( '/^[A-Za-z0-9_\-]+$/', $tag_arguments['name'] ) !== 1 ) {
-            $errors[] = wfMessage( 'mwunit-invalid-test-name', $tag_arguments['name'] )->parse();
-        }
+	/**
+	 * Returns true if and only if the given Title object exists, is a template and has tests written for it.
+	 *
+	 * @param Title $title
+	 * @return bool
+	 */
+	public static function isTemplateCovered( Title $title ): bool {
+		if ( !$title->exists() ) {
+			return false;
+		}
 
-        if ( !isset( $tag_arguments[ 'group' ] ) ) {
-            // The "group" argument is required.
-            $errors[] = wfMessage( 'mwunit-missing-group' )->parse();
-        } else if ( strlen( $tag_arguments['group'] ) > 255 || preg_match( '/^[A-Za-z0-9_\- ]+$/', $tag_arguments['group'] ) !== 1 ) {
-            $errors[] = wfMessage( 'mwunit-invalid-group-name', $tag_arguments['group'] )->parse();
-        }
+		if ( $title->getNamespace() !== NS_TEMPLATE ) {
+			return false;
+		}
 
-        $force_covers = MediaWikiServices::getInstance()
-            ->getMainConfig()
-            ->get( 'MWUnitForceCoversAnnotation' );
+		return wfGetDb( DB_REPLICA )->select(
+			'mwunit_tests',
+			[ 'article_id' ],
+			[ 'covers' => $title->getText() ],
+			__METHOD__
+		)->numRows() > 0;
+	}
 
-        if ( $force_covers && !isset( $tag_arguments[ 'covers' ] ) ) {
-            $errors[] = wfMessage( 'mwunit-missing-covers-annotation', $tag_arguments[ 'name' ] )->parse();
-        }
+	/**
+	 * Occurs after the save page request has been processed.
+	 *
+	 * @param WikiPage $wikiPage
+	 * @param User $user
+	 * @param Content $content
+	 * @param string $summaryText
+	 * @param bool $isMinor
+	 * @param null $isWatch Unused
+	 * @param null $section Unused
+	 * @param int $flags
+	 * @param Revision|null $revision
+	 * @param Status $status
+	 * @param int|false $originalRevId
+	 * @param int $undidRevId
+	 *
+	 * @return bool
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/PageContentSaveComplete
+	 */
+	public static function onPageContentSaveComplete(
+		WikiPage $wikiPage,
+		User $user,
+		Content $content,
+		string $summaryText,
+		bool $isMinor,
+		$isWatch,
+		$section,
+		int $flags,
+		$revision,
+		Status $status,
+		$originalRevId,
+		int $undidRevId
+	) {
+		if ( $wikiPage->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return true;
+		}
 
-        return count( $errors ) === 0;
-    }
+		$article_id = $wikiPage->getTitle()->getArticleID();
+
+		self::getLogger()->debug( 'De-registering tests for article {id} because the page got updated', [
+			'id' => $article_id
+		] );
+
+		// De-register all tests on the page and let the parser re-register them.
+		self::deregisterTestsOnPage( $article_id );
+
+		try {
+			$content = $wikiPage->getContent( Revision::FOR_THIS_USER );
+			$wikitext = $wikiPage->getContentHandler()->serializeContent( $content );
+
+			$test_class = TestClass::newFromWikitext( $wikitext, $wikiPage->getTitle() );
+			$test_class->doUpdate();
+		} catch ( InvalidTestPageException $e ) {
+			self::getLogger()->warning(
+				"Invalid test case(s) on test page {page}: {e}",
+				[ "page" => $wikiPage->getTitle()->getFullText(), "e" => $e->getMessage() ]
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Gets executed when an article (page) has been deleted. Deletes are records associated
+	 * with that page.
+	 *
+	 * @param WikiPage &$article
+	 * @param User &$user
+	 * @param string $reason
+	 * @param int $id
+	 * @param string|null $content
+	 * @param LogEntry $logEntry
+	 * @param int $archivedRevisionCount
+	 *
+	 * @return bool
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/ArticleDeleteComplete
+	 */
+	public static function onArticleDeleteComplete(
+		WikiPage &$article,
+		User &$user,
+		$reason,
+		$id,
+		$content,
+		LogEntry $logEntry,
+		$archivedRevisionCount
+	) {
+		if ( $article->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return true;
+		}
+
+		$deleted_id = $article->getId();
+
+		self::getLogger()->debug( 'De-registering tests for article {id} because the page got deleted', [
+			'id' => $deleted_id
+		] );
+
+		self::deregisterTestsOnPage( $deleted_id );
+
+		return true;
+	}
+
+	/**
+	 * Removes all test cases on a page from the database.
+	 *
+	 * @param int $article_id The article ID of the page from which the tests should be de-registered.
+	 */
+	private static function deregisterTestsOnPage( int $article_id ) {
+		$database = wfGetDb( DB_MASTER );
+
+		$database->delete(
+			'mwunit_tests',
+			[ 'article_id' => $article_id ]
+		);
+
+		$database->delete(
+			'mwunit_attributes',
+			[ 'article_id' => $article_id ]
+		);
+
+		$database->delete(
+			'mwunit_setup',
+			[ 'article_id' => $article_id ]
+		);
+
+		$database->delete(
+			'mwunit_teardown',
+			[ 'article_id' => $article_id ]
+		);
+
+		$database->delete(
+			'mwunit_content',
+			[ 'article_id' => $article_id ]
+		);
+	}
 }

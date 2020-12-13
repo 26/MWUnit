@@ -16,10 +16,12 @@ class MWUnitException extends \Exception {
 	 * @param string $message_name The message key for this exception
 	 * @param array $arguments Arguments given to $message_name
 	 */
-	public function __construct( string $message_name, array $arguments = [] ) {
+	public function __construct( string $message_name = "", array $arguments = [] ) {
 		$this->message_name = $message_name;
 		$this->arguments = $arguments;
 
-		parent::__construct( wfMessage( $message_name, ...$arguments )->parse(), 4500 );
+		$message = $message_name ?: wfMessage( $message_name, ...$arguments )->parse();
+
+		parent::__construct( $message, 4500 );
 	}
 }

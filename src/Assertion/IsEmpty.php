@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class IsEmpty implements Assertion {
+class IsEmpty extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "empty";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**
@@ -32,7 +25,7 @@ class IsEmpty implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $haystack, $message = null ) {
+	public static function assert( string &$failure_message, string $haystack, $message = null ) {
 		$failure_message = $message ??
 			wfMessage( "mwunit-assert-failure-empty", $haystack )->plain();
 

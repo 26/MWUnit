@@ -13,7 +13,7 @@ use MWUnit\Assertion\StringContains;
  * @covers \MWUnit\Assertion\StringContains
  */
 class StringContainsTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\StringContains::shouldRegister
@@ -43,6 +43,8 @@ class StringContainsTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = 0; $i < 100; $i++ ) {
+			$f = "";
+
 			$haystack = md5( rand() );
 
 			$haystack_length = strlen( $haystack );

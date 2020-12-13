@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class LessThan implements Assertion {
+class LessThan extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "less_than";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**
@@ -33,7 +26,7 @@ class LessThan implements Assertion {
 	 * @param string|null $message
 	 * @return bool|null
 	 */
-	public static function assert( &$failure_message, $left, $right, $message = null ) {
+	public static function assert( string &$failure_message, string $left, string $right, $message = null ) {
 		if ( !is_numeric( $left ) || !is_numeric( $right ) ) {
 			$failure_message = wfMessage( 'mwunit-invalid-assertion' )->plain();
 			return null;

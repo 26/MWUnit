@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class IsNumeric implements Assertion {
+class IsNumeric extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "is_numeric";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**
@@ -34,7 +27,7 @@ class IsNumeric implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $haystack, $message = null ) {
+	public static function assert( string &$failure_message, string $haystack, $message = null ) {
 		$failure_message = $message ??
 			wfMessage( "mwunit-assert-failure-is-numeric", $haystack )->plain();
 

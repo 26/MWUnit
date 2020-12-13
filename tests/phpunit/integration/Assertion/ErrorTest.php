@@ -13,7 +13,7 @@ use MWUnit\Assertion\Error;
  * @covers \MWUnit\Assertion\Error
  */
 class ErrorTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\Error::shouldRegister
@@ -47,6 +47,8 @@ class ErrorTest extends MediaWikiTestCase {
 
 		foreach ( $valid_tags as $tag ) {
 			foreach ( $attributes as $attribute ) {
+				$f = "";
+
 				$error_content = sprintf(
 					'<%s class="error %s">Foobar</%s>',
 					$tag, $attribute, $tag

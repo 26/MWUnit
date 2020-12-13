@@ -3,7 +3,6 @@
 namespace MWUnit\Maintenance;
 
 use MWUnit\Exception\MWUnitException;
-use MWUnit\TestCaseRepository;
 use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestSuite;
 
@@ -67,16 +66,18 @@ class RunTests extends \Maintenance {
 	 * @inheritDoc
 	 *
 	 * @throws MWUnitException|\ConfigException
-     */
+	 */
 	public function execute() {
-		$version = \ExtensionRegistry::getInstance()->getAllThings()['MWUnit']['version'] ?? null;
-		$this->output( "MWUnit $version by Marijn van Wezel and contributors.\n" );
+		$this->outputIntro();
 
-		if ( $this->getOption( 'version' ) === 1 ) {
+		if ( $this->getOption( 'version' ) === 1 || count( $this->orderedOptions ) < 1 ) {
+			// The intro already contains the version; exit here
 			return true;
 		}
 
 		$this->output( "\n" );
+
+		// Check if the given parameters are not mutually exclusive
 		$this->checkMutuallyExclusiveOptions();
 
 		if ( $this->getOption( 'list-groups' ) === 1 ) {
@@ -94,37 +95,18 @@ class RunTests extends \Maintenance {
 			return true;
 		}
 
-		$group = $this->getOption( 'group', false );
-		$test = $this->getOption( 'test', false );
-		$testsuite = $this->getOption( 'page', false );
-		$covers = $this->getOption( 'covers', false );
+		$test_suite = $this->getTests();
 
-		if ( !$group && !$test && !$testsuite && !$covers ) {
-			$this->fatalError( "No tests to run." );
-		}
-
-		try {
-            $tests = $this->getTests();
-        } catch( MWUnitException $e ) {
-		    $this->fatalError( wfMessage( 'mwunit-rebuild-required' )->parse() );
-        }
-
-		if ( count( $tests ) === 0 ) {
+		if ( count( $test_suite ) === 0 ) {
 			$this->fatalError( 'No tests to run.' );
 		}
 
-		$interface = $this->getOption( 'testdox', 0 ) === 1 ||
-					 $this->getConfig()->get( "MWUnitDefaultTestDox" ) === true ?
-			new TestDoxResultPrinter() :
-			new MWUnitResultPrinter(
-				(int)$this->getOption( 'columns', 16 ),
-				(bool)$this->getOption( 'no-progress', false )
-			);
+		$result_printer = $this->getResultPrinter();
 
-		$unit_test_runner = new TestSuiteRunner( $tests, [ $interface, "testCompletionCallback" ] );
-		$unit_test_runner->run();
+		$test_runner = TestSuiteRunner::newFromTestSuite( $test_suite, [ $result_printer, "testCompletionCallback" ] );
+		$test_runner->run();
 
-		$interface->outputTestResults( $unit_test_runner );
+		$result_printer->outputTestResults( $test_runner );
 
 		return true;
 	}
@@ -132,7 +114,7 @@ class RunTests extends \Maintenance {
 	private function checkMutuallyExclusiveOptions() {
 		$set = 0;
 		foreach ( self::MUTUALLY_EXCLUSIVE_OPTIONS as $option ) {
-			$set += (bool)$this->getOption( $option, false );
+			$set += $this->hasOption( $option );
 		}
 
 		if ( $set > 1 ) {
@@ -245,8 +227,8 @@ class RunTests extends \Maintenance {
 			return TestSuite::newFromGroup( $group );
 		}
 
-        $page = $this->getOption( 'page', false );
-        if ( $page !== false ) {
+		$page = $this->getOption( 'page', false );
+		if ( $page !== false ) {
 			// Run testsuite
 			$title = \Title::newFromText( $page, NS_TEST );
 
@@ -257,7 +239,7 @@ class RunTests extends \Maintenance {
 			return TestSuite::newFromTitle( $title );
 		}
 
-        $covers = $this->getOption( 'covers', false );
+		$covers = $this->getOption( 'covers', false );
 		if ( $covers !== false ) {
 			// Run tests covering template
 			$title = \Title::newFromText( $covers, NS_TEMPLATE );
@@ -269,14 +251,41 @@ class RunTests extends \Maintenance {
 			return TestSuite::newFromCovers( $covers );
 		}
 
-        $test = $this->getOption( 'test', false );
+		$test = $this->getOption( 'test', false );
+		if ( $test !== false ) {
+			if ( strpos( $test, '::' ) === false ) {
+				$this->fatalError( "The test name '$test' is invalid." );
+			}
 
-		// Run test
-		if ( strpos( $test, '::' ) === false ) {
-			$this->fatalError( "The test name '$test' is invalid." );
+			return TestSuite::newFromText( $test );
 		}
 
-		return TestSuite::newFromText( $test );
+		return TestSuite::newEmpty();
+	}
+
+	/**
+	 * Outputs the "intro" text.
+	 */
+	private function outputIntro() {
+		$version = \ExtensionRegistry::getInstance()->getAllThings()['MWUnit']['version'] ?? null;
+		$this->output( "MWUnit $version by Marijn van Wezel and contributors.\n" );
+	}
+
+	/**
+	 * Return the appropriate ResultPrinter for the given CLI arguments.
+	 *
+	 * @return CommandLineResultPrinter
+	 * @throws \ConfigException
+	 */
+	private function getResultPrinter() {
+		if ( $this->hasOption( "testdox" ) || $this->getConfig()->get( "MWUnitDefaultTestDox" ) === true ) {
+			return new TestDoxResultPrinter();
+		}
+
+		return new MWUnitResultPrinter(
+			(int)$this->getOption( 'columns', 48 ),
+			$this->hasOption( 'no-progress' )
+		);
 	}
 }
 

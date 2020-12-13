@@ -13,7 +13,7 @@ use MWUnit\Assertion\NotEmpty;
  * @covers \MWUnit\Assertion\NotEmpty
  */
 class NotEmptyTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\NotEmpty::shouldRegister
@@ -44,6 +44,8 @@ class NotEmptyTest extends MediaWikiTestCase {
 		$empty_strings = [ "", " ", "  ", "   " ];
 
 		foreach ( $empty_strings as $empty ) {
+			$f = "";
+
 			$this->assertFalse( NotEmpty::assert(
 				$f,
 				$empty
@@ -52,6 +54,8 @@ class NotEmptyTest extends MediaWikiTestCase {
 
 		for ( $i = 0; $i < 100; $i++ ) {
 			$haystack = md5( rand() );
+
+			$f = "";
 
 			$this->assertTrue( NotEmpty::assert(
 				$f,

@@ -13,7 +13,7 @@ interface CommandLineResultPrinter {
 	 * @param \MWUnit\Runner\Result\TestResult $result The associated TestResult object
 	 * @return void
 	 */
-	public function testCompletionCallback(\MWUnit\Runner\Result\TestResult $result );
+	public function testCompletionCallback( \MWUnit\Runner\Result\TestResult $result );
 
 	/**
 	 * Outputs the given test to the console.
@@ -21,5 +21,5 @@ interface CommandLineResultPrinter {
 	 * @param \MWUnit\Runner\TestSuiteRunner $runner The associated UnitTestRunner object
 	 * @return void
 	 */
-	public function outputTestResults(\MWUnit\Runner\TestSuiteRunner $runner );
+	public function outputTestResults( \MWUnit\Runner\TestSuiteRunner $runner );
 }

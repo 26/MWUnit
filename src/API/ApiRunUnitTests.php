@@ -3,121 +3,130 @@
 namespace MWUnit\API;
 
 use ApiBase;
-use MWUnit\Exception\MWUnitException;
+use ApiUsageException;
 use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestSuite;
 
-class ApiRunUnitTests extends ApiBase {
-    /**
-     * @inheritDoc
-     */
-    public function execute() {
-        $this->checkUserRightsAny( 'mwunit-runtests' );
+class ApiRunUnitTests extends \ApiBase {
+	/**
+	 * @inheritDoc
+	 * @throws ApiUsageException
+	 * @throws \MWException
+	 */
+	public function execute() {
+		$this->checkUserRightsAny( 'mwunit-runtests' );
 
-        // Require at least one test or suite to be specified.
-        $this->requireAtLeastOneParameter(
-            $this->extractRequestParams(),
-            'group',
-            'test',
-            'page',
-            'covers'
-        );
+		$test_suite = $this->getTestSuite();
+		$runner = TestSuiteRunner::newFromTestSuite( $test_suite );
 
-        $group_test_suite = TestSuite::newEmpty();
-        $test_test_suite = TestSuite::newEmpty();
-        $page_test_suite = TestSuite::newEmpty();
-        $covers_test_suite = TestSuite::newEmpty();
+		$runner->run();
 
-        if ( $group = $this->getParameter( 'group' ) ) {
-            $group_test_suite = TestSuite::newFromGroup( $group );
-        }
+		$test_run_store = $runner->getTestRunStore();
+		$api_result     = $this->getResult();
 
-        if ( $test = $this->getParameter( 'test' ) ) {
-            try {
-                $test_test_suite = TestSuite::newFromText( $test );
-            } catch ( MWUnitException $e ) {
-                $this->dieWithError( 'mwunit-api-fatal-invalid-test-name' );
-            }
-        }
+		foreach ( $test_run_store->getAll() as $idx => $test_run ) {
+			$id = $test_run->getTestCase()->getCanonicalName();
 
-        if ( $page = $this->getParameter( 'page' ) ) {
-            $title = \Title::newFromText( $page );
+			$result = $test_run->getResult();
 
-            if ( !$title instanceof \Title ) {
-                $this->dieWithError( 'mwunit-api-fatal-invalid-title' );
-            }
+			$output     = $test_run->getTestOutputs();
+			$test_case  = $test_run->getTestCase();
+			$covered    = $test_run->getTestCase()->getCovers();
+			$assertions = $test_run->getAssertionCount();
 
-            $page_test_suite = TestSuite::newFromTitle( $title );
-        }
+			$result_path = [ $id, "result" ];
 
-        if ( $covers = $this->getParameter( 'covers' ) ) {
-            $covers_test_suite = TestSuite::newFromCovers( $covers );
-        }
+			$api_result->addValue( $result_path, "code", $result->getResultConstant() );
+			$api_result->addValue( $result_path, "message", $result->getMessage() );
 
-        $test_suite = $group_test_suite->merge( $test_test_suite, $page_test_suite, $covers_test_suite );
+			$metadata_path = [ $id, "metadata" ];
 
-        $runner = new TestSuiteRunner( $test_suite );
+			$api_result->addValue( $metadata_path, "name", $test_case->getName() );
+			$api_result->addValue( $metadata_path, "group", $test_case->getGroup() );
+			$api_result->addValue( $metadata_path, "title", $test_case->getTitle() );
+			$api_result->addValue( $metadata_path, "assertions", $assertions );
+			$api_result->addValue( $metadata_path, "covers", $covered );
 
-        try {
-            $runner->run();
-        } catch ( MWUnitException $e ) {
-            $this->dieWithException( $e );
-        }
+			$output_path = [ $id, "output" ];
 
-        $test_run_store = $runner->getTestRunStore();
-        $api_result     = $this->getResult();
+			foreach ( $output as $out ) {
+				$api_result->addValue( $output_path, null, $out );
+			}
+		}
+	}
 
-        foreach ( $test_run_store->getAll() as $idx => $test_run ) {
-            $id = $test_run->getTestCase()->__toString();
+	/**
+	 * @inheritDoc
+	 */
+	public function getAllowedParams() {
+		return [
+			'group' => [
+				ApiBase::PARAM_TYPE => 'string',
+				ApiBase::PARAM_HELP_MSG => 'mwunit-api-group-param'
+			],
+			'test' => [
+				ApiBase::PARAM_TYPE => 'string',
+				ApiBase::PARAM_HELP_MSG => 'mwunit-api-test-param'
+			],
+			'page' => [
+				ApiBase::PARAM_TYPE => 'string',
+				ApiBase::PARAM_HELP_MSG => 'mwunit-api-page-param'
+			],
+			'covers' => [
+				ApiBase::PARAM_TYPE => 'string',
+				ApiBase::PARAM_HELP_MSG => 'mwunit-api-covers-param'
+			]
+		];
+	}
 
-            $result     = $test_run->getResult();
-            $output     = $test_run->getTestOutputCollector();
-            $test_case  = $test_run->getTestCase();
-            $covered    = $test_run->getCovered();
-            $assertions = $test_run->getAssertionCount();
+	/**
+	 * Returns the appropriate TestSuite based on the API request.
+	 *
+	 * @return TestSuite
+	 */
+	private function getTestSuite(): TestSuite {
+		// Require at most AND at least one of the following parameters
+		$this->requireMaxOneParameter(
+			$this->extractRequestParams(),
+			'group',
+			'test',
+			'page',
+			'covers'
+		);
 
-            $result_path = [ $id, "result" ];
+		$this->requireOnlyOneParameter(
+			$this->extractRequestParams(),
+			'group',
+			'test',
+			'page',
+			'covers'
+		);
 
-            $api_result->addValue( $result_path, "code", $result->getResultConstant() );
-            $api_result->addValue( $result_path, "message", $result->getMessage() );
+		if ( $group = $this->getParameter( 'group' ) ) {
+			return TestSuite::newFromGroup( $group );
+		}
 
-            $metadata_path = [ $id, "metadata" ];
+		if ( $page = $this->getParameter( 'page' ) ) {
+			if ( strpos( $page, ":" ) !== false ) {
+				// A namespace is specified
+				$title = \Title::newFromText( $page );
+			} else {
+				$title = \Title::newFromText( $page, NS_TEST );
+			}
 
-            $api_result->addValue( $metadata_path, "name", $test_case->getName() );
-            $api_result->addValue( $metadata_path, "group", $test_case->getGroup() );
-            $api_result->addValue( $metadata_path, "title", $test_case->getTitle() );
-            $api_result->addValue( $metadata_path, "assertions", $assertions );
-            $api_result->addValue( $metadata_path, "covers", $covered );
+			if ( !$title instanceof \Title ) {
+				$this->dieWithError( 'mwunit-api-fatal-invalid-title' );
+			}
 
-            $output_path = [ $id, "output" ];
+			return TestSuite::newFromTitle( $title );
+		}
 
-            foreach ( $output as $out ) {
-                $api_result->addValue( $output_path, null, $out->getOutput() );
-            }
-        }
-    }
+		if ( $covers = $this->getParameter( 'covers' ) ) {
+			return TestSuite::newFromCovers( $covers );
+		}
 
-    /**
-     * @inheritDoc
-     */
-    public function getAllowedParams() {
-        return [
-            'group' => [
-                ApiBase::PARAM_TYPE => 'string',
-                ApiBase::PARAM_HELP_MSG => 'mwunit-api-group-param'
-            ],
-            'test' => [
-                ApiBase::PARAM_TYPE => 'string',
-                ApiBase::PARAM_HELP_MSG => 'mwunit-api-test-param'
-            ],
-            'page' => [
-                ApiBase::PARAM_TYPE => 'string',
-                ApiBase::PARAM_HELP_MSG => 'mwunit-api-page-param'
-            ],
-            'covers' => [
-                ApiBase::PARAM_TYPE => 'string',
-                ApiBase::PARAM_HELP_MSG => 'mwunit-api-covers-param'
-            ]
-        ];
-    }
+		// "test" must be defined, because it is required by the checks at the start of the
+		// function, and none of the other variables were defined
+		return TestSuite::newFromText( $this->getParameter( "test" ) );
+	}
 }

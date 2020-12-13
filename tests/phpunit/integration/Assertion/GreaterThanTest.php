@@ -13,7 +13,7 @@ use MWUnit\Assertion\GreaterThan;
  * @covers \MWUnit\Assertion\GreaterThanOrEqual
  */
 class GreaterThanTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\GreaterThan::shouldRegister
@@ -44,6 +44,8 @@ class GreaterThanTest extends MediaWikiTestCase {
 
 		for ( $i = 1; $i < 100; $i++ ) {
 			for ( $j = $i + 1; $j < $i + 100; $j++ ) {
+				$f = "";
+
 				$result = GreaterThan::assert(
 					$f,
 					$j,

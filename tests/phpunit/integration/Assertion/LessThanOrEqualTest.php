@@ -13,7 +13,7 @@ use MWUnit\Assertion\LessThanOrEqual;
  * @covers \MWUnit\Assertion\LessThanOrEqual
  */
 class LessThanOrEqualTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\LessThanOrEqual::shouldRegister
@@ -44,6 +44,8 @@ class LessThanOrEqualTest extends MediaWikiTestCase {
 
 		for ( $i = 0; $i < 100; $i++ ) {
 			for ( $j = 0; $j < $i; $j++ ) {
+				$f = "";
+
 				$result = LessThanOrEqual::assert(
 					$f,
 					$j,
@@ -56,6 +58,8 @@ class LessThanOrEqualTest extends MediaWikiTestCase {
 			}
 
 			for ( $j = $i + 1; $j < $i + 101; $j++ ) {
+				$f = "";
+
 				$result = LessThanOrEqual::assert(
 					$f,
 					$j,

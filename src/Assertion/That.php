@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class That implements Assertion {
+class That extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "that";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**
@@ -38,7 +31,7 @@ class That implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $proposition, $message = null ) {
+	public static function assert( string &$failure_message, string $proposition, $message = null ) {
 		$failure_message = $message ??
 			wfMessage( "mwunit-assert-failure-that", $proposition )->plain();
 

@@ -13,7 +13,7 @@ use MWUnit\Assertion\EqualsIgnoreCase;
  * @covers \MWUnit\Assertion\EqualsIgnoreCase
  */
 class EqualsIgnoreCaseTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\EqualsIgnoreCase::shouldRegister
@@ -45,6 +45,8 @@ class EqualsIgnoreCaseTest extends MediaWikiTestCase {
 		for ( $i = 0; $i < 1000; $i++ ) {
 			$a = md5( rand() );
 			$b = md5( rand() );
+
+			$f = "";
 
 			$this->assertTrue( EqualsIgnoreCase::assert(
 				$f,

@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class StringEndsWith implements Assertion {
+class StringEndsWith extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "string_ends_with";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**
@@ -33,7 +26,7 @@ class StringEndsWith implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $needle, $haystack, $message = null ) {
+	public static function assert( string &$failure_message, string $needle, string $haystack, $message = null ) {
 		$needle_length = strlen( $needle );
 
 		$failure_message = $message ??

@@ -13,7 +13,7 @@ use MWUnit\Assertion\That;
  * @covers \MWUnit\Assertion\That
  */
 class ThatTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\That::shouldRegister
@@ -46,12 +46,16 @@ class ThatTest extends MediaWikiTestCase {
 		$false_values = [ false, "false", "0", 0, "no", "off" ];
 
 		foreach ( $true_values as $true_value ) {
+			$f = "";
+
 			$result = That::assert( $f, $true_value, $message );
 			$this->assertTrue( $result, "Failed to cast $true_value to `true`" );
 			$this->assertSame( $message, $f );
 		}
 
 		foreach ( $false_values as $false_value ) {
+			$f = "";
+
 			$result = That::assert( $f, $false_value, $message );
 			$this->assertFalse( $result, "Failed to cast $false_value to `false`" );
 			$this->assertSame( $message, $f );

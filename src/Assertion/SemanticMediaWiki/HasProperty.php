@@ -2,24 +2,16 @@
 
 namespace MWUnit\Assertion\SemanticMediaWiki;
 
-use MWUnit\Assertion\Assertion;
 use SMW\StoreFactory;
 use SMWDIProperty;
 use SMWDIWikiPage;
 
-class HasProperty implements Assertion {
+class HasProperty extends SMWAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "has_property";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return \ExtensionRegistry::getInstance()->isLoaded( 'SemanticMediaWiki' );
 	}
 
 	/**
@@ -39,7 +31,7 @@ class HasProperty implements Assertion {
 	 * @param string|null $message
 	 * @return bool|null
 	 */
-	public static function assert( &$failure_message, $page_title, $property_name, $message = null ) {
+	public static function assert( string &$failure_message, string $page_title, string $property_name, $message = null ) {
 		$title = \Title::newFromText( $page_title );
 		if ( $title === null || $title === false || !$title->exists() ) {
 			$failure_message = wfMessage( "mwunit-invalid-assertion" )->plain();

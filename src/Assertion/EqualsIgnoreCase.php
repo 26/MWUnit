@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class EqualsIgnoreCase implements Assertion {
+class EqualsIgnoreCase extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "equals_ignore_case";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**
@@ -34,7 +27,7 @@ class EqualsIgnoreCase implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $expected, $actual, $message = null ) {
+	public static function assert( string &$failure_message, string $expected, string $actual, $message = null ) {
 		$expected_lower = strtolower( $expected );
 		$actual_lower = strtolower( $actual );
 

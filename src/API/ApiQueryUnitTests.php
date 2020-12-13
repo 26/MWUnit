@@ -3,83 +3,96 @@
 namespace MWUnit\API;
 
 use ApiBase;
-use ApiQueryBase;
-use MWUnit\TestCase;
-use MWUnit\TestCaseRepository;
+use ApiUsageException;
+use MWUnit\Exception\MWUnitException;
+use MWUnit\TestSuite;
 
-class ApiQueryUnitTests extends ApiQueryBase {
-    /**
-     * @inheritDoc
-     */
-    public function execute() {
-        $this->checkUserRightsAny( 'read' );
+class ApiQueryUnitTests extends \ApiQueryBase {
+	/**
+	 * @inheritDoc
+	 *
+	 * @throws ApiUsageException
+	 * @throws MWUnitException
+	 */
+	public function execute() {
+		$this->checkUserRightsAny( 'read' );
 
-        $this->requireAtLeastOneParameter(
-            $this->extractRequestParams(),
-            'group',
-            'page',
-            'covers'
-        );
+		$this->requireAtLeastOneParameter(
+			$this->extractRequestParams(),
+			'group',
+			'page',
+			'covers'
+		);
 
-        $repository = TestCaseRepository::getInstance();
+		$test_cases = [];
 
-        $group_tests    = [];
-        $page_tests     = [];
-        $covers_tests   = [];
+		if ( $group = $this->getParameter( 'group' ) ) {
+			$test_suite = TestSuite::newFromGroup( $group );
+			foreach ( $test_suite as $test_class ) {
+				foreach ( $test_class->getTestCases() as $test_case ) {
+					$test_cases[] = $test_case;
+				}
+			}
+		}
 
-        if ( $group = $this->getParameter( 'group' ) ) {
-            $group_tests = $repository->getTestsFromGroup( $group );
-            $group_tests = iterator_to_array( $group_tests );
-        }
+		if ( $page = $this->getParameter( 'page' ) ) {
+			if ( strpos( $page, ":" ) !== false ) {
+				// A namespace is specified
+				$title = \Title::newFromText( $page );
+			} else {
+				$title = \Title::newFromText( $page, NS_TEST );
+			}
 
-        if ( $page = $this->getParameter( 'page' ) ) {
-            $title = \Title::newFromText( $page );
+			if ( !$title instanceof \Title ) {
+				$this->dieWithError( 'mwunit-api-fatal-invalid-title' );
+			}
 
-            if ( !$title instanceof \Title ) {
-                $this->dieWithError( 'mwunit-api-fatal-invalid-title' );
-            }
+			$test_suite = TestSuite::newFromTitle( $title );
+			foreach ( $test_suite as $test_class ) {
+				foreach ( $test_class->getTestCases() as $test_case ) {
+					$test_cases[] = $test_case;
+				}
+			}
+		}
 
-            $page_tests = $repository->getTestsFromTitle( $title );
-            $page_tests = iterator_to_array( $page_tests );
-        }
+		if ( $covers = $this->getParameter( 'covers' ) ) {
+			$test_suite = TestSuite::newFromCovers( $covers );
+			foreach ( $test_suite as $test_class ) {
+				foreach ( $test_class->getTestCases() as $test_case ) {
+					$test_cases[] = $test_case;
+				}
+			}
+		}
 
-        if ( $covers = $this->getParameter( 'covers' ) ) {
-            $covers_tests = $repository->getTestsCoveringTemplate( $covers );
-            $covers_tests = iterator_to_array( $covers_tests );
-        }
+		$api_result = $this->getResult();
 
-        $tests = array_merge( $group_tests, $page_tests, $covers_tests );
-        $api_result = $this->getResult();
+		foreach ( $test_cases as $test_case ) {
+			$id = $test_case->getCanonicalName();
 
-        foreach ( $tests as $row ) {
-            $test_case = TestCase::newFromRow( $row );
+			$api_result->addValue( $id, "name", $test_case->getTestName() );
+			$api_result->addValue( $id, "group", $test_case->getTestGroup() );
+			$api_result->addValue( $id, "article_id", $test_case->getTestPage()->getArticleID() );
+			$api_result->addValue( $id, "article_text", $test_case->getTestPage()->getFullText() );
+		}
+	}
 
-            $id =  "{$test_case->getTitle()->getText()}::{$test_case->getName()}";
-
-            $api_result->addValue( $id, "name", $test_case->getName() );
-            $api_result->addValue( $id, "group", $test_case->getGroup() );
-            $api_result->addValue( $id, "article_id", $test_case->getTitle()->getArticleID() );
-            $api_result->addValue( $id, "article_text", $test_case->getTitle() );
-        }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getAllowedParams() {
-        return [
-            'group' => [
-                ApiBase::PARAM_TYPE => 'string',
-                ApiBase::PARAM_HELP_MSG => 'mwunit-api-group-param'
-            ],
-            'page' => [
-                ApiBase::PARAM_TYPE => 'string',
-                ApiBase::PARAM_HELP_MSG => 'mwunit-api-page-param'
-            ],
-            'covers' => [
-                ApiBase::PARAM_TYPE => 'string',
-                ApiBase::PARAM_HELP_MSG => 'mwunit-api-covers-param'
-            ]
-        ];
-    }
+	/**
+	 * @inheritDoc
+	 */
+	public function getAllowedParams() {
+		return [
+			'group' => [
+				ApiBase::PARAM_TYPE => 'string',
+				ApiBase::PARAM_HELP_MSG => 'mwunit-api-group-param'
+			],
+			'page' => [
+				ApiBase::PARAM_TYPE => 'string',
+				ApiBase::PARAM_HELP_MSG => 'mwunit-api-page-param'
+			],
+			'covers' => [
+				ApiBase::PARAM_TYPE => 'string',
+				ApiBase::PARAM_HELP_MSG => 'mwunit-api-covers-param'
+			]
+		];
+	}
 }

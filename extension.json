@@ -6,7 +6,7 @@
   "author": [
     "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
   ],
-  "version": "1.2.0",
+  "version": "2.0.0",
   "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
   "description": "A unit testing framework for MediaWiki",
   "descriptionmsg": "mwunit-description",
@@ -28,8 +28,8 @@
   "Hooks": {
     "ParserFirstCallInit": "MWUnit\\MWUnit::onParserFirstCallInit",
     "LoadExtensionSchemaUpdates": "MWUnit\\MWUnit::onLoadExtensionSchemaUpdates",
-    "PageContentSaveComplete": "MWUnit\\UpdateHandler::onPageContentSaveComplete",
-    "ArticleDeleteComplete": "MWUnit\\UpdateHandler::onArticleDeleteComplete",
+    "PageContentSaveComplete": "MWUnit\\MWUnit::onPageContentSaveComplete",
+    "ArticleDeleteComplete": "MWUnit\\MWUnit::onArticleDeleteComplete",
     "SkinBuildSidebar": "MWUnit\\MWUnit::onSkinBuildSidebar",
     "ParserFetchTemplate": [
       "MWUnit\\Runner\\TestRun::onParserFetchTemplate",
@@ -41,12 +41,12 @@
     "MovePageIsValidMove": "MWUnit\\MWUnit::onMovePageIsValidMove"
   },
   "SpecialPages": {
-    "MWUnit": "MWUnit\\Special\\SpecialMWUnit"
+    "UnitTests": "MWUnit\\Special\\SpecialUnitTests"
   },
   "config": {
     "MWUnitMaxTestExecutionTime": {
       "value": 600,
-      "descriptionmsg": "mwunit-config-max-text-execution-time"
+      "descriptionmsg": "mwunit-config-max-test-execution-time"
     },
     "MWUnitDefaultTestDox": {
       "value": false,
@@ -75,6 +75,14 @@
     "MWUnitAllowTransclusion": {
       "value": false,
       "descriptionmsg": "mwunit-config-allow-transclusion"
+    },
+    "MWUnitMaxTestCases": {
+      "value": 2048,
+      "descriptionmsg": "mwunit-config-max-test-cases"
+    },
+    "MWUnitMaxReportedErrors": {
+      "value": 256,
+      "descriptionmsg": "mwunit-config-max-reported-errors"
     }
   },
   "namespaces": [
@@ -108,19 +116,26 @@
       "mwunit-createtests": true
     }
   },
-  "APIModules": {
-    "rununittests": "MWUnit\\API\\ApiRunUnitTests"
-  },
-  "APIListModules": {
-    "unittests": "MWUnit\\API\\ApiQueryUnitTests"
-  },
   "ContentHandlers": {
     "test": "MWUnit\\ContentHandler\\TestContentHandler"
   },
   "ResourceModules": {
     "ext.mwunit.TestContent.css": {
       "styles": "extensions/MWUnit/resources/styles/TestContent.css"
+    },
+    "ext.mwunit.TestPage.css": {
+      "styles": "extensions/MWUnit/resources/styles/TestPage.css"
+    },
+    "ext.mwunit.InvalidTestPage.css": {
+      "styles": "extensions/MWUnit/resources/styles/InvalidTestPage.css"
     }
   },
-  "callback": "MWUnit\\MWUnit::registrationCallback"
+  "APIModules": {
+    "rununittests": "MWUnit\\API\\ApiRunUnitTests"
+  },
+  "APIListModules": {
+    "unittests": "MWUnit\\API\\ApiQueryUnitTests"
+  },
+  "callback": "MWUnit\\MWUnit::registrationCallback",
+  "load_composer_autoloader": true
 }

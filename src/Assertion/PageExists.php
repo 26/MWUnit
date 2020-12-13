@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class PageExists implements Assertion {
+class PageExists extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "page_exists";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**
@@ -33,14 +26,12 @@ class PageExists implements Assertion {
 	 * @param string|null $message
 	 * @return bool
 	 */
-	public static function assert( &$failure_message, $page_name, $message = null ) {
+	public static function assert( string &$failure_message, string $page_name, $message = null ) {
 		$failure_message = $message ??
 			wfMessage( "mwunit-assert-failure-page-exists" )->plain();
 
 		$title = \Title::newFromText( $page_name );
 
-		return $title !== null &&
-			$title !== false &&
-			$title->exists();
+		return $title instanceof \Title && $title->exists();
 	}
 }

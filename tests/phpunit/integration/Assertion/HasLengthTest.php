@@ -13,7 +13,7 @@ use MWUnit\Assertion\HasLength;
  * @covers \MWUnit\Assertion\HasLength
  */
 class HasLengthTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\HasLength::shouldRegister
@@ -43,6 +43,8 @@ class HasLengthTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = 1; $i < 25; $i++ ) {
+			$f = "";
+
 			$string = substr( md5( rand() ), 0, $i );
 
 			$this->assertTrue( HasLength::assert(

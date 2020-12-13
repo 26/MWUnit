@@ -1,0 +1,75 @@
+.mwunit-table-header {
+    border-bottom: 1px solid #cccccc;
+}
+
+.mwunit-tab-label {
+    display: table;
+    margin-bottom: -1px;
+    border-top: 2px solid #cccccc;
+    border-left: 1px solid #cccccc;
+    border-right: 1px solid #cccccc;
+    border-bottom: 1px solid white;
+    padding: 8px;
+    font-weight: bold;
+}
+
+.mwunit-error-tab-label {
+    border-top: 2px solid #D8000C;
+}
+
+.mwunit-regular-tab-label {
+    border-top: 2px solid #33cc88;
+}
+
+.mwunit-table-row {
+    padding: 15px;
+    border-style: solid;
+    border-color: #cccccc;
+    border-width: 1px 1px 0 1px;
+}
+
+.mwunit-test-content {
+    font-weight: bold;
+    font-size: 1.3em;
+    font-family: monospace;
+}
+
+.mwunit-table-row:nth-child(odd) {
+    background-color: whitesmoke;
+}
+
+.mwunit-table-row:nth-child(even) {
+    background-color: white;
+}
+
+.mwunit-table-row:first-child {
+    border-top: none;
+}
+
+.mwunit-table-row:last-child {
+    border-bottom: 1px solid #cccccc;
+}
+
+.mwunit-setup-row {
+    background-color: #DFF2BF !important;
+}
+
+.mwunit-teardown-row {
+    background-color: #BDE5F8 !important;
+}
+
+.mwunit-message-box {
+    padding: 15px;
+    border-left: 3px solid #00529B;
+    color: #00529B;
+    margin: 10px 0;
+    background-color: #BDE5F8;
+}
+
+.mwunit-error-box {
+    padding: 15px;
+    margin: 10px 0;
+    border-left: 3px solid #D8000C;
+    color: #D8000C;
+    background-color: #FFD2D2;
+}

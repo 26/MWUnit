@@ -13,7 +13,7 @@ use MWUnit\Assertion\IsInteger;
  * @covers \MWUnit\Assertion\IsInteger
  */
 class IsIntegerTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\IsInteger::shouldRegister
@@ -43,6 +43,8 @@ class IsIntegerTest extends MediaWikiTestCase {
 		$message = "foobar";
 
 		for ( $i = -100; $i < 100; $i++ ) {
+			$f = "";
+
 			$integer = (string)$i;
 			$non_integer = md5( rand() );
 

@@ -2,19 +2,12 @@
 
 namespace MWUnit\Assertion;
 
-class HasLength implements Assertion {
+class HasLength extends StandardAssertion {
 	/**
 	 * @inheritDoc
 	 */
 	public static function getName(): string {
 		return "has_length";
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function shouldRegister(): bool {
-		return true;
 	}
 
 	/**
@@ -33,7 +26,7 @@ class HasLength implements Assertion {
 	 * @param string|null $message
 	 * @return bool|null
 	 */
-	public static function assert( &$failure_message, $haystack, $expected_length, $message = null ) {
+	public static function assert( string &$failure_message, string $haystack, string $expected_length, $message = null ) {
 		$actual_length = mb_strlen( $haystack );
 
 		if ( !ctype_digit( $expected_length ) ) {
