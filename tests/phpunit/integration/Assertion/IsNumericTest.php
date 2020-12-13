@@ -13,7 +13,7 @@ use MWUnit\Assertion\IsNumeric;
  * @covers \MWUnit\Assertion\IsNumeric
  */
 class IsNumericTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\IsNumeric::shouldRegister

@@ -18,7 +18,6 @@ use Parser;
 use ParserOptions;
 use Revision;
 use Title;
-use User;
 
 /**
  * Class TestRun
@@ -72,9 +71,9 @@ class TestRun {
 	public static function onParserFetchTemplate(
 		$parser,
 		Title $title,
-        $revision,
+		$revision,
 		&$text,
-        &$deps
+		&$deps
 	) {
 		self::$templates_used[] = strtolower( $title->getText() );
 	}
@@ -169,14 +168,14 @@ class TestRun {
 	 * Returns the result of this test run.
 	 *
 	 * @return TestResult
-     * @throws \LogicException If the function is called before a result is available
+	 * @throws \LogicException If the function is called before a result is available
 	 */
 	public function getResult(): TestResult {
-        if ( !isset( $this->result ) || $this->result === null ) {
-            throw new \LogicException( __METHOD__ . " called before the initialization of result" );
-        }
+		if ( !isset( $this->result ) || $this->result === null ) {
+			throw new \LogicException( __METHOD__ . " called before the initialization of result" );
+		}
 
-	    return $this->result;
+		return $this->result;
 	}
 
 	/**
@@ -215,14 +214,14 @@ class TestRun {
 		return $this->execution_time;
 	}
 
-    /**
-     * Runs the test case. A Result object is guaranteed to be available if this function
-     * finished successfully.
-     *
-     * @param Parser $parser The parser to use for running the tests
-     * @param ParserOptions $options The parser options which which to initialize the parsing
-     * @param Profiler|null $profiler Optional profiler to profile this test class
-     */
+	/**
+	 * Runs the test case. A Result object is guaranteed to be available if this function
+	 * finished successfully.
+	 *
+	 * @param Parser $parser The parser to use for running the tests
+	 * @param ParserOptions $options The parser options which which to initialize the parsing
+	 * @param Profiler|null $profiler Optional profiler to profile this test class
+	 */
 	public function runTest( Parser $parser, ParserOptions $options, Profiler $profiler = null ) {
 		try {
 			// Avoid PHP 7.1 warning when passing $this as reference
@@ -230,8 +229,8 @@ class TestRun {
 			$result = Hooks::run( 'MWUnitBeforeRunTestCase', [ &$this->test_case, &$test_run, &$context ] );
 
 			if ( $result === false ) {
-			    // The hook returned false, therefore another extension asked MWUnit to skip this
-                // test
+				// The hook returned false, therefore another extension asked MWUnit to skip this
+				// test
 				return;
 			}
 		} catch ( \Exception $e ) {
@@ -242,9 +241,9 @@ class TestRun {
 		}
 
 		try {
-		    if ( isset( $profiler ) ) {
-                $profiler->flag();
-            }
+			if ( isset( $profiler ) ) {
+				$profiler->flag();
+			}
 
 			$parser->parse(
 				$this->test_case->getContent(),
@@ -254,14 +253,14 @@ class TestRun {
 				false
 			);
 		} finally {
-            if ( !isset( $this->result ) ) {
-                $this->setSuccess();
-            }
+			if ( !isset( $this->result ) ) {
+				$this->setSuccess();
+			}
 
-            if ( isset( $profiler ) ) {
-                $profiler->flag();
-                $this->execution_time = $profiler->getFlagExecutionTime();
-            }
+			if ( isset( $profiler ) ) {
+				$profiler->flag();
+				$this->execution_time = $profiler->getFlagExecutionTime();
+			}
 		}
 	}
 

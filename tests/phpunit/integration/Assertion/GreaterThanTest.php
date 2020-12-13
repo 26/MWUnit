@@ -13,7 +13,7 @@ use MWUnit\Assertion\GreaterThan;
  * @covers \MWUnit\Assertion\GreaterThanOrEqual
  */
 class GreaterThanTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\GreaterThan::shouldRegister

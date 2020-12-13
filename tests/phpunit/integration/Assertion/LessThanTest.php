@@ -13,7 +13,7 @@ use MWUnit\Assertion\LessThan;
  * @covers \MWUnit\Assertion\LessThan
  */
 class LessThanTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\LessThan::shouldRegister

@@ -86,7 +86,7 @@ class TestContent extends \AbstractContent {
 	 * @return bool
 	 */
 	public function isValid() {
-	    return true;
+		return true;
 	}
 
 	/**
@@ -223,9 +223,13 @@ class TestContent extends \AbstractContent {
 
 		$test_content = $test_case->getContent();
 		$test_name = $test_case->getCanonicalName();
+		$group = $test_case->getTestGroup();
 		$covers = $test_case->getCovers();
 
 		$attributes = [];
+
+		$attributes[] = "@group $group";
+
 		foreach ( $test_case->getAttributes() as $key => $value ) {
 			$attributes[] = "@$key $value";
 		}

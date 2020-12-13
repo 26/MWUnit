@@ -24,7 +24,10 @@ class UpdateContentModels extends \Maintenance {
 
 		$this->addOption( 'quick', 'Skip the 5 second countdown before starting' );
 
-		$this->addDescription( 'Updates the content model for all pages in the Test namespace. May be required after updating to a newer version of MWUnit.' );
+		$this->addDescription(
+			'Updates the content model for all pages in the Test namespace. ' .
+			'May be required after updating to a newer version of MWUnit.'
+		);
 		$this->requireExtension( "MWUnit" );
 	}
 

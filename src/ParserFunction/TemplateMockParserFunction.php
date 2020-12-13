@@ -2,7 +2,6 @@
 
 namespace MWUnit\ParserFunction;
 
-use MWUnit\Exception\MWUnitException;
 use MWUnit\MWUnit;
 use MWUnit\ParserData;
 use MWUnit\Runner\TestRun;
@@ -24,26 +23,26 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector, Tem
 	 */
 	private static $run;
 
-    /**
-     * @var TemplateMockStore
-     */
-    private static $template_mock_store;
+	/**
+	 * @var TemplateMockStore
+	 */
+	private static $template_mock_store;
 
-    /**
+	/**
 	 * @inheritDoc
 	 */
 	public static function setTestRun( TestRun $run ) {
 		self::$run = $run;
 	}
 
-    /**
-     * @inheritDoc
-     */
+	/**
+	 * @inheritDoc
+	 */
 	public static function setTemplateMockStore( TemplateMockStore $store ) {
-        self::$template_mock_store = $store;
-    }
+		self::$template_mock_store = $store;
+	}
 
-    /**
+	/**
 	 * Called when the parser fetches a template. Used to replace the template with
 	 * a mock.
 	 *
@@ -61,7 +60,7 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector, Tem
 		array &$deps
 	) {
 		if ( !self::$template_mock_store->exists( $title ) ) {
-		    return;
+			return;
 		}
 
 		if ( !self::$run ) {
@@ -116,17 +115,17 @@ class TemplateMockParserFunction implements ParserFunction, TestRunInjector, Tem
 		return '';
 	}
 
-    /**
-     * Returns a new Title object from the given page title. This function should return
-     * a Title object in the Template namespace when no explicit namespace is given.
-     *
-     * @param string $page_text
-     * @return Title
-     */
+	/**
+	 * Returns a new Title object from the given page title. This function should return
+	 * a Title object in the Template namespace when no explicit namespace is given.
+	 *
+	 * @param string $page_text
+	 * @return Title
+	 */
 	public function getTitleFromPage( string $page_text ): Title {
-        // Interpret page title without namespace prefix as a template.
-        return strpos( $page_text, ":" ) === false ?
-            Title::newFromText( $page_text, NS_TEMPLATE ) :
-            Title::newFromText( $page_text );
-    }
+		// Interpret page title without namespace prefix as a template.
+		return strpos( $page_text, ":" ) === false ?
+			Title::newFromText( $page_text, NS_TEMPLATE ) :
+			Title::newFromText( $page_text );
+	}
 }

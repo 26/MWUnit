@@ -70,7 +70,7 @@ class TestSuiteRunner {
 
 	/**
 	 * Runs all tests in the group specified in the constructor.
-     */
+	 */
 	public function run() {
 		try {
 			if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [] ) ) {
@@ -149,25 +149,25 @@ class TestSuiteRunner {
 		return $this->test_run_store->getSkippedCount();
 	}
 
-    /**
-     * Runs all the test classes in this test suite.
-     */
-    public function runTestClasses() {
-        foreach ( $this->test_suite as $test_class ) {
-            $this->runTestClass( $test_class );
-        }
-    }
+	/**
+	 * Runs all the test classes in this test suite.
+	 */
+	public function runTestClasses() {
+		foreach ( $this->test_suite as $test_class ) {
+			$this->runTestClass( $test_class );
+		}
+	}
 
-    /**
-     * Runs the given test class.
-     *
-     * @param TestClass $test_class
-     */
+	/**
+	 * Runs the given test class.
+	 *
+	 * @param TestClass $test_class
+	 */
 	private function runTestClass( TestClass $test_class ) {
-	    $runner = new TestClassRunner( $test_class, $this->test_run_store, $this->callback );
-	    $runner->run();
+		$runner = new TestClassRunner( $test_class, $this->test_run_store, $this->callback );
+		$runner->run();
 
-	    $this->total_assertions_count += $runner->getAssertionCount();
-	    $this->test_count             += $runner->getRunTestCount();
+		$this->total_assertions_count += $runner->getAssertionCount();
+		$this->test_count             += $runner->getRunTestCount();
 	}
 }

@@ -13,7 +13,7 @@ use MWUnit\Assertion\StringContains;
  * @covers \MWUnit\Assertion\StringContains
  */
 class StringContainsTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\StringContains::shouldRegister

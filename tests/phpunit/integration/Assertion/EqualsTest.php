@@ -13,7 +13,7 @@ use MWUnit\Assertion\Equals;
  * @covers \MWUnit\Assertion\Error
  */
 class EqualsTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\Equals::shouldRegister

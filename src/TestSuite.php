@@ -44,10 +44,10 @@ class TestSuite implements Iterator, Countable {
 		}
 
 		try {
-            return self::newFromDb( $db_result );
-        } catch ( MWUnitException $e ) {
-		    return self::newEmpty();
-        }
+			return self::newFromDb( $db_result );
+		} catch ( MWUnitException $e ) {
+			return self::newEmpty();
+		}
 	}
 
 	/**

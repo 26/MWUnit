@@ -77,6 +77,11 @@ class ParserFunctionFactory {
 		$assertion_factory->registerFunctionHandlers();
 	}
 
+	/**
+	 * Returns the parser function definition for the "#create_parser_mock" parser function.
+	 *
+	 * @return array
+	 */
 	private function getParserMockFunctionDefinition(): array {
 		$definition = function ( Parser $parser, PPFrame $frame, $args ) {
 			if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
@@ -92,6 +97,11 @@ class ParserFunctionFactory {
 		return [ 'create_parser_mock', $definition, Parser::SFH_OBJECT_ARGS ];
 	}
 
+	/**
+	 * Returns the function definition for the "#create_mock" parser function.
+	 *
+	 * @return array
+	 */
 	private function getTemplateMockFunctionDefinition(): array {
 		$definition = function ( Parser $parser, PPFrame $frame, $args ) {
 			if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
@@ -107,6 +117,11 @@ class ParserFunctionFactory {
 		return [ 'create_mock', $definition, Parser::SFH_OBJECT_ARGS ];
 	}
 
+	/**
+	 * Returns the function definition for the "#var_dump" parser function.
+	 *
+	 * @return array
+	 */
 	private function getVarDumpFunctionDefinition(): array {
 		$definition = function ( Parser $parser, PPFrame $frame, $args ) {
 			if ( $parser->getTitle()->getNamespace() !== NS_TEST ) {
@@ -122,14 +137,29 @@ class ParserFunctionFactory {
 		return [ 'var_dump', $definition, Parser::SFH_OBJECT_ARGS ];
 	}
 
+	/**
+	 * Returns a new "ParserMockParserFunction" object.
+	 *
+	 * @return ParserFunction
+	 */
 	private function newParserMockParserFunction(): ParserFunction {
 		return new ParserMockParserFunction();
 	}
 
+	/**
+	 * Returns a new "TemplateMockParserFunction" object.
+	 *
+	 * @return ParserFunction
+	 */
 	private function newTemplateMockParserFunction(): ParserFunction {
 		return new TemplateMockParserFunction();
 	}
 
+	/**
+	 * Returns a new "VarDumpParserFunction" object.
+	 *
+	 * @return ParserFunction
+	 */
 	private function newVarDumpParserFunction(): ParserFunction {
 		return new VarDumpParserFunction();
 	}

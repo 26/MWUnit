@@ -28,6 +28,13 @@ class Profiler {
 	}
 
 	/**
+	 * Resets the Profiler singleton.
+	 */
+	public static function reset() {
+		self::$instance = new self();
+	}
+
+	/**
 	 * Gets the Profiler instance.
 	 *
 	 * @return Profiler

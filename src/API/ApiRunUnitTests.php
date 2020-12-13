@@ -4,16 +4,15 @@ namespace MWUnit\API;
 
 use ApiBase;
 use ApiUsageException;
-use MWUnit\Exception\MWUnitException;
 use MWUnit\Runner\TestSuiteRunner;
 use MWUnit\TestSuite;
 
 class ApiRunUnitTests extends \ApiBase {
-    /**
-     * @inheritDoc
-     * @throws ApiUsageException
-     * @throws \MWException
-     */
+	/**
+	 * @inheritDoc
+	 * @throws ApiUsageException
+	 * @throws \MWException
+	 */
 	public function execute() {
 		$this->checkUserRightsAny( 'mwunit-runtests' );
 

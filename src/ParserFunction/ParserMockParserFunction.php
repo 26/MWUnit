@@ -10,7 +10,21 @@ use Parser;
 use PPFrame;
 
 class ParserMockParserFunction implements ParserFunction {
+	/**
+	 * @var Parser
+	 */
+	private $parser;
+
 	private static $function_hook_backups = [];
+
+	/**
+	 * ParserMockParserFunction constructor.
+	 *
+	 * @param Parser|null $parser The Parser object to which the mocks will be added
+	 */
+	public function __construct( Parser $parser = null ) {
+		$this->parser = $parser ?? MediaWikiServices::getInstance()->getParser();
+	}
 
 	/**
 	 * Hooked to the #create_parser_mock parser function.
@@ -119,8 +133,7 @@ class ParserMockParserFunction implements ParserFunction {
 	 * @return bool
 	 */
 	public function parserFunctionExists( string $parser_function ) {
-		$parser = MediaWikiServices::getInstance()->getParser();
-		return in_array( $parser_function, $parser->getFunctionHooks() );
+		return in_array( $parser_function, $this->parser->getFunctionHooks() );
 	}
 
 	/**
@@ -134,8 +147,7 @@ class ParserMockParserFunction implements ParserFunction {
 			return;
 		}
 
-		$parser   = MediaWikiServices::getInstance()->getParser();
-		$hooks    = $parser->mFunctionHooks;
+		$hooks    = $this->parser->mFunctionHooks;
 		$callable = $hooks[ $parser_function ];
 
 		self::$function_hook_backups[ $parser_function ] = $callable;
@@ -151,9 +163,8 @@ class ParserMockParserFunction implements ParserFunction {
 		// Assert that the parser function was backed up
 		assert( isset( self::$function_hook_backups[$parser_function] ) );
 
-		$parser = MediaWikiServices::getInstance()->getParser();
-		$flags = $parser->mFunctionHooks[$parser_function][1];
-		$parser->mFunctionHooks[$parser_function][0] = $flags & Parser::SFH_OBJECT_ARGS ?
+		$flags = $this->parser->mFunctionHooks[$parser_function][1];
+		$this->parser->mFunctionHooks[$parser_function][0] = $flags & Parser::SFH_OBJECT_ARGS ?
 			function ( \Parser $p, \PPFrame $f, array $args ) use ( $mock ) {
 				$args = array_map( function ( $argument ) use ( $f ) {
 					return trim( $f->expand( $argument ) );

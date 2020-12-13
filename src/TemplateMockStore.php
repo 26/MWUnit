@@ -2,18 +2,17 @@
 
 namespace MWUnit;
 
-use MWUnit\Exception\MWUnitException;
 use MWUnit\ParserFunction\TemplateMockParserFunction;
 use MWUnit\Runner\BaseTestRunner;
 use Title;
 
 class TemplateMockStore {
-    /**
-     * @var TemplateMockStore
-     */
-    private static $instance = null;
+	/**
+	 * @var TemplateMockStore
+	 */
+	private static $instance = null;
 
-    /**
+	/**
 	 * Key value pair, where the key is the page ID for the page that is mocked and
 	 * the value is the mock value.
 	 *
@@ -21,14 +20,14 @@ class TemplateMockStore {
 	 */
 	private $mocks = [];
 
-    /**
-     * TemplateMockStore constructor.
-     *
-     * Injects itself into dependencies that require it.
-     */
+	/**
+	 * TemplateMockStore constructor.
+	 *
+	 * Injects itself into dependencies that require it.
+	 */
 	private function __construct() {
-	    TemplateMockParserFunction::setTemplateMockStore( $this );
-	    BaseTestRunner::setTemplateMockStore( $this );
+		TemplateMockParserFunction::setTemplateMockStore( $this );
+		BaseTestRunner::setTemplateMockStore( $this );
 	}
 
 	/**
@@ -37,18 +36,18 @@ class TemplateMockStore {
 	 * @return TemplateMockStore
 	 */
 	public static function getInstance(): TemplateMockStore {
-	    self::instantiate();
+		self::instantiate();
 		return self::$instance;
 	}
 
-    /**
-     * Instantiates the TemplateMockStore.
-     */
+	/**
+	 * Instantiates the TemplateMockStore.
+	 */
 	public static function instantiate() {
-	    if ( !isset( self::$instance ) ) {
-            self::$instance = new self();
-        }
-    }
+		if ( !isset( self::$instance ) ) {
+			self::$instance = new self();
+		}
+	}
 
 	/**
 	 * Returns true if and only if the given Title is mocked.
@@ -68,7 +67,7 @@ class TemplateMockStore {
 	 * @return string|null
 	 */
 	public function get( Title $title ) {
-	    return $this->mocks[ $title->getArticleID() ] ?? null;
+		return $this->mocks[ $title->getArticleID() ] ?? null;
 	}
 
 	/**

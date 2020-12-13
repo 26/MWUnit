@@ -13,7 +13,7 @@ use MWUnit\Assertion\NoError;
  * @covers \MWUnit\Assertion\NoError
  */
 class NoErrorTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\NoError::shouldRegister

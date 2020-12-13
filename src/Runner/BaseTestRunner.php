@@ -27,12 +27,12 @@ use User;
  * @package MWUnit
  */
 class BaseTestRunner implements TemplateMockStoreInjector {
-    /**
-     * @var TemplateMockStore
-     */
-    private static $template_mock_store;
+	/**
+	 * @var TemplateMockStore
+	 */
+	private static $template_mock_store;
 
-    /**
+	/**
 	 * @var TestCase The test case
 	 */
 	private $test_case;
@@ -47,58 +47,58 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 	 */
 	private $user_serialized;
 
-    /**
-     * @var Parser
-     */
-    private $parser;
+	/**
+	 * @var Parser
+	 */
+	private $parser;
 
-    /**
-     * @var TestRun|false The test run
-     */
-    private $test_run = false;
+	/**
+	 * @var TestRun|false The test run
+	 */
+	private $test_run = false;
 
-    /**
-     * @var RequestContext
-     */
-    private $request_context;
+	/**
+	 * @var RequestContext
+	 */
+	private $request_context;
 
-    /**
-     * @var Profiler
-     */
-    private $profiler;
+	/**
+	 * @var Profiler
+	 */
+	private $profiler;
 
-    /**
-     * @inheritDoc
-     */
-    public static function setTemplateMockStore( TemplateMockStore $store ) {
-        self::$template_mock_store = $store;
-    }
+	/**
+	 * @inheritDoc
+	 */
+	public static function setTemplateMockStore( TemplateMockStore $store ) {
+		self::$template_mock_store = $store;
+	}
 
-    /**
-     * TestCaseRunner constructor.
-     *
-     * @param TestCase $test_case
-     * @param Parser $parser
-     * @param RequestContext $request_context
-     * @param Profiler|null $profiler Optional profiler class for profiling test runs
-     */
+	/**
+	 * TestCaseRunner constructor.
+	 *
+	 * @param TestCase $test_case
+	 * @param Parser $parser
+	 * @param RequestContext $request_context
+	 * @param Profiler|null $profiler Optional profiler class for profiling test runs
+	 */
 	public function __construct( TestCase $test_case, Parser $parser, RequestContext $request_context, Profiler $profiler = null ) {
 		$this->test_case = $test_case;
-        $this->parser = $parser;
-        $this->request_context = $request_context;
+		$this->parser = $parser;
+		$this->request_context = $request_context;
 
-        $test_run = new TestRun( $test_case );
+		$test_run = new TestRun( $test_case );
 
-        try {
-            \Hooks::run( "MWUnitAfterInitializeTestRun", [ &$test_run ] );
-        } catch ( \Exception $e ) {
-            MWUnit::getLogger()->debug( "Exception while running hook MWUnitAfterInitializeTestRun: {e}", [
-                'e' => $e->getMessage()
-            ] );
-        }
+		try {
+			\Hooks::run( "MWUnitAfterInitializeTestRun", [ &$test_run ] );
+		} catch ( \Exception $e ) {
+			MWUnit::getLogger()->debug( "Exception while running hook MWUnitAfterInitializeTestRun: {e}", [
+				'e' => $e->getMessage()
+			] );
+		}
 
-        $this->test_run = $test_run;
-        $this->profiler = Profiler::getInstance() ?? $profiler;
+		$this->test_run = $test_run;
+		$this->profiler = Profiler::getInstance() ?? $profiler;
 	}
 
 	/**
@@ -128,27 +128,27 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		$this->runTest();
 
 		if ( $this->shouldMarkRisky( $message ) ) {
-		    $this->test_run->setRisky( $message );
-        }
+			$this->test_run->setRisky( $message );
+		}
 	}
 
-    /**
-     * Executes the TestRun object in this class.
-     */
+	/**
+	 * Executes the TestRun object in this class.
+	 */
 	public function runTest() {
 		$this->backupUser();
 		$this->backupGlobals();
 
-        $context = $this->getContext();
+		$context = $this->getContext();
 
-        if ( $context === false ) {
-            return;
-        }
+		if ( $context === false ) {
+			return;
+		}
 
 		try {
 			$this->test_run->runTest( $this->parser, ParserOptions::newCanonical( $context ), $this->profiler );
 		} finally {
-		    $this->restore();
+			$this->restore();
 		}
 
 		try {
@@ -160,36 +160,36 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		}
 	}
 
-    /**
-     * Run's the test class's teardown method, resets the parser and restores changed global
-     * state.
-     */
+	/**
+	 * Run's the test class's teardown method, resets the parser and restores changed global
+	 * state.
+	 */
 	public function restore() {
-        try {
-            $this->restoreGlobals();
-        } catch ( MWUnitException $e ) {
-            MWUnit::getLogger()->emergency( "Unable to restore globals because they are not available" );
-        }
+		try {
+			$this->restoreGlobals();
+		} catch ( MWUnitException $e ) {
+			MWUnit::getLogger()->emergency( "Unable to restore globals because they are not available" );
+		}
 
-        $this->restoreUser();
+		$this->restoreUser();
 
-        try {
-            Hooks::run( "MWUnitRestore", [ &$this ] );
-        } catch ( \Exception $e ) {
-            MWUnit::getLogger()->error(
-                "Exception while running hook MWUnitRestore: {e}",
-                [ "e" => $e->getMessage() ]
-            );
-        }
+		try {
+			Hooks::run( "MWUnitRestore", [ &$this ] );
+		} catch ( \Exception $e ) {
+			MWUnit::getLogger()->error(
+				"Exception while running hook MWUnitRestore: {e}",
+				[ "e" => $e->getMessage() ]
+			);
+		}
 
-        self::$template_mock_store->reset();
+		self::$template_mock_store->reset();
 
-        try {
-            ParserMockParserFunction::restoreAndReset();
-        } catch ( MWUnitException $e ) {
-            MWUnit::getLogger()->emergency( "Unable to restore parser mocks: {e}", [ "e" => $e->getMessage() ] );
-        }
-    }
+		try {
+			ParserMockParserFunction::restoreAndReset();
+		} catch ( MWUnitException $e ) {
+			MWUnit::getLogger()->emergency( "Unable to restore parser mocks: {e}", [ "e" => $e->getMessage() ] );
+		}
+	}
 
 	/**
 	 * Returns true if and only if the current test run should be skipped (i.e. has @skip or invalid @requires).
@@ -206,9 +206,9 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 			return true;
 		}
 
-        $title = \Title::newFromText( $this->test_case->getCovers(), NS_TEMPLATE );
+		$title = \Title::newFromText( $this->test_case->getCovers(), NS_TEMPLATE );
 
-        if ( $this->doInvalidCoversCheck( $message, $title ) ) {
+		if ( $this->doInvalidCoversCheck( $message, $title ) ) {
 			return true;
 		}
 
@@ -225,42 +225,42 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		return $skip;
 	}
 
-    /**
-     * Returns true if and only if the test should be marked as risky.
-     *
-     * @param string|null $message The "risky" message if the test was deemed risky, null otherwise
-     * @return bool
-     */
+	/**
+	 * Returns true if and only if the test should be marked as risky.
+	 *
+	 * @param string|null &$message The "risky" message if the test was deemed risky, null otherwise
+	 * @return bool
+	 */
 	public function shouldMarkRisky( &$message ): bool {
-        if ( $this->doAssertionCheck( $message ) ) {
-            return true;
-        }
+		if ( $this->doAssertionCheck( $message ) ) {
+			return true;
+		}
 
-        if ( $this->doCoversCheck( $message ) ) {
-            return true;
-        }
+		if ( $this->doCoversCheck( $message ) ) {
+			return true;
+		}
 
-        $skip = false;
+		$skip = false;
 
-        try {
-            \Hooks::run( "MWUnitShouldMarkRisky", [ &$skip, &$message ] );
-        } catch ( \Exception $e ) {
-            MWUnit::getLogger()->debug( "Exception while running hook MWUnitShouldMarkRisky: {e}", [
-                'e' => $e->getMessage()
-            ] );
-        }
+		try {
+			\Hooks::run( "MWUnitShouldMarkRisky", [ &$skip, &$message ] );
+		} catch ( \Exception $e ) {
+			MWUnit::getLogger()->debug( "Exception while running hook MWUnitShouldMarkRisky: {e}", [
+				'e' => $e->getMessage()
+			] );
+		}
 
-        return $skip;
-    }
+		return $skip;
+	}
 
-    /**
-     * Checks if all extensions required through the "requires" annotation are loaded. Returns
-     * true if one or more extensions are NOT loaded, false otherwise.
-     *
-     * @param string &$message
-     * @param \ExtensionRegistry $extension_registry
-     * @return bool
-     */
+	/**
+	 * Checks if all extensions required through the "requires" annotation are loaded. Returns
+	 * true if one or more extensions are NOT loaded, false otherwise.
+	 *
+	 * @param string &$message
+	 * @param \ExtensionRegistry $extension_registry
+	 * @return bool
+	 */
 	public function doMissingRequiresCheck( &$message, \ExtensionRegistry $extension_registry ): bool {
 		$requires = $this->test_case->getAttribute( "requires" );
 
@@ -318,15 +318,15 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		return true;
 	}
 
-    /**
-     * Checks if the test should be skipped because of an invalid "@covers" annotation. Returns true if
-     * and only if the test should be skipped.
-     *
-     * @param string &$message Message that will be set iff the covers check fails
-     * @param Title|null $title The Title object to check for validity
-     * @return bool
-     */
-    public function doInvalidCoversCheck( &$message, $title ): bool {
+	/**
+	 * Checks if the test should be skipped because of an invalid "@covers" annotation. Returns true if
+	 * and only if the test should be skipped.
+	 *
+	 * @param string &$message Message that will be set iff the covers check fails
+	 * @param Title|null $title The Title object to check for validity
+	 * @return bool
+	 */
+	public function doInvalidCoversCheck( &$message, $title ): bool {
 		if ( !$this->test_case->getCovers() ) {
 			// This test case does not have a "covers" annotation
 			return false;
@@ -340,24 +340,24 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		return false;
 	}
 
-    /**
-     * Returns true if and only if the test should be marked as risky because it did not conform
-     * to "strict coverage".
-     *
-     * @param string|null $message The "risky" message if the test was deemed risky, null otherwise
-     * @return bool
-     */
+	/**
+	 * Returns true if and only if the test should be marked as risky because it did not conform
+	 * to "strict coverage".
+	 *
+	 * @param string|null &$message The "risky" message if the test was deemed risky, null otherwise
+	 * @return bool
+	 */
 	public function doCoversCheck( &$message ): bool {
 		if ( !$this->test_case->getCovers() ) {
 			// This test case does not have a "covers" annotation
 			return false;
 		}
 
-        try {
-            $strict_coverage = $this->request_context->getConfig()->get( 'MWUnitStrictCoverage' );
-        } catch ( \Exception $e ) {
-            $strict_coverage = false;
-        }
+		try {
+			$strict_coverage = $this->request_context->getConfig()->get( 'MWUnitStrictCoverage' );
+		} catch ( \Exception $e ) {
+			$strict_coverage = false;
+		}
 
 		if ( !$strict_coverage ) {
 			// Strict coverage is not enforced
@@ -372,10 +372,10 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		$covers = strtolower( $this->test_case->getCovers() );
 
 		if ( in_array( $covers, $this->test_run->getUsedTemplates() ) ) {
-		    return false;
-        }
+			return false;
+		}
 
-        $message = wfMessage( 'mwunit-strict-coverage-violation' )->parse();
+		$message = wfMessage( 'mwunit-strict-coverage-violation' )->parse();
 
 		return true;
 	}
@@ -462,18 +462,18 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		$wgUser = $user;
 	}
 
-    /**
-     * Returns true if and only if the current user is allowed to mock other
-     * users while running a test.
-     *
-     * @return bool
-     */
+	/**
+	 * Returns true if and only if the current user is allowed to mock other
+	 * users while running a test.
+	 *
+	 * @return bool
+	 */
 	private function canMockUsers(): bool {
-        try {
-            $mocking_allowed = $this->request_context->getConfig()->get( 'MWUnitAllowRunningTestAsOtherUser' );
-        } catch ( \ConfigException $e ) {
-            $mocking_allowed = false;
-        }
+		try {
+			$mocking_allowed = $this->request_context->getConfig()->get( 'MWUnitAllowRunningTestAsOtherUser' );
+		} catch ( \ConfigException $e ) {
+			$mocking_allowed = false;
+		}
 
 		if ( !$mocking_allowed ) {
 			// Mocking users is disabled
@@ -532,13 +532,13 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		}
 	}
 
-    /**
-     * Returns true if and only if the test should be marked as risky because it failed to perform
-     * any assertions.
-     *
-     * @param string|null $message The "risky" message if the test was deemed risky, null otherwise
-     * @return bool
-     */
+	/**
+	 * Returns true if and only if the test should be marked as risky because it failed to perform
+	 * any assertions.
+	 *
+	 * @param string|null &$message The "risky" message if the test was deemed risky, null otherwise
+	 * @return bool
+	 */
 	public function doAssertionCheck( &$message ) {
 		$test_result = $this->test_run->getResult();
 
@@ -558,10 +558,10 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		}
 
 		if ( $this->test_run->getAssertionCount() !== 0 ) {
-            return false;
-        }
+			return false;
+		}
 
-        $message = wfMessage( 'mwunit-no-assertions' )->parse();
+		$message = wfMessage( 'mwunit-no-assertions' )->parse();
 
 		return true;
 	}

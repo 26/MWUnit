@@ -13,7 +13,7 @@ use MWUnit\Assertion\IsEmpty;
  * @covers \MWUnit\Assertion\IsEmpty
  */
 class IsEmptyTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\IsEmpty::shouldRegister

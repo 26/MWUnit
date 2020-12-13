@@ -13,7 +13,7 @@ use MWUnit\Assertion\StringContainsIgnoreCase;
  * @covers \MWUnit\Assertion\StringContainsIgnoreCase
  */
 class StringContainsIgnoreCaseTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\StringContainsIgnoreCase::shouldRegister

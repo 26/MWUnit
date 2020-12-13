@@ -5,12 +5,18 @@ namespace MWUnit;
 use DOMDocument;
 
 class TestPageParser {
+	/**
+	 * @var array
+	 */
 	const TAGS = [
 		"setup",
 		"teardown",
 		"testcase",
-	];
+	]; // phpcs:ignore
 
+	/**
+	 * @var array Key-value pairs of strip markers with their stripped content.
+	 */
 	private $strip_markers = [];
 
 	/**
@@ -34,7 +40,7 @@ class TestPageParser {
 		// Parse the document using DOMDocument
 		$dom = new DOMDocument();
 		$dom->preserveWhiteSpace = false;
-		@$dom->loadHTML( $wikitext );
+		@$dom->loadHTML( $wikitext ); // phpcs:ignore
 
 		$tags = [];
 
@@ -67,11 +73,22 @@ class TestPageParser {
 	 * @return string
 	 */
 	private function setTagStripMarkers( string $tag, string $wikitext ): string {
+		$opening_tag_regex = "/<" . preg_quote( $tag ) . ".+?>/s";
+		$closing_tag_regex = "/<\/" . preg_quote( $tag ) . ">/";
+
 		// Match opening tag
-		$wikitext = preg_replace_callback( "/<" . preg_quote( $tag ) . ".+?>/s", [ $this, "setStripMarker" ], $wikitext );
+		$wikitext = preg_replace_callback(
+			$opening_tag_regex,
+			[ $this, "setStripMarker" ],
+			$wikitext
+		);
 
 		// Match closing tag
-		$wikitext = preg_replace_callback( "/<\/" . preg_quote( $tag ) . ">/", [ $this, "setStripMarker" ], $wikitext );
+		$wikitext = preg_replace_callback(
+			$closing_tag_regex,
+			[ $this, "setStripMarker" ],
+			$wikitext
+		);
 
 		return $wikitext;
 	}

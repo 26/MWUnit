@@ -13,7 +13,7 @@ use MWUnit\Assertion\StringStartsWith;
  * @covers \MWUnit\Assertion\StringStartsWith
  */
 class StringStartsWithTest extends MediaWikiTestCase {
-	const NO_BOOKKEEPING_PARAMS = 2;
+	const NO_BOOKKEEPING_PARAMS = 2; // phpcs:ignore
 
 	/**
 	 * @covers \MWUnit\Assertion\StringStartsWith::shouldRegister
