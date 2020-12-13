@@ -73,7 +73,7 @@ class TestSuiteRunner {
 	 */
 	public function run() {
 		try {
-			if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [] ) ) {
+			if ( !\Hooks::run( 'MWUnitBeforeFirstTest', [ &$this->test_suite ] ) ) {
 				return;
 			}
 		} catch ( \Exception $e ) {

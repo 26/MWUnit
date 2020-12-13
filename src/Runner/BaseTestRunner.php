@@ -215,7 +215,7 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 		$skip = false;
 
 		try {
-			\Hooks::run( "MWUnitShouldSkipTest", [ &$skip, &$message ] );
+			\Hooks::run( "MWUnitShouldSkipTest", [ &$this->test_case, &$skip, &$message ] );
 		} catch ( \Exception $e ) {
 			MWUnit::getLogger()->debug( "Exception while running hook MWUnitShouldSkipTest: {e}", [
 				'e' => $e->getMessage()
@@ -240,17 +240,17 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 			return true;
 		}
 
-		$skip = false;
+		$risky = false;
 
 		try {
-			\Hooks::run( "MWUnitShouldMarkRisky", [ &$skip, &$message ] );
+			\Hooks::run( "MWUnitShouldMarkRisky", [ &$this->test_case, &$risky, &$message ] );
 		} catch ( \Exception $e ) {
 			MWUnit::getLogger()->debug( "Exception while running hook MWUnitShouldMarkRisky: {e}", [
 				'e' => $e->getMessage()
 			] );
 		}
 
-		return $skip;
+		return $risky;
 	}
 
 	/**
