@@ -105,6 +105,7 @@
   "mwunit-skipped": "This test was skipped, because it was annotated with '@skip'.",
   "mwunit-skipped-missing-extensions-plural": "This test was skipped, because the following required extensions were not installed: $1.",
   "mwunit-skipped-missing-extensions-singular": "This test was skipped, because the following required extension was not installed: $1.",
+  "unittests": "Run unit tests",
   "apihelp-rununittests-summary": "Run unit tests.",
   "apihelp-query+unittests-summary": "List all unit tests that match certain criteria.",
   "specialpages-group-mwunit": "Unit testing",
