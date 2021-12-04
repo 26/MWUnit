@@ -421,7 +421,11 @@ class BaseTestRunner implements TemplateMockStoreInjector {
 
 			MWUnit::getLogger()->debug( "Restoring globals" );
 
-			$GLOBALS  	= $this->globals[ 'GLOBALS' ];
+			// PHP 8.0 does not support writing to the $GLOBALS array directly
+			foreach ( $this->globals[ 'GLOBALS' ] as $global_name => $global_value ) {
+				$GLOBALS[$global_name] = $global_value;
+			}
+
 			$_SERVER  	= $this->globals[ '_SERVER' ];
             $_GET	  	= $this->globals[ '_GET' ]; // phpcs:ignore
             $_POST    	= $this->globals[ '_POST' ]; // phpcs:ignore

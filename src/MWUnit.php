@@ -6,6 +6,10 @@ use Content;
 use DatabaseUpdater;
 use LogEntry;
 use MediaWiki\Logger\LoggerFactory;
+use MediaWiki\Revision\SlotRecord;
+use MediaWiki\Storage\EditResult;
+use MediaWiki\Storage\RevisionRecord;
+use MediaWiki\User\UserIdentity;
 use MWException;
 use MWUnit\Exception\InvalidTestPageException;
 use MWUnit\Factory\ParserFunctionFactory;
@@ -312,6 +316,57 @@ abstract class MWUnit {
 			self::getLogger()->warning(
 				"Invalid test case(s) on test page {page}: {e}",
 				[ "page" => $wikiPage->getTitle()->getFullText(), "e" => $e->getMessage() ]
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * After an article has been updated.
+	 *
+	 * @note This is a fix to make MWUnit work with 1.37.
+	 *
+	 * @param WikiPage $wiki_page
+	 * @param UserIdentity $user
+	 * @param string $summary
+	 * @param int $flags
+	 * @param RevisionRecord $revision
+	 * @param EditResult $edit_result
+	 * @return bool
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/PageSaveComplete
+	 */
+	public static function onPageSaveComplete(
+		WikiPage $wiki_page,
+		UserIdentity $user,
+		string $summary,
+		int $flags,
+		RevisionRecord $revision,
+		EditResult $edit_result
+	) {
+		if ( $wiki_page->getTitle()->getNamespace() !== NS_TEST ) {
+			// Do not run hook outside of "Test" namespace
+			return true;
+		}
+
+		$article_id = $wiki_page->getTitle()->getArticleID();
+
+		self::getLogger()->debug( 'De-registering tests for article {id} because the page got updated', [
+			'id' => $article_id
+		] );
+
+		// De-register all tests on the page and let the parser re-register them.
+		self::deregisterTestsOnPage( $article_id );
+
+		try {
+			$wikitext = $wiki_page->getContentHandler()->serializeContent( $revision->getContent( SlotRecord::MAIN ) );
+
+			$test_class = TestClass::newFromWikitext( $wikitext, $wiki_page->getTitle() );
+			$test_class->doUpdate();
+		} catch ( InvalidTestPageException $e ) {
+			self::getLogger()->warning(
+				"Invalid test case(s) on test page {page}: {e}",
+				[ "page" => $wiki_page->getTitle()->getFullText(), "e" => $e->getMessage() ]
 			);
 		}
 

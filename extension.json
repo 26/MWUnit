@@ -6,7 +6,7 @@
   "author": [
     "[https://www.mediawiki.org/wiki/User:Xxmarijnw Marijn van Wezel]"
   ],
-  "version": "2.0.1",
+  "version": "2.1.0",
   "url": "https://www.mediawiki.org/wiki/Extension:MWUnit",
   "description": "A unit testing framework for MediaWiki",
   "descriptionmsg": "mwunit-description",
@@ -39,7 +39,8 @@
     "ContentHandlerDefaultModelFor": "MWUnit\\MWUnit::onContentHandlerDefaultModelFor",
     "BeforePageDisplay": "MWUnit\\MWUnit::onBeforePageDisplay",
     "MovePageIsValidMove": "MWUnit\\MWUnit::onMovePageIsValidMove",
-    "ParserGetVariableValueVarCache": "MWUnit\\MWUnit::onParserGetVariableValueVarCache"
+    "ParserGetVariableValueVarCache": "MWUnit\\MWUnit::onParserGetVariableValueVarCache",
+	"PageSaveComplete": "MWUnit\\MWUnit::onPageSaveComplete"
   },
   "SpecialPages": {
     "UnitTests": "MWUnit\\Special\\SpecialUnitTests"
